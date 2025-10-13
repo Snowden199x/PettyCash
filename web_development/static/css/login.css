@@ -1,0 +1,158 @@
+/* login.css */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+/* Background setup */
+body {
+    background-color: #F8EBD7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+/* background.svg */
+.background {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+}
+
+.background img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Header (Logo Only) */
+header {
+    position: absolute;
+    top: 40px;
+    left: 60px;
+}
+
+header .logo {
+    width: 300px; 
+    height: auto;
+    object-fit: contain;
+}
+
+/* Login Card */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.login-card {
+    background: #ffffffee; 
+    backdrop-filter: blur(10px);
+    padding: 70px 80px; 
+    border-radius: 24px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    width: 480px; 
+}
+
+.login-card h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2a2a2a;
+    margin-bottom: 12px;
+}
+
+.login-card p {
+    color: #666;
+    font-size: 15px;
+    margin-bottom: 40px;
+}
+
+/* Inputs */
+.login-card input {
+    width: 100%;
+    padding: 15px 18px;
+    margin-bottom: 25px;
+    border: 1.5px solid #d3d3d3;
+    border-radius: 12px;
+    outline: none;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.login-card input:focus {
+    border-color: #D0A85C;
+}
+
+/* Button */
+.login-card button {
+    width: 100%;
+    padding: 15px;
+    background-color: #F3D58D;
+    border: 2px solid #000;
+    border-radius: 12px;
+    color: #020202;
+    font-weight: 600;
+    font-size: 17px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+/* Hover effect */
+.login-card button:hover {
+    background-color: #D1C48B;
+    border: 2px solid #D1C48B; 
+    transform: translateY(-2px); 
+}
+
+
+.login-card button:focus {
+    outline: none;
+    border: 2px solid #D1C48B; 
+}
+
+
+/* Signup text */
+.signup-text {
+    margin-top: 25px;
+    color: #444;
+    font-size: 15px;
+}
+
+.signup-text a {
+    color: hsl(0, 0%, 0%);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.signup-text a:hover {
+    text-decoration: underline;
+}
+.flash-messages {
+    list-style-type: none;
+    padding: 0;
+}
+
+.flash-messages li {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.flash-messages .success {
+    background-color: #28a745;
+    color: white;
+}
+
+.flash-messages .error {
+    background-color: #dc3545;
+    color: white;
+}

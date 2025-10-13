@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | PockiTrack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/signup.css') }}">
+</head>
+<body>
+    <!-- Background Image -->
+    <div class="background">
+        <img src="{{ url_for('static', filename='images/background.svg') }}" alt="Background">
+    </div>
+
+    <!-- Header (Logo only) -->
+    <header>
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" class="logo">
+    </header>
+
+    <!-- Main Signup Container -->
+    <main class="signup-container">
+        <div class="signup-card">
+            <h2>Create Account</h2>
+            <p>Fill in your details to get started</p>
+
+            <!-- Signup Form -->
+            <form method="POST" action="/signup">
+                <input type="text" name="fullname" placeholder="Full Name" required>
+                <input type="email" name="email" placeholder="Email Address" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+                <button type="submit">Sign Up</button>
+            </form>
+
+            <p class="login-text">
+                Already have an account? <a href="{{ url_for('login') }}">Login</a>
+            </p>
+        </div>
+    </main>
+</body>
+</html>
