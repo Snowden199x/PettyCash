@@ -5,14 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up | PockiTrack</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/signup.css') }}">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
 <body>
-    <!-- Background Image -->
+
+      <!-- Flash Messages (fixed full-width top bar) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Background -->
     <div class="background">
         <img src="{{ url_for('static', filename='images/background.svg') }}" alt="Background">
     </div>
 
-    <!-- Header (Logo only) -->
+    <!-- Header (Logo) -->
     <header>
         <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" class="logo">
     </header>
@@ -20,22 +33,50 @@
     <!-- Main Signup Container -->
     <main class="signup-container">
         <div class="signup-card">
-            <h2>Create Account</h2>
-            <p>Fill in your details to get started</p>
+            <h2>Create an Account</h2>
+            <p>Fill in your details to get started.</p>
 
             <!-- Signup Form -->
             <form method="POST" action="/signup">
                 <input type="text" name="fullname" placeholder="Full Name" required>
-                <input type="email" name="email" placeholder="Email Address" required>
-                <input type="password" name="password" placeholder="Password" required>
-                <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+                <input type="email" name="email" placeholder="Email" required>
+
+                   <!-- PASSWORD -->
+                <div class="input-group">
+                    <input type="password" id="password" name="password" placeholder="Password" required>
+                    <img 
+                    src="{{ url_for('static', filename='images/eye-close.png') }}" 
+                    class="toggle-password" 
+                    data-target="password" 
+                    alt="Toggle Password">
+                </div>
+
+                    <!-- Password Strength Indicator -->
+                <div class="password-strength">
+                    <div id="password-strength-bar" class="strength-bar"></div>
+                    <p id="password-strength-text">Weak</p>
+                </div>
+
+                    <!-- CONFIRM PASSWORD -->
+                <div class="input-group">
+                    <input type="password" id="confirmPassword" name="confirm_password" placeholder="Confirm Password" required>
+                    <img 
+                        src="{{ url_for('static', filename='images/eye-close.png') }}" 
+                        class="toggle-password" 
+                        data-target="confirmPassword" 
+                        alt="Toggle Confirm Password">
+                </div>
+
                 <button type="submit">Sign Up</button>
             </form>
 
+            <!-- Login link -->
             <p class="login-text">
                 Already have an account? <a href="{{ url_for('login') }}">Login</a>
             </p>
         </div>
     </main>
+
+    <script src="{{ url_for('static', filename='js/signup.js') }}"></script>
 </body>
 </html>

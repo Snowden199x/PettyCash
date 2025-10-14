@@ -1,12 +1,12 @@
-/* signup.css */
-* {
+/* SIGNUP PAGE CSS */ 
+*
+{
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: "Poppins", sans-serif;
 }
 
-/* Background setup */
 body {
     background-color: #F8EBD7;
     display: flex;
@@ -17,7 +17,7 @@ body {
     position: relative;
 }
 
-/* background.svg */
+/* Background Image */
 .background {
     position: absolute;
     inset: 0;
@@ -30,7 +30,7 @@ body {
     object-fit: cover;
 }
 
-/* Header (Logo Only) */
+/* Header (Logo) */
 header {
     position: absolute;
     top: 40px;
@@ -43,7 +43,7 @@ header .logo {
     object-fit: contain;
 }
 
-/* Signup Card */
+/* Signup Container */
 .signup-container {
     display: flex;
     justify-content: center;
@@ -90,6 +90,53 @@ header .logo {
     border-color: #D0A85C;
 }
 
+.input-group {
+  position: relative;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 14px 45px 14px 15px; 
+  border: 1.5px solid #d3d3d3;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 15px;
+  top: 35%;
+  transform: translateY(-50%);
+  width: 20px; 
+  height: 15px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.toggle-password:hover {
+  opacity: 1;
+}
+
+/* Password field group */
+.password-group {
+    position: relative;
+}
+
+.password-group .toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #555;
+    font-size: 18px;
+}
+
+.password-group .toggle-password:hover {
+    color: #000;
+}
+
 /* Button */
 .signup-card button {
     width: 100%;
@@ -107,8 +154,8 @@ header .logo {
 
 .signup-card button:hover {
     background-color: #D1C48B;
-    border: 2px solid #D1C48B; 
-    transform: translateY(-2px); 
+    border: 2px solid #D1C48B;
+    transform: translateY(-2px);
 }
 
 /* Login text */
@@ -119,11 +166,89 @@ header .logo {
 }
 
 .login-text a {
-    color: hsl(0, 0%, 0%);
+    color: #000;
     text-decoration: none;
     font-weight: 600;
 }
 
 .login-text a:hover {
     text-decoration: underline;
+}
+
+/* === Flash Messages (Full-width Top Bar) === */
+.flash-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 9999;
+}
+
+.flash-message {
+    width: 100%;
+    padding: 15px 20px;
+    text-align: center;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.3px;
+    animation: slideDown 0.4s ease, fadeOut 0.5s ease 3s forwards;
+}
+
+/* Flash types */
+.flash-message.success {
+    background-color: #28a745; /* Green */
+}
+
+.flash-message.error {
+    background-color: #dc3545; /* Red */
+}
+
+.flash-message.warning {
+    background-color: #ffc107; /* Yellow */
+    color: #000;
+}
+
+.flash-message.info {
+    background-color: #17a2b8; /* Blue */
+}
+
+/* Animation keyframes */
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateY(-50%);
+    }
+}
+
+/* Password Strength Indicator */
+.password-strength {
+    margin-top: 5px;
+    width: 100%;
+}
+
+.strength-bar {
+    height: 5px;
+    width: 0%;
+    background-color: #dc3545;
+    border-radius: 3px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.password-strength p {
+    margin-top: 5px;
+    font-size: 13px;
+    color: #999;
+    text-align: left;
+    transition: color 0.3s ease;
 }
