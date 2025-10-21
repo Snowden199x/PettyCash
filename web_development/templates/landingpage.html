@@ -1,57 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PockiTrack</title>
-    <link rel="stylesheet" href="../static/css/landingStyle.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PockiTrack</title>
+  <link rel="stylesheet" href="../static/css/landingStyle.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet"
+  >
 </head>
+
 <body>
-    <!-- HEADER -->
-    <header>
-        <div class="logo">
-            <img src="../static/images/landing_logo.png" alt="PockiTrack Logo">
-            <h2>PockiTrack</h2>
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <img src="../static/images/pocki_logo.png" alt="PockiTrack Logo">
+      <h2 class="logo_name">PockiTrack</h2>
+    </div>
+    <button class="login-btn">Log in</button>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="hero-text">
+      <h1>Financial Management <br> Made Simple</h1>
+      <p>
+        PockiTrack helps university organizations track expenses, manage budgets,
+        and generate professional financial reports with ease.
+      </p>
+      <button class="get-started">Get started →</button>
+    </div>
+
+    <div class="hero-card">
+      <div class="card">
+        <img src="wallet_icon.png" alt="Wallet Icon" class="wallet-icon">
+        <div class="card-details">
+          <h4>SEMINAR</h4>
+          <p class="budget">Budget Used</p>
+          <div class="progress-bar">
+            <div class="progress" style="width: 70%;"></div>
+          </div>
+          <div class="info">
+            <span class="income">Income: Php 5,000</span>
+            <span class="expense">Expenses: Php 3,500</span>
+          </div>
         </div>
-        <button class="login-btn">Log in</button>
-    </header>
+      </div>
 
-    <!-- HERO SECTION -->
-    <section class="hero">
-        <div class="hero-text">
-            <h1>Financial Management <br> Made Simple</h1>
-            <p>PockiTrack helps university organizations track expenses, manage budgets, 
-               and generate professional financial reports with ease.</p>
-            <button class="get-started">Get started →</button>
+      <div class="card">
+        <img src="wallet_icon.png" alt="Wallet Icon" class="wallet-icon">
+        <div class="card-details">
+          <h4>OUTREACH PROGRAM</h4>
+          <p class="budget">Budget Used</p>
+          <div class="progress-bar">
+            <div class="progress" style="width: 40%;"></div>
+          </div>
+          <div class="info">
+            <span class="income">Income: Php 3,000</span>
+            <span class="expense">Expenses: Php 1,200</span>
+          </div>
         </div>
+      </div>
+    </div>
+  </section>
 
-        <div class="hero-card">
-            <div class="card">
-                <h4>SEMINAR</h4>
-                <p class="budget">Budget Used</p>
-                <div class="progress-bar"><div class="progress" style="width:70%"></div></div>
-                <div class="info">
-                    <span>Income: Php 5,000</span>
-                    <span>Expenses: Php 3,500</span>
-                </div>
-            </div>
+  <!-- FEATURES SECTION -->
+  <section class="features">
+    <h2>Everything You Need to Manage Your Finances</h2>
+    <p>
+      Built specifically for student organizations to meet university financial reporting requirements.
+    </p>
 
-            <div class="card">
-                <h4>OUTREACH PROGRAM</h4>
-                <p class="budget">Budget Used</p>
-                <div class="progress-bar"><div class="progress" style="width:40%"></div></div>
-                <div class="info">
-                    <span>Income: Php 3,000</span>
-                    <span>Expenses: Php 1,200</span>
-                </div>
-            </div>
+    <div class="features-grid">
+      <div class="feature-box">
+        <img src="track_finances.png" alt="Track Finances Icon" class="feature-icon">
+        <div class="feature-content">
+          <h3>Track Finances</h3>
+          <p>
+            Monitor your organization’s income, expenses, and budget in real-time with intuitive dashboards.
+          </p>
         </div>
-    </section>
+      </div>
 
-    <!-- INFO SECTION -->
-    <section class="info-section">
-        <h2>Everything You Need to Manage Your Finances</h2>
-        <p>Built specifically for student organizations to meet university financial reporting requirements.</p>
-    </section>
+      <div class="feature-box">
+        <img src="generate_reports.png" alt="Generate Reports Icon" class="feature-icon">
+        <div class="feature-content">
+          <h3>Generate Reports</h3>
+          <p>
+            Create professional Event, Monthly, and Summary Financial Reports formatted for school requirements.
+          </p>
+        </div>
+      </div>
+
+      <div class="feature-box">
+        <img src="secured.png" alt="Secure & Reliable Icon" class="feature-icon">
+        <div class="feature-content">
+          <h3>Secure & Reliable</h3>
+          <p>
+            Keep your financial data safe with secure authentication and organized record-keeping.
+          </p>
+        </div>
+      </div>
+
+      <div class="feature-box">
+        <img src="collaborate.png" alt="Multi-Officer Access Icon" class="feature-icon">
+        <div class="feature-content">
+          <h3>Multi-Officer Access</h3>
+          <p>
+            Designed for Presidents, VPs, Treasurers, and Auditors to collaborate on financial management.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA SECTION -->
+  <section class="cta">
+    <h3>Ready to Simplify Your Organization’s Finances?</h3>
+    <p>Get started with PockiTrack today and manage your finances with confidence.</p>
+    <button class="btn access-btn">Access your account</button>
+  </section>
+
+  <script src="script.js"></script>
 </body>
 </html>
