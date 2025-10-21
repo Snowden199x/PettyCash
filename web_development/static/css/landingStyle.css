@@ -38,7 +38,9 @@ header {
 .logo_name {
   font-weight: 500;
   font-size: 28px;
+  color: #000;
 }
+
 
 .login-btn {
   position: absolute;
@@ -302,3 +304,47 @@ header {
 .btn.access-btn:hover {
   background-color: #602805;
 }
+
+/* =========================================
+   FOOTER SECTION
+========================================= */
+
+.footer {  
+  text-align: center;
+  padding: 10px 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.footer-text {
+  font-size: 12px;
+  color: #4A3B00;
+  margin-bottom: 5px;
+  line-height: 1.6;
+}
+
+.footer-credit {
+  font-size: 12px;
+  color: #6B5C2E;
+  opacity: 0.8;
+}
+
+/* Smooth page transition */
+body {
+  opacity: 1;
+  transition: opacity 0.6s ease-out;
+}
+
+body.fade-out {
+  opacity: 0;
+}
+
+/* Smooth transition when leaving the landing page */
+body {
+  opacity: 1;
+  transition: opacity 0.6s ease-out;
+}
+
+body.fade-out {
+  opacity: 0;
+}
+
