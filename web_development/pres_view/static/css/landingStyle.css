@@ -5,12 +5,18 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: Poppins
+  font-family: Poppins;
 }
 
 body {
   background-color: #f7f3eb;
   color: #2b2b2b;
+  opacity: 1;
+  transition: opacity 0.6s ease-out;
+}
+
+body.fade-out {
+  opacity: 0;
 }
 
 /* =========================================
@@ -22,12 +28,14 @@ header {
   align-items: center;
   background-color: #f7f3eb;
   padding: 15px 50px;
+  flex-wrap: wrap;
 }
 
 .logo {
   display: flex;
   align-items: center;
   gap: 10px;
+  cursor: pointer;
 }
 
 .logo img {
@@ -40,7 +48,6 @@ header {
   font-size: 28px;
   color: #000;
 }
-
 
 .login-btn {
   position: absolute;
@@ -70,6 +77,7 @@ header {
   align-items: center;
   padding: 80px 100px;
   background-color: rgba(243, 213, 141, 0.2);
+  flex-wrap: wrap;
 }
 
 .hero-text {
@@ -207,7 +215,6 @@ header {
   margin-bottom: 40px;
 }
 
-/* GRID LAYOUT */
 .features-grid {
   display: flex;
   justify-content: center;
@@ -216,7 +223,6 @@ header {
   margin-top: 120px;
 }
 
-/* FEATURE BOX */
 .feature-box {
   background-color: #fff;
   box-shadow: 0px 4px 8.2px 3px rgba(243, 213, 141, 0.36);
@@ -289,7 +295,6 @@ header {
   font-size: 16px;
 }
 
-/* CTA BUTTON */
 .btn.access-btn {
   background-color: #8b3b08;
   color: #fff;
@@ -308,8 +313,7 @@ header {
 /* =========================================
    FOOTER SECTION
 ========================================= */
-
-.footer {  
+.footer {
   text-align: center;
   padding: 10px 10px;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
@@ -328,23 +332,209 @@ header {
   opacity: 0.8;
 }
 
-/* Smooth page transition */
-body {
-  opacity: 1;
-  transition: opacity 0.6s ease-out;
+.footer a {
+  color: #4A3B00;
+  text-decoration: none;
+  font-weight: 600;
 }
 
-body.fade-out {
-  opacity: 0;
+.footer a:hover {
+  text-decoration: underline;
+  color: #8b3b08;
 }
 
-/* Smooth transition when leaving the landing page */
-body {
-  opacity: 1;
-  transition: opacity 0.6s ease-out;
+/* =========================================
+   RESPONSIVE DESIGN
+========================================= */
+
+/* Laptop adjustments (below 1400px) */
+@media (max-width: 1400px) {
+  .login-btn {
+    position: static;
+    margin-left: auto;
+  }
+
+  header {
+    justify-content: space-between;
+    padding: 20px 40px;
+  }
+
+  .cta {
+    width: 90%;
+    height: auto;
+  }
 }
 
-body.fade-out {
-  opacity: 0;
+/* Tablet (below 1024px) */
+@media (max-width: 1024px) {
+  .hero {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 60px 40px;
+  }
+
+  .hero-text {
+    margin-bottom: 30px;
+  }
+
+  .hero-card {
+    width: 90%;
+    height: auto;
+  }
+
+  .cta {
+    width: 95%;
+  }
 }
 
+/* Mobile (below 768px) */
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .login-btn {
+    position: static;
+    margin-top: 10px;
+  }
+
+  .hero-text h1 {
+    font-size: 30px;
+  }
+
+  .hero-text p {
+    font-size: 14px;
+  }
+
+  .cta h3 {
+    font-size: 28px;
+  }
+
+  .features {
+    padding: 40px 20px;
+  }
+
+  .feature-box {
+    width: 90%;
+  }
+}
+
+/* Small mobile (below 480px) */
+@media (max-width: 480px) {
+  .hero-text h1 {
+    font-size: 24px;
+  }
+
+  .get-started {
+    font-size: 16px;
+    padding: 10px 20px;
+  }
+
+  .footer-text,
+  .footer-credit {
+    font-size: 10px;
+  }
+}
+
+
+/* =========================================
+   HERO CARD RESPONSIVE FIX (FINAL)
+   keeps layout intact and smooth
+========================================= */
+.hero, 
+.hero-card {
+  transition: all 0.4s ease;
+  will-change: width, height, padding, margin, transform;
+}
+
+.hero-card {
+  width: 560px;
+  max-width: 90%;
+  height: auto;
+  background-color: #fff;
+  border: 1px solid #f3d58d;
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0px 4px 9.2px 3px #f3d58d;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+  overflow: hidden; /* ✅ keeps content inside */
+}
+
+/* Ensure the cards stay properly aligned inside */
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  min-height: 138px;
+  border-radius: 10px;
+  border: 0.5px solid #d9d9d9;
+  padding: 15px 20px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  overflow: hidden; /* ✅ prevents elements sticking out */
+}
+
+.card img,
+.wallet-icon {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+}
+
+/* Fix text & bar alignment on smaller screens */
+@media (max-width: 1024px) {
+  .hero {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: all 0.4s ease;
+  }
+
+  .hero-card {
+    width: 85%;
+  }
+
+  .card {
+    flex-direction: row; /* ✅ stay side-by-side */
+    flex-wrap: wrap; /* ✅ if needed, wraps safely */
+    justify-content: center;
+    text-align: center;
+    gap: 15px;
+  }
+
+  .card img {
+    margin: 0 auto;
+  }
+
+  .info {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-card {
+    width: 95%;
+  }
+
+  .card {
+    flex-direction: column; /* ✅ only stack when very small */
+    align-items: center;
+    gap: 10px;
+  }
+
+  .info {
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+}

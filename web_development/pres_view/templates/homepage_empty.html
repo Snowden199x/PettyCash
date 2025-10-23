@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PockiTrack | Home</title>
+  <link rel="stylesheet" href="../static/css/homepage_empty.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <img src="../static/img/pocki_logo.png" alt="PockiTrack Logo">
+        <h2>PockiTrack</h2>
+      </div>
+      <button class="new-btn">+ New</button>
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active"><img src="../static/img/navi_home.png"> Home</a>
+        <a href="#"><img src="../static/img/navi_history.png"> History</a>
+        <a href="#"><img src="../static/img/navi_wallet.png"> Wallets</a>
+        <a href="#"><img src="../static/img/navi_profile.png"> Profile</a>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <section class="header">
+        <h3>Hello, <span id="username">User</span></h3>
+        <p>Thursday, February 20</p>
+        <div class="summary">
+          <div class="card"><p>Total balance</p><h2>Php 0.00</h2></div>
+          <div class="card"><p>Total no. of events</p><h2>0</h2></div>
+          <div class="card"><p>Income this month</p><h2>Php 0.00</h2></div>
+          <div class="card"><p>Expenses this month</p><h2>Php 0.00</h2></div>
+        </div>
+      </section>
+
+      <section class="overview">
+        <div class="wallets">
+          <h4>Wallets Overview</h4>
+          <div class="empty-card">
+            <img src="../static/img/navi_wallet.png">
+            <p>No wallets yet</p>
+            <small>Create your first wallet to start tracking your finances</small>
+          </div>
+        </div>
+
+        <div class="transactions">
+          <h4>Transaction History</h4>
+          <div class="empty-card">
+            <img src="../static/img/navi_history.png">
+            <p>No transactions yet</p>
+            <small>Your transaction history will appear here once you add entries</small>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../static/js/homepage_empty.js"></script>
+</body>
+</html>
