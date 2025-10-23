@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
-// 🟢 Correct imports based on your folder structure
-import 'Sign_Up/sign_up.dart';
-import 'Sign_Up/create_id_screen.dart';
+// 🟢 Import all screens
+import 'LogIn/LogIn_Screen.dart';
 import 'Navigation/home_screen.dart';
 import 'Navigation/transaction_history_screen.dart';
 import 'Navigation/wallet_screen.dart';
@@ -20,19 +19,29 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'PettyCash',
+
+      // 🎨 App theme
       theme: ThemeData(
-        primaryColor: Colors.amber,
+        primarySwatch: Colors.amber,
         scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.amber,
+          foregroundColor: Colors.black,
+          centerTitle: true,
+          elevation: 0,
+        ),
       ),
 
-      // ✅ First screen that loads
-      home: const SignUpScreen(),
+      // 🟡 Initial screen
+      initialRoute: '/signup',
 
-      // ✅ Define all routes for navigation
+      // 🧭 Define all named routes
       routes: {
         '/signup': (context) => const SignUpScreen(),
-        '/create_id': (context) => const CreateIdScreen(),
+
+        // 👇 You can pass data like organization name here
         '/home': (context) => const HomeScreen(orgName: "Organization"),
+
         '/history': (context) => const TransactionHistoryScreen(),
         '/wallet': (context) => const WalletScreen(),
         '/profile': (context) => const ProfileScreen(),

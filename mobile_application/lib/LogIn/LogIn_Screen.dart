@@ -9,7 +9,7 @@ class SignUpScreen extends StatelessWidget {
     final passwordController = TextEditingController();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Padding(
@@ -19,32 +19,31 @@ class SignUpScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 🔹 Top Row (Back + Title)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back_ios_new),
-                    ),
-                    const Spacer(),
-                    const Text(
-                      'Sign up',
+                Container(
+                  margin: const EdgeInsets.only(top: 30),
+                  child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Text(
+                      'Log In',
                       style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
                         color: Colors.black87,
                       ),
                     ),
-                    const Spacer(flex: 2),
                   ],
+                 ),  
                 ),
                 const SizedBox(height: 30),
 
                 // 🔹 App Icon
                 Center(
                   child: Image.asset(
-                    'assets/wallet-icon2.png',
-                    height: 120,
+                    'assets/Icons/wallet-icon2.png',
+                    height: 171.67,
+                    width: 174,
                     fit: BoxFit.contain,
                   ),
                 ),
@@ -52,15 +51,20 @@ class SignUpScreen extends StatelessWidget {
 
                 // 🔹 Email Field
                 const Text(
-                  'Email',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  'Username',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16, 
+                    fontWeight: FontWeight.w400
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 2),
                 TextField(
                   controller: emailController,
                   decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(5),
                     ),
                   ),
                 ),
@@ -69,15 +73,19 @@ class SignUpScreen extends StatelessWidget {
                 // 🔹 Password Field
                 const Text(
                   'Password',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16, 
+                    fontWeight: FontWeight.w400),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 2),
                 TextField(
                   controller: passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(5),
                     ),
                   ),
                 ),
@@ -98,20 +106,22 @@ class SignUpScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // ✅ Navigate using named route instead of MaterialPageRoute
-                  Navigator.pushNamed(context, '/create_id');
+                  // ✅ Go directly to home_screen.dart via named route
+                  Navigator.pushNamed(context, '/home');
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFD180),
+                  backgroundColor: const Color(0xFFF3D58D),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
+                  side: BorderSide(color: Colors.black, width: 1,),
                   elevation: 0,
                 ),
                 child: const Text(
-                  'Continue',
+                  'Log in',
                   style: TextStyle(
+                    fontFamily: 'Poppins',
                     color: Colors.black,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -119,30 +129,7 @@ class SignUpScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 15),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  "Already have an account? ",
-                  style: TextStyle(color: Colors.black54),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    // 🔹 Placeholder for future Login page
-                    Navigator.pushNamed(context, '/login');
-                  },
-                  child: const Text(
-                    'Log in here.',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            const SizedBox(height: 15),            
           ],
         ),
       ),

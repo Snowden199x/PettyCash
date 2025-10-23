@@ -20,10 +20,20 @@ dev_dependencies:
 # This section generates your custom app icon
 flutter_icons:
   android: true       # Generate icon for Android
-  image_path: "assets/wallet-icon2.png"   # Path to your logo file
+  image_path: "assets/Icons/wallet-icon2.png"   # Path to your logo file
 
 flutter:
   uses-material-design: true
 
   assets:
-    - assets/wallet-icon2.png
+    - assets/Icons/wallet-icon2.png
+    - assets/Fonts/
+
+  # This section is for fonts
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/Fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/Fonts/Poppins-SemiBold.ttf
+          weight: 600
