@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PockiTrack | Home</title>
+  <link rel="stylesheet" href="../static/css/homepage_empty.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <!-- Fixed logo top-left -->
+      <a href="#" class="logo">
+        <img src="../static/images/pocki_logo.png" alt="PockiTrack Logo" >
+        <span class="logo_name">PockiTrack</span>
+      </a>
+
+      <!-- Sidebar content below logo -->
+      <div class="sidebar-content">
+        <!-- New Button -->
+        <button class="new-btn">+ New</button>
+
+        <!-- Navigation Menu -->
+        <nav class="nav-menu">
+          <a href="#" class="nav-item active">
+            <img src="../static/images/nav_home.png" alt="Home Icon"> Home
+          </a>
+          <a href="#" class="nav-item">
+            <img src="../static/images/nav_history.png" alt="History Icon"> History
+          </a>
+          <a href="#" class="nav-item">
+            <img src="../static/images/nav_wallet.png" alt="Wallet Icon"> Wallets
+          </a>
+          <a href="#" class="nav-item">
+            <img src="../static/images/nav_profile.png" alt="Profile Icon"> Profile
+          </a>
+        </nav>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="content-box">
+        <section class="header">
+          <h3>Hello, <span id="username">User</span></h3>
+          <p class="date-text"></p>
+
+          <!-- Summary Wrapper -->
+          <div class="summary-wrapper">
+            <div class="summary">
+              <div class="card">
+                <p>Total balance</p>
+                <h2>Php 0.00</h2>
+              </div>
+              <div class="card">
+                <p>Total no. of events</p>
+                <h2>0</h2>
+              </div>
+              <div class="card">
+                <p>Income this month</p>
+                <h2>Php 0.00</h2>
+              </div>
+              <div class="card">
+                <p>Expenses this month</p>
+                <h2>Php 0.00</h2>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="overview">
+          <div class="wallets">
+            <h4>Wallets Overview</h4>
+            <div class="empty-card">
+              <img src="../static/images/nav_wallet.png" alt="Wallet Icon">
+              <p>No wallets yet</p>
+              <small>Create your first wallet to start tracking your finances</small>
+            </div>
+          </div>
+
+          <div class="transactions">
+            <h4>Transaction History</h4>
+            <div class="empty-card">
+              <img src="../static/images/nav_history.png" alt="History Icon">
+              <p>No transactions yet</p>
+              <small>Your transaction history will appear here once you add entries</small>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="../static/js/homepage_empty.js"></script>
+</body>
+</html>
