@@ -9,7 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  intl: ^0.17.0
+  intl: ^0.19.0   # ✅ Updated for latest null-safety and DateFormat support
 
 dev_dependencies:
   flutter_test:
@@ -17,10 +17,11 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.14.4
 
-# This section generates your custom app icon
+# ✅ Custom app icon configuration
 flutter_icons:
-  android: true       # Generate icon for Android
-  image_path: "assets/Icons/wallet-icon2.png"   # Path to your logo file
+  android: true
+  ios: true
+  image_path: "assets/Icons/wallet-icon2.png"
 
 flutter:
   uses-material-design: true
@@ -29,11 +30,17 @@ flutter:
     - assets/Icons/wallet-icon2.png
     - assets/Fonts/
 
-  # This section is for fonts
   fonts:
     - family: Poppins
       fonts:
-        - asset: assets/Fonts/Poppins-Regular.ttf
+        - asset: assets/Fonts/Poppins/Poppins-Regular.ttf
           weight: 400
-        - asset: assets/Fonts/Poppins-SemiBold.ttf
+        - asset: assets/Fonts/Poppins/Poppins-SemiBold.ttf
           weight: 600
+
+    - family: PlayFairDisplay
+      fonts:
+        - asset: assets/Fonts/PlayFair/PlayFairDisplay-Regular.ttf
+          weight: 400
+        - asset: assets/Fonts/PlayFair/PlayFairDisplay-Italic.ttf
+          style: italic   # ✅ Added style for italic variant

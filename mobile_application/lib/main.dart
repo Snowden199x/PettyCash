@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 // 🟢 Import all screens
-import 'LogIn/LogIn_Screen.dart';
+import 'LogIn/login_screen.dart';
 import 'Navigation/home_screen.dart';
 import 'Navigation/transaction_history_screen.dart';
 import 'Navigation/wallet_screen.dart';
@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
 
       // 🧭 Define all named routes
       routes: {
-        '/signup': (context) => const SignUpScreen(),
+        '/signup': (context) => const LoginScreen(),
 
         // 👇 You can pass data like organization name here
         '/home': (context) => const HomeScreen(orgName: "Organization"),
