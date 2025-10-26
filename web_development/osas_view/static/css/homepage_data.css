@@ -38,13 +38,14 @@ body {
   height: 40px;
   cursor: pointer;
 }
+
 /* DASHBOARD */
 .dashboard {
   padding: 20px 40px;
   box-sizing: border-box;
 }
 
-/* STATS */
+/* --- Statistic Cards --- */
 .stats {
   display: flex;
   flex-wrap: wrap;
@@ -81,6 +82,7 @@ text-align: left;
   color: #000000;
   margin-top: 5px;
 }
+
 
 /* ORGANIZATIONS */
 .organizations {

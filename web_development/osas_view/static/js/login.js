@@ -39,8 +39,8 @@ document.addEventListener("DOMContentLoaded", function() {
     }, 500);
 
     if (valid) {
-      alert("Admin login successful (demo only)");
-      // window.location.href = "admin_dashboard.html";
+      // Temporarily redirect to homepage with data
+      window.location.href = "homepage_data.html";
     }
   });
 });
