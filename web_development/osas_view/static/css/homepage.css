@@ -1,0 +1,199 @@
+/* =========================================
+   GLOBAL STYLES
+========================================= */
+body {
+  margin: 0;
+  font-family: Poppins;
+  background-color: #F5F1E8;
+  color: #000000;
+}
+
+/* =========================================
+   HEADER (Same as Landing Page)
+========================================= */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to bottom, #FFFFFF, #ECDDC6);
+  padding: 1px 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* --- Logo section --- */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.logo img {
+  width: 71px;
+  height: 70px;
+}
+
+.logo_name {
+  font-weight: 500;
+  font-size: 28px;
+  color: #000000;
+}
+
+/* --- Menu icon --- */
+.menu-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.menu-icon span {
+  width: 28px;
+  height: 3px;
+  background-color: #000000;
+  border-radius: 2px;
+}
+
+/* =========================================
+   MAIN DASHBOARD
+========================================= */
+.dashboard {
+  padding: 20px;
+}
+
+/* --- Statistic Cards --- */
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: flex-start;
+  padding: 0 75px; /* ⬅ reduced to match organizations box */
+  box-sizing: border-box;
+}
+
+.stat-card {
+  width: 426px;
+  height: 112px;
+  background-color: #FFFFFF;
+  border: 1px solid #E59E2C;
+  border-radius: 15px;
+  box-shadow: 0px 4px 7.9px 4px rgba(243, 213, 141, 0.4);
+  padding: 18px 25px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Label text (top) */
+.stat-card .label {
+  font-size: 20px;
+  font-weight: 400; /* Regular Poppins */
+  color: #828282;
+  margin: 0;
+  text-align: left;
+}
+
+/* Count text (bottom) */
+.stat-card .count {
+  font-size: 32px;
+  font-weight: 500; /* Medium Poppins */
+  color: #000000;
+  margin: 5px 0 0 0;
+  text-align: left;
+}
+
+
+/* =========================================
+   ACCREDITED ORGANIZATIONS SECTION
+========================================= */
+.organizations {
+  width: calc(100% - 80px); /* ⬅ matches the 40px padding on each side */
+  max-width: 1344px;
+  height: 493px;
+  background-color: #FFFFFF;
+  border: 2px solid rgba(130, 130, 130, 0.5);
+  border-radius: 15px;
+  margin: 40px auto; /* centers it */
+  padding: 25px 30px;
+  box-sizing: border-box;
+}
+
+/* --- Header Row (Title + Button) --- */
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.header-row h3 {
+  font-size: 20px;
+  font-weight: 500; /* Medium Poppins */
+  color: #000000;
+  margin: 0;
+  text-align: left;
+}
+
+.header-row p {
+  font-size: 16px;
+  font-weight: 400; /* Regular Poppins */
+  color: #828282;
+  margin: 5px 0 0 0;
+  text-align: left;
+}
+
+/* --- Add Organization Button --- */
+.add-btn {
+  width: 240px;
+  height: 50px;
+  background-color: #8B3B08;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 10px;
+  font-size: 20px;
+  font-weight: 500; 
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-btn:hover {
+  background-color: #602805;
+}
+
+/* --- Inner Box (Empty State Container) --- */
+.empty-state {
+  width: 1292px;
+  height: 343px;
+  border: 1px solid rgba(130, 130, 130, 0.5);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin: 0 auto;
+}
+
+.empty-state img {
+  width: 85px;
+  height: 85px;
+  margin-bottom: 20px;
+}
+
+.empty-state h4 {
+  font-size: 24px;
+  font-weight: 500; /* Medium Poppins */
+  color: #000000;
+  margin: 0 0 10px 0;
+}
+
+.empty-state p {
+  font-size: 20px;
+  font-weight: 300; /* Light Poppins */
+  color: #616161;
+  margin: 0;
+  max-width: 800px;
+}
+

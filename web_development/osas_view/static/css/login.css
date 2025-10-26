@@ -1,0 +1,144 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Poppins;
+}
+
+/* Background */
+body {
+  background: url("../images/log_in_bg.png") no-repeat center center fixed;
+  background-size: cover;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Centered Logo */
+.logo-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.logo-center img {
+  width: 71.22px;
+  height: 70px;
+}
+
+.logo_name {
+  font-weight: 500;
+  font-size: 28px;
+  color: #000;
+  margin-top: 6px;
+}
+
+.portal-text {
+  font-size: 13px;
+  color: #000;
+  margin-top: 4px;
+}
+
+/* Login Box */
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.login-box {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 472px;
+  padding: 40px 45px;
+  border-radius: 24px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
+  text-align: left;
+}
+
+/* Form */
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-size: 13px;
+  color: #828282;
+  margin-bottom: 6px;
+}
+
+input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  transition: all 0.3s ease-out;
+}
+
+input:focus,
+input:hover {
+  outline: none;
+  border-color: #E59E2C;
+  box-shadow: 0px 1px 7.1px 2px rgba(243, 213, 141, 0.43);
+}
+
+/* Button */
+.login-btn {
+  background-color: #F3D58D;
+  border: 1px solid #000;
+  color: #000;
+  font-weight: 600;
+  font-size: 20px;
+  padding: 5px 0;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: background 0.3s ease-out;
+  margin-top: 20px;
+}
+
+.login-btn:hover {
+  background-color: #E59E2C;
+  color: #fff;
+}
+
+/* Error message */
+.error-message {
+  color: red;
+  font-size: 12px;
+  margin-top: -10px;
+  margin-bottom: 10px;
+  display: none;
+}
+
+/* Shake animation */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+
+.shake {
+  animation: shake 0.4s ease;
+  border-color: red !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .login-box {
+    max-width: 85%;
+    padding: 30px 25px;
+  }
+  .logo-center img {
+    width: 55px;
+    height: 54px;
+  }
+  .logo_name { font-size: 24px; }
+}

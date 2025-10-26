@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PockiTrack | Admin Homepage</title>
+
+  <!-- ===== CSS LINK ===== -->
+  <link rel="stylesheet" href="../static/css/homepage.css">
+
+  <!-- ===== GOOGLE FONTS ===== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+</head>
+
+<body>
+  <!-- =========================================
+       HEADER SECTION (Same as Landing Page)
+       Only difference: menu icon replaces login button
+  ========================================== -->
+  <header class="admin-header">
+    <div class="logo">
+      <img src="../static/images/pocki_logo.png" alt="PockiTrack Logo">
+      <h2 class="logo_name">PockiTrack</h2>
+    </div>
+
+    <!-- Menu icon (replaces Log In button) -->
+    <div class="menu-icon">
+    <img src="../static/images/menu.png" alt="Menu Logo">
+
+    </div>
+  </header>
+
+  <!-- =========================================
+       MAIN DASHBOARD SECTION
+  ========================================== -->
+  <main class="dashboard">
+    <!-- ===== Statistic Cards ===== -->
+    <section class="stats">
+      <div class="stat-card">
+        <p class="label">Total Organizations</p>
+        <h2 class="count">0</h2>
+      </div>
+
+      <div class="stat-card">
+        <p class="label">Pending Financial Report</p>
+        <h2 class="count">0</h2>
+      </div>
+
+      <div class="stat-card">
+        <p class="label">Approved Financial Report</p>
+        <h2 class="count">0</h2>
+      </div>
+    </section>
+
+    <!-- ===== Accredited Organizations ===== -->
+    <section class="organizations">
+      <div class="header-row">
+        <div>
+          <h3>Accredited Organizations</h3>
+          <p>Manage organizations and their login credentials</p>
+        </div>
+        <button class="add-btn" id="addOrganization">+ Add Organization</button>
+      </div>
+
+      <!-- Empty State (when no orgs yet) -->
+      <div class="empty-state">
+        <img src="../static/images/empty_org.png" alt="No Organizations">
+        <h4>No Accredited Organizations</h4>
+        <p>Start by adding your first organization to manage their details and reports here.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== JAVASCRIPT LINK ===== -->
+  <script src="../static/js/homepage.js"></script>
+</body>
+</html>
