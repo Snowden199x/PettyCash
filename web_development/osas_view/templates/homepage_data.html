@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Homepage - PockiTrack</title>
+  <link rel="stylesheet" href="../static/css/homepage_data.css">
+  <script src="../static/js/homepage_data.js" defer></script>
+  <!-- ===== GOOGLE FONTS ===== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="admin-header">
+    <div class="logo">
+      <img src="../static/images/pocki_logo.png" alt="PockiTrack Logo">
+      <span class="logo_name">PockiTrack</span>
+    </div>
+    <div class="menu-icon">
+      <img src="../static/images/menu.png" alt="Menu">
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="dashboard">
+    <!-- STAT CARDS -->
+    <section class="stats">
+      <div class="stat-card">
+        <p class="label">Total Organizations</p>
+        <h2 id="totalOrganizations" class="count">0</h2>
+      </div>
+      <div class="stat-card">
+        <p class="label">Pending Financial Report</p>
+        <h2 id="pendingReports" class="count">0</h2>
+      </div>
+      <div class="stat-card">
+        <p class="label">Approved Financial Report</p>
+        <h2 id="approvedReports" class="count">0</h2>
+      </div>
+    </section>
+
+    <!-- ORGANIZATIONS TABLE -->
+    <section class="organizations">
+      <div class="header-row">
+        <div>
+          <h3>Accredited Organizations</h3>
+          <p>Manage organizations and their login credentials</p>
+        </div>
+        <button class="add-btn" id="addOrganization">+ Add Organization</button>
+      </div>
+
+      <div class="table-container">
+        <table id="organizationTable">
+          <thead>
+            <tr>
+              <th>Organization Name</th>
+              <th>Code</th>
+              <th>Password</th>
+              <th>Accreditation Date</th>
+              <th>Status</th>
+              <th></th> <!-- Action column -->
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rows added dynamically by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
