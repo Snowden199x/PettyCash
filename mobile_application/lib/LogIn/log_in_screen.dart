@@ -213,8 +213,9 @@ class _LoginScreenState extends State<LoginScreen>
                       controller: passwordController,
                       obscureText: true,
                       onChanged: (_) {
-                        if (passwordError)
+                        if (passwordError) {
                           setState(() => passwordError = false);
+                        }
                       },
                       decoration: InputDecoration(
                         isDense: true,
