@@ -80,7 +80,9 @@ class _LoginScreenState extends State<LoginScreen>
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28), // adjusted slightly left
+          padding: const EdgeInsets.symmetric(
+            horizontal: 28,
+          ), // adjusted slightly left
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +138,9 @@ class _LoginScreenState extends State<LoginScreen>
                     );
                   },
                   child: Container(
-                    margin: const EdgeInsets.only(right: 4), // fixes right cutoff
+                    margin: const EdgeInsets.only(
+                      right: 4,
+                    ), // fixes right cutoff
                     child: TextField(
                       controller: emailController,
                       onChanged: (_) {
@@ -202,12 +206,15 @@ class _LoginScreenState extends State<LoginScreen>
                     );
                   },
                   child: Container(
-                    margin: const EdgeInsets.only(right: 4), // fixes right cutoff
+                    margin: const EdgeInsets.only(
+                      right: 4,
+                    ), // fixes right cutoff
                     child: TextField(
                       controller: passwordController,
                       obscureText: true,
                       onChanged: (_) {
-                        if (passwordError) setState(() => passwordError = false);
+                        if (passwordError)
+                          setState(() => passwordError = false);
                       },
                       decoration: InputDecoration(
                         isDense: true,
@@ -258,7 +265,8 @@ class _LoginScreenState extends State<LoginScreen>
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const ForgotPassword()),
+                          builder: (context) => const ForgotPassword(),
+                        ),
                       );
                     },
                     style: TextButton.styleFrom(
@@ -295,22 +303,22 @@ class _LoginScreenState extends State<LoginScreen>
               child: ElevatedButton(
                 onPressed: _validateAndLogin,
                 style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.resolveWith<Color>(
-                    (states) {
-                      if (states.contains(WidgetState.pressed)) {
-                        return const Color(0xFFE59E2C);
-                      }
-                      return const Color(0xFFF3D58D);
-                    },
-                  ),
-                  foregroundColor: WidgetStateProperty.resolveWith<Color>(
-                    (states) {
-                      if (states.contains(WidgetState.pressed)) {
-                        return Colors.white;
-                      }
-                      return Colors.black;
-                    },
-                  ),
+                  backgroundColor: WidgetStateProperty.resolveWith<Color>((
+                    states,
+                  ) {
+                    if (states.contains(WidgetState.pressed)) {
+                      return const Color(0xFFE59E2C);
+                    }
+                    return const Color(0xFFF3D58D);
+                  }),
+                  foregroundColor: WidgetStateProperty.resolveWith<Color>((
+                    states,
+                  ) {
+                    if (states.contains(WidgetState.pressed)) {
+                      return Colors.white;
+                    }
+                    return Colors.black;
+                  }),
                   padding: WidgetStateProperty.all(
                     const EdgeInsets.symmetric(vertical: 16),
                   ),
