@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PockiTrack Admin Login</title>
+  <link rel="stylesheet" href="../static/css/login.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Centered Logo -->
+  <div class="logo-center">
+    <img src="../static/images/pocki_logo.png" alt="PockiTrack Logo">
+    <span class="logo_name">PockiTrack</span>
+    <p class="portal-text">OSAS Admin Portal</p>
+  </div>
+
+  <!-- Login Container -->
+  <div class="container">
+    <div class="login-box">
+      <form id="adminLoginForm">
+        <!-- Username -->
+        <label for="username">Username</label>
+        <input type="text" id="username">
+        <p id="usernameError" class="error-message"></p>
+
+        <!-- Password -->
+        <label for="password">Password</label>
+        <input type="password" id="password">
+        <p id="passwordError" class="error-message"></p>
+
+        <button type="submit" class="login-btn">Log in</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- External JS -->
+  <script src="../static/js/login.js"></script>
+</body>
+</html>

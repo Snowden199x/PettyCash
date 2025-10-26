@@ -1,0 +1,272 @@
+/* =========================================
+   GLOBAL STYLES
+========================================= */
+body {
+  margin: 0;
+  font-family: Poppins;
+  background-color: #F5F1E8;
+  color: #000000;
+}
+
+/* =========================================
+   HEADER (Same as Landing Page)
+========================================= */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to bottom, #FFFFFF, #ECDDC6);
+  padding: 10px 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.logo img {
+  width: 60px;
+  height: 60px;
+}
+
+.logo_name {
+  font-weight: 500;
+  font-size: 28px;
+  color: #000000;
+}
+
+.menu-icon img {
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
+
+/* =========================================
+   MAIN DASHBOARD
+========================================= */
+.dashboard {
+  padding: 20px 40px;
+  box-sizing: border-box;
+}
+
+/* --- Statistic Cards --- */
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: center;
+}
+
+.stat-card {
+width: 426px; 
+height: 112px; 
+background-color: #FFFFFF; 
+border: 1px solid #E59E2C; 
+border-radius: 15px; 
+box-shadow: 0px 4px 7.9px 4px rgba(243, 213, 141, 0.4); 
+padding: 18px 25px; 
+box-sizing: border-box; 
+display: flex; 
+flex-direction: column; 
+justify-content: center;
+}
+
+.stat-card .label {
+font-size: 20px; 
+font-weight: 400; /* Regular Poppins */ 
+color: #828282; 
+margin: 0; 
+margin-top: 15px;
+text-align: left;
+}
+
+.stat-card .count {
+  font-size: 32px;
+  font-weight: 500;
+  color: #000000;
+  margin-top: 5px;
+}
+
+/* =========================================
+   ACCREDITED ORGANIZATIONS SECTION
+========================================= */
+.organizations {
+  width: 100%;
+  max-width: 1344px;
+  background-color: #FFFFFF;
+  border: 1px solid rgba(130, 130, 130, 0.5);
+  border-radius: 15px;
+  margin: 40px auto;
+  padding: 25px 30px;
+  box-shadow: 0px 4px 7.9px 4px rgba(243, 213, 141, 0.4);
+  box-sizing: border-box;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.header-row h3 {
+  font-size: 20px;
+  font-weight: 500;
+  color: #000000;
+  margin: 0;
+}
+
+.header-row p {
+  font-size: 16px;
+  color: #828282;
+  margin: 5px 0 0 0;
+}
+
+/* --- Add Organization Button --- */
+.add-btn {
+  width: 240px;
+  height: 50px;
+  background-color: #8B3B08;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 10px;
+  font-size: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-btn:hover {
+  background-color: #602805;
+}
+
+/* --- Empty State Box --- */
+.empty-state {
+  width: 100%;
+  border: 1px solid rgba(130, 130, 130, 0.5);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin-top: 25px;
+  padding: 40px 10px;
+  box-sizing: border-box;
+}
+
+.empty-state img {
+  width: 85px;
+  height: 85px;
+  margin-bottom: 20px;
+}
+
+.empty-state h4 {
+  font-size: 24px;
+  font-weight: 500;
+  color: #000000;
+  margin: 0 0 10px 0;
+}
+
+.empty-state p {
+  font-size: 18px;
+  font-weight: 300;
+  color: #616161;
+  margin: 0;
+  max-width: 700px;
+}
+
+/* =========================================
+   RESPONSIVENESS
+========================================= */
+
+/* Tablets (≤ 1024px) */
+@media (max-width: 1024px) {
+  .dashboard {
+    padding: 20px;
+  }
+
+  .stat-card {
+    flex: 1 1 45%;
+  }
+
+  .organizations {
+    padding: 20px;
+  }
+
+  .add-btn {
+    width: 200px;
+    font-size: 18px;
+  }
+}
+
+/* Mobile (≤ 768px) */
+@media (max-width: 768px) {
+  .admin-header {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .stats {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .stat-card {
+    width: 90%;
+  }
+
+  .organizations {
+    width: 90%;
+    padding: 20px;
+  }
+
+  .header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .add-btn {
+    width: 100%;
+    height: 50px;
+    font-size: 18px;
+  }
+
+  .empty-state p {
+    font-size: 16px;
+    padding: 0 10px;
+  }
+}
+
+/* Small Mobile (≤ 480px) */
+@media (max-width: 480px) {
+  .logo img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .logo_name {
+    font-size: 22px;
+  }
+
+  .stat-card .label {
+    font-size: 16px;
+  }
+
+  .stat-card .count {
+    font-size: 24px;
+  }
+
+  .empty-state h4 {
+    font-size: 20px;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+  }
+}

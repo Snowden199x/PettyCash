@@ -1,0 +1,178 @@
+/* --- MODAL BACKDROP --- */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  justify-content: center;
+  align-items: center;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* --- MODAL BOX --- */
+.modal-box {
+  background: #FFFFFF;
+  border-radius: 15px;
+  padding: 25px 30px;
+  width: 420px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #000;
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+#modalSubtitle {
+  color: #828282;
+  font-size: 14px;
+  margin-top: 5px;
+  margin-bottom: 20px;
+}
+
+/* --- INPUTS --- */
+.modal-box .input-group {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-box label {
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: #000;
+}
+
+.modal-box input,
+.modal-box select {
+  border: 1px solid rgba(130, 130, 130, 0.5);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 15px;
+  background-color: #FAF6EF;
+  outline: none;
+}
+
+.modal-box input:focus,
+.modal-box select:focus {
+  border-color: #E59E2C;
+}
+
+/* --- INPUT + BUTTON --- */
+.input-with-btn {
+  display: flex;
+  gap: 10px;
+}
+
+.input-with-btn input {
+  flex: 1;
+}
+
+.generate-btn {
+  border: 1px solid rgba(130,130,130,0.5);
+  background-color: #FAF6EF;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.generate-btn:hover {
+  background-color: #EDE6D8;
+}
+
+/* --- BUTTONS --- */
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-buttons button {
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 15px;
+  cursor: pointer;
+  font-weight: 500;
+  border: 1px solid rgba(130,130,130,0.5);
+  background: #fff;
+}
+
+.modal-buttons .primary-btn {
+  background-color: #8B3B08;
+  color: #fff;
+  border: none;
+}
+
+.modal-buttons .primary-btn:hover {
+  background-color: #602805;
+}
+
+/* --- DELETE BOX --- */
+.delete-box {
+  width: 360px;
+  text-align: center;
+}
+
+.delete-box h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.delete-box p {
+  font-size: 14px;
+  color: #333;
+  margin: 10px 0 20px;
+}
+
+/* --- DROPDOWN MENU --- */
+.action-menu {
+  display: none;
+  position: absolute;
+  flex-direction: column;
+  background-color: #fff;
+  border: 1px solid rgba(130,130,130,0.4);
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+  z-index: 10000;
+}
+
+.action-menu button {
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.action-menu button:hover {
+  background-color: #FAF6EF;
+}
+
+@keyframes fadeIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
