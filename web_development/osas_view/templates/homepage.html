@@ -7,9 +7,10 @@
 
   <!-- ===== CSS LINK ===== -->
   <link rel="stylesheet" href="{{ url_for('osas.static', filename='css/homepage.css') }}">
+  <link rel="stylesheet" href="{{ url_for('osas.static', filename='css/add_org.css') }}">
 
   <!-- ===== JS ===== -->
-  <script src="../static/js/homepage.js" defer></script>
+  <script src="{{ url_for('osas.static', filename='js/homepage.js') }}"></script>
 
   <!-- ===== GOOGLE FONT ===== -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
