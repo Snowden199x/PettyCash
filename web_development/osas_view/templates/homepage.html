@@ -6,7 +6,7 @@
   <title>PockiTrack | Admin Homepage</title>
 
   <!-- ===== CSS LINK ===== -->
-  <link rel="stylesheet" href="../static/css/homepage.css">
+  <link rel="stylesheet" href="{{ url_for('osas.static', filename='css/homepage.css') }}">
 
   <!-- ===== GOOGLE FONTS ===== -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,11 +22,11 @@
   <!-- HEADER -->
   <header class="admin-header">
     <div class="logo">
-      <img src="../static/images/pocki_logo.png" alt="PockiTrack Logo">
+      <img src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}" alt="PockiTrack Logo">
       <span class="logo_name">PockiTrack</span>
     </div>
     <div class="menu-icon">
-      <img src="../static/images/menu.png" alt="Menu">
+      <img src="{{ url_for('osas.static', filename='images/menu.png') }}" alt="Menu">
     </div>
   </header>
 
@@ -65,7 +65,7 @@
 
       <!-- Empty State (when no orgs yet) -->
       <div class="empty-state">
-        <img src="../static/images/empty_org.png" alt="No Organizations">
+        <img src="{{ url_for('osas.static', filename='images/empty_org.png') }}" alt="No Organizations">
         <h4>No Accredited Organizations</h4>
         <p>Start by adding your first organization to manage their details and reports here.</p>
       </div>
@@ -73,6 +73,6 @@
   </main>
 
   <!-- ===== JAVASCRIPT LINK ===== -->
-  <script src="../static/js/homepage.js"></script>
+  <script src="{{ url_for('osas.static', filename='js/homepage.js') }}"></script>
 </body>
 </html>
