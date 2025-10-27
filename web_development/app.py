@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, session
 from supabase import create_client
 import os
 from dotenv import load_dotenv

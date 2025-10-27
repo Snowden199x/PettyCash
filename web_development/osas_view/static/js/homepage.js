@@ -27,12 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Logout button (temporary)
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    window.location.href = "login.html"; // change to your login route
-  });
-
-
   // ============================
   //  FETCH ORGANIZATION DATA
   // ============================

@@ -49,3 +49,8 @@ def osas_dashboard():
         return render_template('homepage.html')
     else:
         return redirect(url_for('osas.osas_login'))
+    
+@osas.route('/logout')
+def osas_logout():
+    session.clear()
+    return redirect(url_for('osas.osas_login'))
