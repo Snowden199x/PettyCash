@@ -9,6 +9,30 @@ document.addEventListener("DOMContentLoaded", () => {
   const cancelModalBtn = document.getElementById("cancelModal");
   const form = document.getElementById("addOrgForm");
 
+    // ============================
+  //  SLIDE MENU TOGGLE
+  // ============================
+  const menuIcon = document.querySelector(".menu-icon img");
+  const sideMenu = document.getElementById("sideMenu");
+
+  menuIcon.addEventListener("click", () => {
+    sideMenu.classList.toggle("active");
+  });
+
+  // Close when clicking outside the menu
+  window.addEventListener("click", (e) => {
+    if (e.target === sideMenu) return; // clicking inside menu
+    if (!sideMenu.contains(e.target) && !menuIcon.contains(e.target)) {
+      sideMenu.classList.remove("active");
+    }
+  });
+
+  // Logout button (temporary)
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    window.location.href = "login.html"; // change to your login route
+  });
+
+
   // ============================
   //  FETCH ORGANIZATION DATA
   // ============================
