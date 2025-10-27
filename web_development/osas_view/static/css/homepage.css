@@ -3,7 +3,7 @@
 ========================================= */
 body {
   margin: 0;
-  font-family: Poppins;
+  font-family: 'Poppins', sans-serif;
   background-color: #F5F1E8;
   color: #000000;
 }
@@ -61,26 +61,25 @@ body {
 }
 
 .stat-card {
-width: 426px; 
-height: 112px; 
-background-color: #FFFFFF; 
-border: 1px solid #E59E2C; 
-border-radius: 15px; 
-box-shadow: 0px 4px 7.9px 4px rgba(243, 213, 141, 0.4); 
-padding: 18px 25px; 
-box-sizing: border-box; 
-display: flex; 
-flex-direction: column; 
-justify-content: center;
+  width: 426px;
+  height: 112px;
+  background-color: #FFFFFF;
+  border: 1px solid #E59E2C;
+  border-radius: 15px;
+  box-shadow: 0px 4px 7.9px 4px rgba(243, 213, 141, 0.4);
+  padding: 18px 25px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .stat-card .label {
-font-size: 20px; 
-font-weight: 400; /* Regular Poppins */ 
-color: #828282; 
-margin: 0; 
-margin-top: 15px;
-text-align: left;
+  font-size: 20px;
+  font-weight: 400;
+  color: #828282;
+  margin: 15px 0 0 0;
+  text-align: left;
 }
 
 .stat-card .count {
