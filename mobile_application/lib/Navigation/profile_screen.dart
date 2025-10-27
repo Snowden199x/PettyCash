@@ -12,13 +12,33 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _nameController =
-      TextEditingController(text: 'John Rose');
+      TextEditingController(text: 'Information Technology Unity HUb');
   final TextEditingController _emailController =
-      TextEditingController(text: 'john.rosee@example.com');
+      TextEditingController(text: 'College of Computer Studies');
   final TextEditingController _phoneController =
-      TextEditingController(text: '+1234567890');
+      TextEditingController(text: 'ituh@gmail.com');
 
   final int _selectedIndex = 3; // Profile tab index
+
+  // ✅ Icon paths (same as other screens)
+  final iconPaths = {
+    'home': {
+      'active': 'assets/Icons/navigation_icons/nav_home.png',
+      'inactive': 'assets/Icons/navigation_icons/nav_home.png',
+    },
+    'history': {
+      'active': 'assets/Icons/navigation_icons/nav_history.png',
+      'inactive': 'assets/Icons/navigation_icons/nav_history.png',
+    },
+    'wallet': {
+      'active': 'assets/Icons/navigation_icons/nav_wallet.png',
+      'inactive': 'assets/Icons/navigation_icons/nav_wallet.png',
+    },
+    'profile': {
+      'active': 'assets/Icons/navigation_icons/nav_profile.png',
+      'inactive': 'assets/Icons/navigation_icons/nav_profile.png',
+    },
+  };
 
   @override
   void dispose() {
@@ -66,18 +86,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text("Profile"),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
         titleTextStyle: const TextStyle(
           fontStyle: FontStyle.italic,
-          fontFamily: 'Times New Roman',
+          fontFamily: 'Poppins',
           color: Colors.black,
           fontSize: 22,
         ),
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -90,8 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 const CircleAvatar(
                   radius: 50,
-                  backgroundImage:
-                      AssetImage('assets/profile_placeholder.png'),
+                  backgroundImage: AssetImage('assets/profile_placeholder.png'),
                 ),
                 Positioned(
                   right: 4,
@@ -118,7 +140,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             TextField(
               controller: _nameController,
               decoration: const InputDecoration(
-                labelText: 'Name',
+                labelText: 'Organization',
                 prefixIcon: Icon(Icons.person_outline),
                 border: OutlineInputBorder(),
               ),
@@ -130,8 +152,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             TextField(
               controller: _emailController,
               decoration: const InputDecoration(
-                labelText: 'Email',
-                prefixIcon: Icon(Icons.email_outlined),
+                labelText: 'Department',
+                prefixIcon: Icon(Icons.school_outlined),
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.emailAddress,
@@ -143,8 +165,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             TextField(
               controller: _phoneController,
               decoration: const InputDecoration(
-                labelText: 'Phone',
-                prefixIcon: Icon(Icons.phone_outlined),
+                labelText: 'Email',
+                prefixIcon: Icon(Icons.email_outlined),
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.phone,
@@ -181,29 +203,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
 
-      // ✅ Bottom Navigation Bar
+      // ✅ Updated bottom navigation (same exact design as TransactionHistoryScreen)
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF7A4F22),
-        unselectedItemColor: Colors.black54,
+        selectedItemColor: const Color(0xFF8B3B08),
+        unselectedItemColor: Colors.black,
         showSelectedLabels: true,
         showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            label: 'Wallets',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
-          ),
+        items: [
+          _buildNavItem(0, 'Home', iconPaths['home']!),
+          _buildNavItem(1, 'History', iconPaths['history']!),
+          _buildNavItem(2, 'Wallets', iconPaths['wallet']!),
+          _buildNavItem(3, 'Profile', iconPaths['profile']!),
         ],
       ),
+    );
+  }
+
+  // ✅ Navigation item builder (keeps the same highlight style)
+  BottomNavigationBarItem _buildNavItem(
+    int index,
+    String label,
+    Map<String, String> icons,
+  ) {
+    final bool isSelected = _selectedIndex == index;
+
+    return BottomNavigationBarItem(
+      icon: Container(
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF8B3B08) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(8),
+        child: Image.asset(
+          isSelected ? icons['active']! : icons['inactive']!,
+          height: 28,
+          color: isSelected ? Colors.white : Colors.black,
+        ),
+      ),
+      label: label,
     );
   }
 }

@@ -28,7 +28,14 @@ flutter:
 
   assets:
     - assets/Icons/wallet-icon2.png
+    - assets/Icons/notification.png
+    - assets/Icons/navigation_icons/nav_history.png
+    - assets/Icons/navigation_icons/nav_home.png
+    - assets/Icons/navigation_icons/nav_profile.png
+    - assets/Icons/navigation_icons/nav_wallet.png
     - assets/Fonts/
+
+    
 
   fonts:
     - family: Poppins

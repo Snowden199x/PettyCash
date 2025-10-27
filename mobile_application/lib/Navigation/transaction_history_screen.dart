@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'home_screen.dart';
 import 'wallet_screen.dart';
 import 'profile_screen.dart';
-import 'package:intl/intl.dart';
 
 class TransactionHistoryScreen extends StatefulWidget {
   const TransactionHistoryScreen({super.key});
@@ -14,8 +14,28 @@ class TransactionHistoryScreen extends StatefulWidget {
 
 class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   final int _selectedIndex = 1; // Highlight History
-  DateTime _selectedDate = DateTime(2025, 2); // Default month
+  DateTime _selectedDate = DateTime(2025, 2);
   bool isIncomeSelected = true;
+
+  // ✅ Icon paths (same as HomeScreen)
+  final iconPaths = {
+    'home': {
+      'active': 'assets/Icons/navigation_icons/nav_home.png',
+      'inactive': 'assets/Icons/navigation_icons/nav_home.png',
+    },
+    'history': {
+      'active': 'assets/Icons/navigation_icons/nav_history.png',
+      'inactive': 'assets/Icons/navigation_icons/nav_history.png',
+    },
+    'wallet': {
+      'active': 'assets/Icons/navigation_icons/nav_wallet.png',
+      'inactive': 'assets/Icons/navigation_icons/nav_wallet.png',
+    },
+    'profile': {
+      'active': 'assets/Icons/navigation_icons/nav_profile.png',
+      'inactive': 'assets/Icons/navigation_icons/nav_profile.png',
+    },
+  };
 
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
@@ -25,7 +45,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-              builder: (context) => const HomeScreen(orgName: "Organization")),
+              builder: (context) =>
+                  const HomeScreen(orgName: "Organization")),
         );
         break;
       case 1:
@@ -48,10 +69,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
   void _changeMonth(int offset) {
     setState(() {
-      _selectedDate = DateTime(
-        _selectedDate.year,
-        _selectedDate.month + offset,
-      );
+      _selectedDate = DateTime(_selectedDate.year, _selectedDate.month + offset);
     });
   }
 
@@ -63,6 +81,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       backgroundColor: Colors.white,
 
       appBar: AppBar(
+        automaticallyImplyLeading: false, // ✅ Removes the back arrow
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -198,41 +217,64 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         ),
       ),
 
-      // Floating Action Button
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
-        backgroundColor: const Color(0xFF7A4F22),
-        child: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: const Color(0xFF2F4366),
+        shape: const CircleBorder(),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+          size: 28,
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
 
-      // Bottom Navigation Bar
+      // ✅ Custom Bottom Navigation Bar (Matches HomeScreen)
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF7A4F22),
-        unselectedItemColor: Colors.black54,
+        selectedItemColor: const Color(0xFF8B3B08),
+        unselectedItemColor: Colors.black,
         showSelectedLabels: true,
         showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            label: 'Wallets',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
-          ),
+        items: [
+          _buildNavItem(0, 'Home', iconPaths['home']!),
+          _buildNavItem(1, 'History', iconPaths['history']!),
+          _buildNavItem(2, 'Wallets', iconPaths['wallet']!),
+          _buildNavItem(3, 'Profile', iconPaths['profile']!),
         ],
       ),
     );
   }
 
-  // Reusable Transaction Card
+  // ✅ Navigation Item — Same Design as HomeScreen
+  BottomNavigationBarItem _buildNavItem(
+    int index,
+    String label,
+    Map<String, String> icons,
+  ) {
+    final isSelected = _selectedIndex == index;
+
+    return BottomNavigationBarItem(
+      icon: Container(
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF8B3B08) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(8),
+        child: Image.asset(
+          isSelected ? icons['active']! : icons['inactive']!,
+          height: 28,
+          color: isSelected ? Colors.white : Colors.black,
+        ),
+      ),
+      label: label,
+    );
+  }
+
+  // ✅ Transaction Card
   Widget _buildTransactionCard({
     required String title,
     required String desc,
@@ -248,7 +290,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Left
+            // Left Column
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -269,7 +311,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 ),
               ],
             ),
-            // Right
+
+            // Right Column
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
