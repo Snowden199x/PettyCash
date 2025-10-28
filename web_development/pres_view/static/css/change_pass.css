@@ -1,0 +1,160 @@
+/* --------------------------------------------------
+   GLOBAL STYLES
+-------------------------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Poppins;
+}
+
+body {
+  background: url("../images/log_in_bg.png") no-repeat center center fixed;
+  background-size: cover;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --------------------------------------------------
+   LOGO (unchanged)
+-------------------------------------------------- */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.logo img {
+  width: 71.22px;
+  height: 70px;
+}
+
+.logo_name {
+  font-weight: 500;
+  font-size: 28px;
+  color: #000;
+}
+
+/* --------------------------------------------------
+   PASSWORD CONTAINER
+-------------------------------------------------- */
+.password-container {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 40px;
+  padding: 40px 50px;
+  width: 440px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.password-container h2 {
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+/* --------------------------------------------------
+   INPUTS
+-------------------------------------------------- */
+label {
+  display: block;
+  text-align: left;
+  margin-bottom: 5px;
+  font-weight: 400;
+  font-size: 13px;
+  color: #828282;
+}
+
+input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #ccc;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+input:focus,
+input:hover {
+  border-color: #E59E2C;
+  box-shadow: 0px 1px 7.1px 2px rgba(243, 213, 141, 0.43);
+}
+
+/* --------------------------------------------------
+   CHECKLIST
+-------------------------------------------------- */
+.checklist {
+  text-align: left;
+  list-style: none;
+  margin-bottom: 20px;
+  font-size: 11px;
+}
+
+.checklist li {
+  margin-bottom: 3px;
+  color: #930101;
+  transition: color 0.3s;
+}
+
+.checklist li.checked {
+  color: rgb(0, 107, 0);
+  font-weight: 400;
+}
+
+/* --------------------------------------------------
+   BUTTON
+-------------------------------------------------- */
+.submit-btn {
+  width: 100%;
+  background-color: #F3D58D;
+  color: black;
+  border: none;
+  border-radius: 25px;
+  padding: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.3s;
+  margin-top: 20px;
+}
+
+.submit-btn:hover {
+  background-color: #E59E2C;
+}
+
+/* --------------------------------------------------
+   POPUP (center-top)
+-------------------------------------------------- */
+.popup {
+  position: fixed;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #d93025;
+  color: white;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 14px;
+  opacity: 0;
+  transition: all 0.5s ease;
+  z-index: 9999;
+}
+
+.popup.show {
+  top: 30px;
+  opacity: 1;
+}
