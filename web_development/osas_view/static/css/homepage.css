@@ -180,6 +180,72 @@ body {
 }
 
 /* =========================================
+   ORGANIZATION TABLE STYLING
+========================================= */
+.org-box {
+  background-color: #FFFFFF;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-top: 25px;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 10px;
+  margin-top: 15px;
+}
+
+.table-container table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.table-container th {
+  background-color: #f9e6c9;
+  color: #5a3921;
+  font-weight: 600;
+  text-align: left;
+  padding: 12px 18px;
+  border-bottom: 2px solid #e3b266;
+}
+
+.table-container td {
+  padding: 10px 18px;
+  border-bottom: 1px solid #ddd;
+  font-size: 16px;
+  color: #333;
+}
+
+.table-container tr:hover {
+  background-color: #fff7ec;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.table-container td:last-child,
+.table-container th:last-child {
+  text-align: right;
+}
+
+.status-approved {
+  color: #2d8a47;
+  font-weight: 500;
+}
+
+.status-pending {
+  color: #c77b2a;
+  font-weight: 500;
+}
+
+/* Make the password look like hidden dots */
+.table-password {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+}
+
+/* =========================================
    RESPONSIVENESS
 ========================================= */
 

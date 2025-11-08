@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PockiTrack Login</title>
-  <link rel="stylesheet" href="../static/css/loginStyle.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/loginStyle.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
   <!-- Logo (clickable back to landing page) -->
-  <a href="landingpage.html" class="logo">
-    <img src="../static/images/pocki_logo.png" alt="PockiTrack Logo">
+  <a href="{{ url_for('landingpage') }}" class="logo">
+    <img src="{{ url_for('static', filename='images/pocki_logo.png') }}" alt="PockiTrack Logo">
     <span class="logo_name">PockiTrack</span>
   </a>
 
@@ -20,25 +20,25 @@
       <h2>Log in</h2>
       <p class="subtitle">Enter your details to sign in to your account.</p>
 
-      <form id="loginForm">
+      <form id="loginForm" method="POST" action="{{ url_for('pres_login') }}">
         <!-- Username -->
         <label for="username">Username</label>
-        <input type="text" id="username">
+        <input type="text" id="username" name="username">
         <p id="usernameError" class="error-message"></p>
 
         <!-- Password -->
         <label for="password">Password</label>
-        <input type="password" id="password">
+        <input type="password" id="password" name="password">
         <p id="passwordError" class="error-message"></p>
 
-        <a href="forgot_password.html" class="forgot">Forgot password?</a>
+        <a href="{{ url_for('pres_forgot_password') }}" class="forgot">Forgot password?</a>
 
         <button type="submit" class="login-btn">Log in</button>
       </form>
     </div>
   </div>
 
-  <!-- External JS file -->
-  <script src="../static/js/loginValidation.js"></script>
+  <!-- JS -->
+  <script src="{{ url_for('static', filename='js/loginValidation.js') }}"></script>
 </body>
 </html>

@@ -1,11 +1,11 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("loginForm");
   const usernameInput = document.getElementById("username");
   const passwordInput = document.getElementById("password");
   const usernameError = document.getElementById("usernameError");
   const passwordError = document.getElementById("passwordError");
 
-  form.addEventListener("submit", function(e) {
+  form.addEventListener("submit", function (e) {
     e.preventDefault();
 
     let valid = true;
@@ -21,7 +21,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Username validation
     if (username === "") {
-      usernameError.textContent = "We couldn’t find an account with that username. Please check OSAS to continue.";
+      usernameError.textContent =
+        "We couldn’t find an account with that username. Please check OSAS to continue.";
       usernameError.style.display = "block";
       usernameInput.classList.add("shake");
       valid = false;
@@ -42,8 +43,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }, 500);
 
     if (valid) {
-      alert("Login successful (demo only)");
-      // window.location.href = "dashboard.html";
+      form.submit(); // Let Flask handle the login
     }
   });
 });

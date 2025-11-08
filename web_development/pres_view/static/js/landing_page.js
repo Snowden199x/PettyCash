@@ -1,5 +1,5 @@
 // Path to the login page (same folder)
-const LOGIN_PATH = 'login.html';
+const LOGIN_PATH = '/login';
 
 // Helper: wait for transitionend for opacity (fallback uses timeout)
 function waitForFadeOut(timeout = 700) {
@@ -33,5 +33,18 @@ document.addEventListener('DOMContentLoaded', () => {
       await waitForFadeOut(700);
       window.location.href = LOGIN_PATH;
     });
+  });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const header = document.querySelector("header");
+  const stickyOffset = header.offsetTop;
+
+  window.addEventListener("scroll", () => {
+    if (window.pageYOffset > stickyOffset) {
+      header.classList.add("sticky");
+    } else {
+      header.classList.remove("sticky");
+    }
   });
 });

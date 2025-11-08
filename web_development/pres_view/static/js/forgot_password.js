@@ -1,5 +1,3 @@
-// ../static/js/forgot_password.js
-
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ forgot_password.js connected!");
 
@@ -8,25 +6,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const errorMessage = document.getElementById("error-message");
   const card = document.querySelector(".card");
 
+  // Function to show error and shake animation
   function showError(message) {
-    console.log("⚠️ Showing error:", message);
     errorMessage.textContent = message;
     errorMessage.classList.add("show");
-    card.classList.add("shake");
     usernameInput.classList.add("error");
+    card.classList.add("shake");
 
-    setTimeout(() => card.classList.remove("shake"), 400);
+    setTimeout(() => {
+      card.classList.remove("shake");
+    }, 400);
   }
 
+  // Clear error when user types
   usernameInput.addEventListener("input", () => {
     errorMessage.textContent = "";
     errorMessage.classList.remove("show");
     usernameInput.classList.remove("error");
   });
 
+  // Form submission handler
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    console.log("🧾 Form submitted!");
 
     const username = usernameInput.value.trim();
 
@@ -35,12 +36,14 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const existingUsers = ["admin", "user123", "pocki"];
+    // Example demo users - replace with your DB logic
+    const existingUsers = ["demo", "admin", "user123", "pocki"];
     if (!existingUsers.includes(username)) {
       showError("Username not found.");
       return;
     }
 
+    // Success - you can replace this with your actual password reset logic
     alert("Password reset instructions have been sent to your registered email!");
     form.reset();
   });

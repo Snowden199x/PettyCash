@@ -1,169 +1,209 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PockiTrack | Admin Homepage</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PockiTrack | Admin Homepage</title>
 
-  <!-- ===== CSS LINK ===== -->
-  <link rel="stylesheet" href="{{ url_for('osas.static', filename='css/homepage.css') }}">
-  <link rel="stylesheet" href="{{ url_for('osas.static', filename='css/add_org.css') }}">
+    <!-- ===== CSS LINK ===== -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('osas.static', filename='css/homepage.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('osas.static', filename='css/add_org.css') }}"
+    />
 
-  <!-- ===== JS ===== -->
-  <script src="{{ url_for('osas.static', filename='js/homepage.js') }}"></script>
+    <!-- ===== JS ===== -->
+    <script src="{{ url_for('osas.static', filename='js/homepage.js') }}"></script>
+    <script src="{{ url_for('osas.static', filename='js/add_org.js') }}"></script>
+    <!-- ===== GOOGLE FONT ===== -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
 
-  <!-- ===== GOOGLE FONT ===== -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-</head>
-
-<body>
-  <!-- HEADER -->
-  <header class="admin-header">
-    <div class="logo">
-      <img src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}" alt="PockiTrack Logo">
-      <span class="logo_name">PockiTrack</span>
-    </div>
-    <div class="menu-icon">
-      <img src="{{ url_for('osas.static', filename='images/menu.png') }}" alt="Menu">
-    </div>
-  </header>
-
-  <!-- MAIN CONTENT -->
-  <main class="dashboard">
-    <!-- STAT CARDS -->
-    <section class="stats">
-      <div class="stat-card">
-        <p class="label">Total Organizations</p>
-        <h2 class="count" id="totalOrganizations">0</h2>
+  <body>
+    <!-- HEADER -->
+    <header class="admin-header">
+      <div class="logo">
+        <img
+          src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}"
+          alt="PockiTrack Logo"
+        />
+        <span class="logo_name">PockiTrack</span>
       </div>
-      <div class="stat-card">
-        <p class="label">Pending Financial Report</p>
-        <h2 class="count" id="pendingReports">0</h2>
+      <div class="menu-icon">
+        <img
+          src="{{ url_for('osas.static', filename='images/menu.png') }}"
+          alt="Menu"
+        />
       </div>
-      <div class="stat-card">
-        <p class="label">Approved Financial Report</p>
-        <h2 class="count" id="approvedReports">0</h2>
-      </div>
-    </section>
+    </header>
 
-    <!-- ORGANIZATIONS -->
-    <section class="organizations">
-      <div class="header-row">
-        <div>
-          <h3>Accredited Organizations</h3>
-          <p>Manage organizations and their login credentials</p>
+    <!-- MAIN CONTENT -->
+    <main class="dashboard">
+      <!-- STAT CARDS -->
+      <section class="stats">
+        <div class="stat-card">
+          <p class="label">Total Organizations</p>
+          <h2 class="count" id="totalOrganizations">0</h2>
         </div>
-        <button id="addOrganization" class="add-btn">+ Add Organization</button>
-      </div>
+        <div class="stat-card">
+          <p class="label">Pending Financial Report</p>
+          <h2 class="count" id="pendingReports">0</h2>
+        </div>
+        <div class="stat-card">
+          <p class="label">Approved Financial Report</p>
+          <h2 class="count" id="approvedReports">0</h2>
+        </div>
+      </section>
 
-      <!-- Empty State (when no orgs yet) -->
-      <div class="empty-state">
-        <img src="{{ url_for('osas.static', filename='images/empty_org.png') }}" alt="No Organizations">
-        <h4>No Accredited Organizations</h4>
-        <p>Start by adding your first organization to manage their details and reports here.</p>
-      </div>
-
-      <!-- TABLE STATE -->
-      <div class="table-container" id="tableContainer" style="display:none;">
-        <table>
-          <thead>
-            <tr>
-              <th>Organization Name</th>
-              <th>Code</th>
-              <th>Password</th>
-              <th>Accreditation Date</th>
-              <th>Status</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="orgTableBody"></tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-
-  <!-- ACTION MENU -->
-  <div id="actionMenu" class="action-menu">
-    <button id="editOrgBtn">Edit</button>
-    <button id="deleteOrgBtn">Delete</button>
+      <!-- ORGANIZATIONS -->
+<section class="organizations">
+  <div class="header-row">
+    <div>
+      <h3>Accredited Organizations</h3>
+      <p>Manage organizations and their login credentials</p>
+    </div>
+    <button id="addOrganization" class="add-btn">
+      + Add Organization
+    </button>
   </div>
 
-  <!-- ADD/EDIT MODAL -->
-  <div id="addOrgModal" class="modal">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h2 id="modalTitle">Add New Organization</h2>
-        <button class="close-btn" id="closeModal">&times;</button>
+  <!-- WRAPPER BOX -->
+  <div class="org-box">
+    <!-- Empty State (when no orgs yet) -->
+    <div class="empty-state" id="emptyState">
+      <img
+        src="{{ url_for('osas.static', filename='images/empty_org.png') }}"
+        alt="No Organizations"
+      />
+      <h4>No Accredited Organizations</h4>
+      <p>
+        Start by adding your first organization to manage their details and
+        reports here.
+      </p>
+    </div>
+
+    <!-- TABLE STATE -->
+    <div class="table-container" id="tableContainer" style="display: none;">
+      <table>
+        <thead>
+          <tr>
+            <th>Organization Name</th>
+            <th>Username</th>
+            <th>Password</th>
+            <th>Accreditation Date</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="orgTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+    <!-- ACTION MENU -->
+    <div id="actionMenu" class="action-menu">
+      <button id="editOrgBtn">Edit</button>
+      <button id="deleteOrgBtn">Delete</button>
+    </div>
+
+    <!-- ADD/EDIT MODAL -->
+    <div id="addOrgModal" class="modal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2 id="modalTitle">Add New Organization</h2>
+          <button class="close-btn" id="closeModal">&times;</button>
+        </div>
+        <p id="modalSubtitle">Create a new accredited organization account</p>
+
+        <form id="addOrgForm">
+          <div class="input-group">
+            <label>Organization Name</label>
+            <input type="text" id="orgName" name="orgName" required />
+          </div>
+
+          <div class="input-group">
+            <label>Username</label>
+            <div class="input-with-btn">
+              <input type="text" id="orgCode" name="orgCode" required />
+              <button type="button" id="genCode" class="generate-btn">
+                Generate
+              </button>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>Password</label>
+            <div class="input-with-btn">
+              <input type="text" id="orgPassword" name="orgPassword" required />
+              <button type="button" id="genPass" class="generate-btn">
+                Generate
+              </button>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>Accreditation Date</label>
+            <input
+              type="date"
+              id="accreditationDate"
+              name="accreditationDate"
+              required
+            />
+          </div>
+
+          <div class="input-group">
+            <label>Status</label>
+            <select id="orgStatus" name="orgStatus" required>
+              <option value="Approved">Approved</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+
+          <div class="modal-buttons">
+            <button type="button" id="cancelModal">Cancel</button>
+            <button type="submit" id="saveOrgBtn" class="primary-btn">
+              Create
+            </button>
+          </div>
+        </form>
       </div>
-      <p id="modalSubtitle">Create a new accredited organization account</p>
+    </div>
 
-      <form id="addOrgForm">
-        <div class="input-group">
-          <label>Organization Name</label>
-          <input type="text" id="orgName" required>
-        </div>
-
-        <div class="input-group">
-          <label>Code</label>
-          <div class="input-with-btn">
-            <input type="text" id="orgCode" required>
-            <button type="button" id="genCode" class="generate-btn">Generate</button>
-          </div>
-        </div>
-
-        <div class="input-group">
-          <label>Password</label>
-          <div class="input-with-btn">
-            <input type="text" id="orgPassword" required>
-            <button type="button" id="genPass" class="generate-btn">Generate</button>
-          </div>
-        </div>
-
-        <div class="input-group">
-          <label>Accreditation Date</label>
-          <input type="date" id="accreditationDate" required>
-        </div>
-
-        <div class="input-group">
-          <label>Status</label>
-          <select id="orgStatus" required>
-            <option value="Approved">Approved</option>
-            <option value="Pending">Pending</option>
-          </select>
-        </div>
-
+    <!-- DELETE MODAL -->
+    <div id="deleteModal" class="modal">
+      <div class="modal-box delete-box">
+        <h2>Delete Organization</h2>
+        <p>
+          Are you sure you want to delete this organization? This action cannot
+          be undone.
+        </p>
         <div class="modal-buttons">
-          <button type="button" id="cancelModal">Cancel</button>
-          <button type="submit" id="saveOrgBtn" class="primary-btn">Create</button>
+          <button id="cancelDelete">Cancel</button>
+          <button id="confirmDelete" class="primary-btn">Delete</button>
         </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- DELETE MODAL -->
-  <div id="deleteModal" class="modal">
-    <div class="modal-box delete-box">
-      <h2>Delete Organization</h2>
-      <p>Are you sure you want to delete this organization? This action cannot be undone.</p>
-      <div class="modal-buttons">
-        <button id="cancelDelete">Cancel</button>
-        <button id="confirmDelete" class="primary-btn">Delete</button>
       </div>
     </div>
-  </div>
 
-  <!-- SIDE MENU -->
-<div id="sideMenu" class="side-menu">
-  <div class="side-menu-content">
-    <h3>Admin Menu</h3>
-    <ul>
-      <li><a href="#">Dashboard</a></li>
-      <li><a href="#">Reports</a></li>
-      <li><a href="#">Settings</a></li>
-    </ul>
-    <a href="{{ url_for('osas.osas_logout') }}" class="logout-btn">Log Out</a>
-  </div>
-</div>
-
-</body>
+    <!-- SIDE MENU -->
+    <div id="sideMenu" class="side-menu">
+      <div class="side-menu-content">
+        <h3>Admin Menu</h3>
+        <ul>
+          <li><a href="#">Dashboard</a></li>
+          <li><a href="#">Reports</a></li>
+          <li><a href="#">Settings</a></li>
+        </ul>
+        <a href="{{ url_for('osas.osas_logout') }}" class="logout-btn"
+          >Log Out</a
+        >
+      </div>
+    </div>
+  </body>
 </html>
