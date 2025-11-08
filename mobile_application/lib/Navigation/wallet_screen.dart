@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'transaction_history_screen.dart';
-import 'profile_screen.dart'; // make sure this file exists
+import 'profile_screen.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -11,40 +11,53 @@ class WalletScreen extends StatefulWidget {
 }
 
 class _WalletScreenState extends State<WalletScreen> {
-  final int _selectedIndex = 2; // highlight Wallet tab
+  final int _selectedIndex = 2; // Highlight Wallet tab
+
+  // ✅ Icon paths to match HomeScreen design
+  final iconPaths = {
+    'home': {
+      'active': 'assets/Icons/navigation_icons/nav_home.png',
+      'inactive': 'assets/Icons/navigation_icons/nav_home.png',
+    },
+    'history': {
+      'active': 'assets/Icons/navigation_icons/nav_history.png',
+      'inactive': 'assets/Icons/navigation_icons/nav_history.png',
+    },
+    'wallet': {
+      'active': 'assets/Icons/navigation_icons/nav_wallet.png',
+      'inactive': 'assets/Icons/navigation_icons/nav_wallet.png',
+    },
+    'profile': {
+      'active': 'assets/Icons/navigation_icons/nav_profile.png',
+      'inactive': 'assets/Icons/navigation_icons/nav_profile.png',
+    },
+  };
 
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
 
+    Widget nextScreen;
     switch (index) {
       case 0:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const HomeScreen(orgName: "Organization"),
-          ),
-        );
+        nextScreen = const HomeScreen(orgName: "Organization");
         break;
       case 1:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const TransactionHistoryScreen(),
-          ),
-        );
+        nextScreen = const TransactionHistoryScreen();
         break;
       case 2:
-        // Already on Wallet screen
+        nextScreen = const WalletScreen();
         break;
       case 3:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const ProfileScreen(),
-          ),
-        );
+        nextScreen = const ProfileScreen();
         break;
+      default:
+        return;
     }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => nextScreen),
+    );
   }
 
   @override
@@ -53,7 +66,8 @@ class _WalletScreenState extends State<WalletScreen> {
       backgroundColor: Colors.white,
 
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         elevation: 0,
         centerTitle: true,
         title: const Text(
@@ -153,7 +167,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
             const SizedBox(height: 30),
 
-            // Bottom Buttons Row (fixed overflow)
+            // Bottom Buttons Row
             Row(
               children: [
                 Expanded(child: _buildNavButton("Wallets", isActive: true)),
@@ -167,37 +181,52 @@ class _WalletScreenState extends State<WalletScreen> {
         ),
       ),
 
+      // ✅ Custom bottom navigation bar (same as HomeScreen)
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF7A4F22),
-        unselectedItemColor: Colors.black54,
+        selectedItemColor: const Color(0xFF8B3B08),
+        unselectedItemColor: Colors.black,
         showSelectedLabels: true,
         showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'History',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            label: 'Wallets',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
-          ),
+        items: [
+          _buildNavItem(0, 'Home', iconPaths['home']!),
+          _buildNavItem(1, 'History', iconPaths['history']!),
+          _buildNavItem(2, 'Wallets', iconPaths['wallet']!),
+          _buildNavItem(3, 'Profile', iconPaths['profile']!),
         ],
       ),
     );
   }
 
+  // ✅ Same nav item builder as HomeScreen
+  BottomNavigationBarItem _buildNavItem(
+    int index,
+    String label,
+    Map<String, String> icons,
+  ) {
+    final isSelected = _selectedIndex == index;
+
+    return BottomNavigationBarItem(
+      icon: Container(
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF8B3B08) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(8),
+        child: Image.asset(
+          isSelected ? icons['active']! : icons['inactive']!,
+          height: 28,
+          color: isSelected ? Colors.white : Colors.black,
+        ),
+      ),
+      label: label,
+    );
+  }
+
+  // Wallet buttons (Wallets / Reports / Receipts)
   Widget _buildNavButton(String label, {bool isActive = false}) {
     return ElevatedButton(
       onPressed: () {},
