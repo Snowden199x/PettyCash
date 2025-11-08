@@ -124,6 +124,39 @@ html {
   filter: brightness(0) invert(1);
 }
 
+/* Logout Button - fixed at bottom of sidebar */
+.logout-btn {
+  position: absolute;
+  bottom: 30px;
+  left: 40px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 150px;
+  height: 45px;
+  background-color: #ffffff;
+  color: #616161;
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0px 4px 15px -4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: Poppins;
+}
+
+.logout-btn img {
+  width: 22px;
+  height: 22px;
+  opacity: 0.5;
+}
+
+.logout-btn:hover {
+  background-color: #A24A00;
+  color: #fff;
+}
+
 /* Main white content box */
 .content-box {
   background-color: #fff;
