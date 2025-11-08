@@ -91,7 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         automaticallyImplyLeading: false,
         title: const Text("Profile"),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         elevation: 0,
         titleTextStyle: const TextStyle(
           fontStyle: FontStyle.italic,

@@ -67,7 +67,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         elevation: 0,
         centerTitle: true,
         title: const Text(

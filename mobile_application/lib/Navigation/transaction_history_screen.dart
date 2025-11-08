@@ -182,7 +182,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                           title: "FEB FAIR",
                           desc: "(24) Number of Customers",
                           amount: "PHP 852",
-                          date: "February 14, 2025",
+                          date: "February 14, 2026",
                         ),
                         _buildTransactionCard(
                           title: "FEB FAIR",

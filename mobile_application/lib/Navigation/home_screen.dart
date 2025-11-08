@@ -307,6 +307,12 @@ class _HomeScreenState extends State<HomeScreen>
             unselectedItemColor: Colors.black,
             showSelectedLabels: true,
             showUnselectedLabels: true,
+
+            selectedLabelStyle: const TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
             items: [
               _buildNavItem(0, 'Home', iconPaths['home']!),
               _buildNavItem(1, 'History', iconPaths['history']!),
