@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-
-// 🟢 Import all screens
 import 'LogIn/log_in_screen.dart';
+import 'LogIn/change_password.dart';
 import 'Navigation/home_screen.dart';
 import 'Navigation/transaction_history_screen.dart';
 import 'Navigation/wallet_screen.dart';
@@ -20,28 +19,19 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'PettyCash',
 
-      // 🎨 App theme
       theme: ThemeData(
         primarySwatch: Colors.amber,
         scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.amber,
-          foregroundColor: Colors.black,
-          centerTitle: true,
-          elevation: 0,
-        ),
       ),
 
-      // 🟡 Initial screen
-      initialRoute: '/signup',
+      // FIRST SCREEN DISPLAYED
+      initialRoute: '/login',
 
-      // 🧭 Define all named routes
       routes: {
-        '/signup': (context) => const LoginScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/new-password': (context) => const NewPasswordScreen(),
 
-        // 👇 You can pass data like organization name here
         '/home': (context) => const HomeScreen(orgName: "Organization"),
-
         '/history': (context) => const TransactionHistoryScreen(),
         '/wallet': (context) => const WalletScreen(),
         '/profile': (context) => const ProfileScreen(),

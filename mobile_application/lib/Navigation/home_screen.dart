@@ -148,142 +148,172 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // HEADER
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+      body: Stack(
+        children: [
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Hello, ${widget.orgName}',
-                        style: const TextStyle(
-                          fontFamily: 'PlayFairDisplay',
-                          fontStyle: FontStyle.italic,
-                          fontWeight: FontWeight.w400,
-                          fontSize: 32,
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Hello, ${widget.orgName}',
+                            style: const TextStyle(
+                              fontFamily: 'PlayFairDisplay',
+                              fontStyle: FontStyle.italic,
+                              fontWeight: FontWeight.w400,
+                              fontSize: 32,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            currentDate,
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        currentDate,
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          color: Colors.black87,
-                        ),
+                      Image.asset(
+                        'assets/Icons/notification.png',
+                        height: 31.5,
+                        width: 27.02,
                       ),
                     ],
                   ),
-                  Image.asset(
-                    'assets/Icons/notification.png',
-                    height: 31.5,
-                    width: 27.02,
+
+                  const SizedBox(height: 40),
+
+                  Center(
+                    child: Container(
+                      width: 356,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        gradient: const RadialGradient(
+                          center: Alignment.center,
+                          radius: 1.2,
+                          colors: [Color(0xFFFFFFFF), Color(0xFFECDDC6)],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.black),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black26,
+                            offset: Offset(2, 4),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Overview',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Expanded(
+                            child: GridView.count(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 6,
+                              crossAxisSpacing: 6,
+                              childAspectRatio: 2.1,
+                              physics: const NeverScrollableScrollPhysics(),
+                              children: const [
+                                _OverviewCard(
+                                  title: 'Balance:',
+                                  subtitle: 'expenses',
+                                  amount: 'PHP 00.00',
+                                ),
+                                _OverviewCard(
+                                  title: 'EVENT:',
+                                  subtitle: 'expenses',
+                                  amount: 'PHP 00.00',
+                                ),
+                                _OverviewCard(
+                                  title: 'EVENT:',
+                                  subtitle: 'expenses',
+                                  amount: 'PHP 00.00',
+                                ),
+                                _OverviewCard(
+                                  title: "EVENT:",
+                                  subtitle: 'expenses',
+                                  amount: 'PHP 00.00',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
+
+                  const SizedBox(height: 20),
+
+                  const Text(
+                    'Transaction History',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  _buildTransactionItem("EVENT", "Particulars", "Description", "PHP 00.00", "Date"),
+                  _buildTransactionItem("EVENT", "Particulars", "Description", "PHP 00.00", "Date"),
+                  _buildTransactionItem("EVENT", "Particulars", "Description", "PHP 00.00", "Date"),
                 ],
               ),
-
-              const SizedBox(height: 40),
-
-              // OVERVIEW BOX
-              Center(
-                child: Container(
-                  width: 356,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    gradient: const RadialGradient(
-                      center: Alignment.center,
-                      radius: 1.2,
-                      colors: [Color(0xFFFFFFFF), Color(0xFFECDDC6)],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.black),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black26,
-                        offset: Offset(2, 4),
-                        blurRadius: 6,
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Overview',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Expanded(
-                        child: GridView.count(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 6,
-                          crossAxisSpacing: 6,
-                          childAspectRatio: 2.1,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children: const [
-                            _OverviewCard(
-                              title: 'Balance:',
-                              subtitle: 'expenses',
-                              amount: 'PHP 00.00',
-                            ),
-                            _OverviewCard(
-                              title: 'EVENT:',
-                              subtitle: 'expenses',
-                              amount: 'PHP 00.00',
-                            ),
-                            _OverviewCard(
-                              title: 'EVENT:',
-                              subtitle: 'expenses',
-                              amount: 'PHP 00.00',
-                            ),
-                            _OverviewCard(
-                              title: "EVENT:",
-                              subtitle: 'expenses',
-                              amount: 'PHP 00.00',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // TRANSACTION HISTORY
-              const Text(
-                'Transaction History',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontStyle: FontStyle.italic,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              _buildTransactionItem("EVENT", "Particulars", "Description", "PHP 00.00", "Date"),
-              _buildTransactionItem("EVENT", "Particulars", "Description", "PHP 00.00", "Date"),
-              _buildTransactionItem("EVENT", "Particulars", "Description", "PHP 00.00", "Date"),
-            ],
+            ),
           ),
-        ),
+
+          // ✔ FIXED: replaced deprecated withOpacity()
+          if (_isFabMenuOpen)
+            AnimatedOpacity(
+              opacity: _isFabMenuOpen ? 1.0 : 0.9,
+              duration: const Duration(milliseconds: 200),
+              child: Container(
+                color: Colors.white.withValues(alpha: 0.6), // ← FIXED HERE
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 20, bottom: 100),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          _fabMenuButton("New Wallet"),
+                          const SizedBox(height: 15),
+                          _fabMenuButton("Add Receipt"),
+                          const SizedBox(height: 15),
+                          _fabMenuButton("New Record"),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
 
-      // ✅ FAB BUTTON
       floatingActionButton: FloatingActionButton(
         onPressed: _toggleFabMenu,
         backgroundColor: const Color(0xFF2F4366),
@@ -296,8 +326,26 @@ class _HomeScreenState extends State<HomeScreen>
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
 
-      // ✅ Bottom Navigation Bar
       bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  Widget _fabMenuButton(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.black, width: 1),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontFamily: "Poppins",
+          fontWeight: FontWeight.w600,
+          fontSize: 18,
+        ),
+      ),
     );
   }
 
