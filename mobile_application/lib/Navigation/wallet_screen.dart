@@ -13,7 +13,7 @@ class WalletScreen extends StatefulWidget {
 class _WalletScreenState extends State<WalletScreen> {
   final int _selectedIndex = 2; // Highlight Wallet tab
 
-  // ✅ Icon paths to match HomeScreen design
+  // Icon paths (same as other screens)
   final iconPaths = {
     'home': {
       'active': 'assets/Icons/navigation_icons/nav_home.png',
@@ -56,7 +56,11 @@ class _WalletScreenState extends State<WalletScreen> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => nextScreen),
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => nextScreen,
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
     );
   }
 
@@ -67,7 +71,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         title: const Text(
@@ -81,108 +85,122 @@ class _WalletScreenState extends State<WalletScreen> {
         ),
       ),
 
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        child: Column(
-          children: [
-            // Wallet Info Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFF8EBD5), Color(0xFFFFF8EE)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Top Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Balance",
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            "PHP 750",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Total Income",
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            "PHP 500",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                // Wallet Info Card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFF8EBD5), Color(0xFFFFF8EE)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // Bottom Row
-                  const Column(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "Total Expenses",
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                      // Top Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: const [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Balance",
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                "PHP 750",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Total Income",
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                "PHP 500",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 4),
-                      Text(
-                        "PHP 1250",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
+
+                      const SizedBox(height: 20),
+
+                      // Bottom Row
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Total Expenses",
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "PHP 1250",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
+                ),
 
-            const SizedBox(height: 30),
+                const SizedBox(height: 30),
 
-            // Bottom Buttons Row
-            Row(
-              children: [
-                Expanded(child: _buildNavButton("Wallets", isActive: true)),
-                const SizedBox(width: 8),
-                Expanded(child: _buildNavButton("Reports")),
-                const SizedBox(width: 8),
-                Expanded(child: _buildNavButton("Receipts")),
+                // Bottom Buttons Row
+                Row(
+                  children: [
+                    Expanded(child: _buildNavButton("Wallets", isActive: true)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildNavButton("Reports")),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildNavButton("Receipts")),
+                  ],
+                ),
               ],
             ),
-          ],
+          ),
         ),
       ),
 
-      // ✅ Custom bottom navigation bar (same as HomeScreen)
-      bottomNavigationBar: BottomNavigationBar(
+      // Navigation bar (same as transaction_history.dart)
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  // EXACT same navigation bar design used in TransactionHistoryScreen
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: Colors.black12, width: 1)),
+      ),
+      child: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
@@ -191,6 +209,11 @@ class _WalletScreenState extends State<WalletScreen> {
         unselectedItemColor: Colors.black,
         showSelectedLabels: true,
         showUnselectedLabels: true,
+        selectedLabelStyle: const TextStyle(
+          fontFamily: 'Poppins',
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
         items: [
           _buildNavItem(0, 'Home', iconPaths['home']!),
           _buildNavItem(1, 'History', iconPaths['history']!),
@@ -201,7 +224,7 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
-  // ✅ Same nav item builder as HomeScreen
+  // EXACT same nav item style as TransactionHistoryScreen
   BottomNavigationBarItem _buildNavItem(
     int index,
     String label,
@@ -211,11 +234,11 @@ class _WalletScreenState extends State<WalletScreen> {
 
     return BottomNavigationBarItem(
       icon: Container(
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF8B3B08) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
-        padding: const EdgeInsets.all(8),
         child: Image.asset(
           isSelected ? icons['active']! : icons['inactive']!,
           height: 28,
@@ -226,7 +249,7 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
-  // Wallet buttons (Wallets / Reports / Receipts)
+  // Wallet buttons
   Widget _buildNavButton(String label, {bool isActive = false}) {
     return ElevatedButton(
       onPressed: () {},

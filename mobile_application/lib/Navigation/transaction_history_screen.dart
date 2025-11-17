@@ -13,11 +13,10 @@ class TransactionHistoryScreen extends StatefulWidget {
 }
 
 class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
-  final int _selectedIndex = 1; // Highlight History
+  final int _selectedIndex = 1;
   DateTime _selectedDate = DateTime(2025, 2);
   bool isIncomeSelected = true;
 
-  // ✅ Icon paths (same as HomeScreen)
   final iconPaths = {
     'home': {
       'active': 'assets/Icons/navigation_icons/nav_home.png',
@@ -40,31 +39,32 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
 
+    Widget nextScreen;
     switch (index) {
       case 0:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  const HomeScreen(orgName: "Organization")),
-        );
+        nextScreen = const HomeScreen(orgName: "Organization");
         break;
       case 1:
-        // Already in History
+        nextScreen = const TransactionHistoryScreen();
         break;
       case 2:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const WalletScreen()),
-        );
+        nextScreen = const WalletScreen();
         break;
       case 3:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const ProfileScreen()),
-        );
+        nextScreen = const ProfileScreen();
         break;
+      default:
+        return;
     }
+
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => nextScreen,
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
   }
 
   void _changeMonth(int offset) {
@@ -81,7 +81,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       backgroundColor: Colors.white,
 
       appBar: AppBar(
-        automaticallyImplyLeading: false, // ✅ Removes the back arrow
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -96,124 +96,128 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         ),
       ),
 
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-        child: Column(
-          children: [
-            // Month Selector
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+          child: SingleChildScrollView(
+            child: Column(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: () => _changeMonth(-1),
+                // Month Selector
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left),
+                      onPressed: () => _changeMonth(-1),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        formattedMonthYear,
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right),
+                      onPressed: () => _changeMonth(1),
+                    ),
+                  ],
                 ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    formattedMonthYear,
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
+
+                const SizedBox(height: 15),
+
+                // Income / Expense Toggle
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () =>
+                            setState(() => isIncomeSelected = true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isIncomeSelected
+                              ? const Color(0xFFFFE4B5)
+                              : Colors.white,
+                          foregroundColor: Colors.black,
+                          side: const BorderSide(color: Colors.black),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        child: const Text('Income'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () =>
+                            setState(() => isIncomeSelected = false),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: !isIncomeSelected
+                              ? const Color(0xFFFFE4B5)
+                              : Colors.white,
+                          foregroundColor: Colors.black,
+                          side: const BorderSide(color: Colors.black),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        child: const Text('Expense'),
+                      ),
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: () => _changeMonth(1),
+
+                const SizedBox(height: 20),
+
+                // Transaction List
+                Column(
+                  children: isIncomeSelected
+                      ? [
+                          _buildTransactionCard(
+                            title: "FEB FAIR",
+                            desc: "(24) Number of Customers",
+                            amount: "PHP 852",
+                            date: "February 14, 2026",
+                          ),
+                          _buildTransactionCard(
+                            title: "FEB FAIR",
+                            desc: "(24) Number of Customers",
+                            amount: "PHP 515",
+                            date: "February 12, 2025",
+                          ),
+                        ]
+                      : [
+                          _buildTransactionCard(
+                            title: "FEB FAIR",
+                            desc: "(1 set) Bracelet Locks",
+                            amount: "-PHP 73",
+                            date: "February 9, 2025",
+                          ),
+                          _buildTransactionCard(
+                            title: "FEB FAIR",
+                            desc: "(1 roll) Kwad",
+                            amount: "-PHP 100",
+                            date: "February 9, 2025",
+                          ),
+                          _buildTransactionCard(
+                            title: "FEB FAIR",
+                            desc: "(N/A) Print",
+                            amount: "-PHP 65",
+                            date: "February 9, 2025",
+                          ),
+                        ],
                 ),
               ],
             ),
-
-            const SizedBox(height: 15),
-
-            // Income / Expense Toggle
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => setState(() => isIncomeSelected = true),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isIncomeSelected
-                          ? const Color(0xFFFFE4B5)
-                          : Colors.white,
-                      foregroundColor: Colors.black,
-                      side: const BorderSide(color: Colors.black),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    child: const Text('Income'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => setState(() => isIncomeSelected = false),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: !isIncomeSelected
-                          ? const Color(0xFFFFE4B5)
-                          : Colors.white,
-                      foregroundColor: Colors.black,
-                      side: const BorderSide(color: Colors.black),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    child: const Text('Expense'),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Transaction List
-            Expanded(
-              child: ListView(
-                children: isIncomeSelected
-                    ? [
-                        _buildTransactionCard(
-                          title: "FEB FAIR",
-                          desc: "(24) Number of Customers",
-                          amount: "PHP 852",
-                          date: "February 14, 2026",
-                        ),
-                        _buildTransactionCard(
-                          title: "FEB FAIR",
-                          desc: "(24) Number of Customers",
-                          amount: "PHP 515",
-                          date: "February 12, 2025",
-                        ),
-                      ]
-                    : [
-                        _buildTransactionCard(
-                          title: "FEB FAIR",
-                          desc: "(1 set) Bracelet Locks",
-                          amount: "-PHP 73",
-                          date: "February 9, 2025",
-                        ),
-                        _buildTransactionCard(
-                          title: "FEB FAIR",
-                          desc: "(1 roll) Kwad",
-                          amount: "-PHP 100",
-                          date: "February 9, 2025",
-                        ),
-                        _buildTransactionCard(
-                          title: "FEB FAIR",
-                          desc: "(N/A) Print",
-                          amount: "-PHP 65",
-                          date: "February 9, 2025",
-                        ),
-                      ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
 
@@ -229,8 +233,16 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
 
-      // ✅ Custom Bottom Navigation Bar (Matches HomeScreen)
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: Colors.black12, width: 1)),
+      ),
+      child: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
@@ -239,6 +251,11 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         unselectedItemColor: Colors.black,
         showSelectedLabels: true,
         showUnselectedLabels: true,
+        selectedLabelStyle: const TextStyle(
+          fontFamily: 'Poppins',
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
         items: [
           _buildNavItem(0, 'Home', iconPaths['home']!),
           _buildNavItem(1, 'History', iconPaths['history']!),
@@ -249,7 +266,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     );
   }
 
-  // ✅ Navigation Item — Same Design as HomeScreen
   BottomNavigationBarItem _buildNavItem(
     int index,
     String label,
@@ -259,11 +275,11 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
     return BottomNavigationBarItem(
       icon: Container(
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF8B3B08) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
-        padding: const EdgeInsets.all(8),
         child: Image.asset(
           isSelected ? icons['active']! : icons['inactive']!,
           height: 28,
@@ -274,7 +290,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     );
   }
 
-  // ✅ Transaction Card
   Widget _buildTransactionCard({
     required String title,
     required String desc,
