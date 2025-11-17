@@ -3,8 +3,9 @@ from supabase import create_client
 import os
 from dotenv import load_dotenv
 
-# ✅ Import the OSAS Blueprint
+# ✅ Import the OSAS, PRES Blueprint
 from osas_view.app import osas  
+from pres_view.app import pres
 
 # ✅ Load environment variables
 load_dotenv()
@@ -13,8 +14,13 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 
-# ✅ Register the OSAS Blueprint
+# ⭐ IMPORTANT: Session cookie name (avoid conflicts)
+app.config['SESSION_COOKIE_NAME'] = 'pockitrack_session'
+app.config['SESSION_PERMANENT'] = False
+
+# ✅ Register the OSAS, PRES Blueprint
 app.register_blueprint(osas, url_prefix='/osas')
+app.register_blueprint(pres, url_prefix='/pres')
 
 # ✅ Supabase connection
 SUPABASE_URL = os.getenv("SUPABASE_URL")
