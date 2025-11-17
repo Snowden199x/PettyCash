@@ -4,13 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PockiTrack Login</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/loginStyle.css') }}">
+
+  <!-- FIXED: blueprint static -->
+  <link rel="stylesheet" href="{{ url_for('pres.static', filename='css/loginStyle.css') }}">
+
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
+
   <!-- Logo (clickable back to landing page) -->
-  <a href="{{ url_for('landingpage') }}" class="logo">
-    <img src="{{ url_for('static', filename='images/pocki_logo.png') }}" alt="PockiTrack Logo">
+  <!-- FIXED -->
+  <a href="{{ url_for('pres.landingpage') }}" class="logo">
+    <img src="{{ url_for('pres.static', filename='images/pocki_logo.png') }}" alt="PockiTrack Logo">
     <span class="logo_name">PockiTrack</span>
   </a>
 
@@ -20,7 +25,9 @@
       <h2>Log in</h2>
       <p class="subtitle">Enter your details to sign in to your account.</p>
 
-      <form id="loginForm" method="POST" action="{{ url_for('pres_login') }}">
+      <!-- FIXED: correct action -->
+      <form id="loginForm" method="POST" action="{{ url_for('pres.pres_login') }}">
+
         <!-- Username -->
         <label for="username">Username</label>
         <input type="text" id="username" name="username">
@@ -31,14 +38,15 @@
         <input type="password" id="password" name="password">
         <p id="passwordError" class="error-message"></p>
 
-        <a href="{{ url_for('pres_forgot_password') }}" class="forgot">Forgot password?</a>
+        <!-- FIXED -->
+        <a href="{{ url_for('pres.pres_forgot_password') }}" class="forgot">Forgot password?</a>
 
         <button type="submit" class="login-btn">Log in</button>
       </form>
     </div>
   </div>
 
-  <!-- JS -->
-  <script src="{{ url_for('static', filename='js/loginValidation.js') }}"></script>
+  <!-- JS fixed to blueprint static -->
+  <script src="{{ url_for('pres.static', filename='js/loginValidation.js') }}"></script>
 </body>
 </html>

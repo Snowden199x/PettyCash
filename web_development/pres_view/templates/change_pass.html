@@ -22,11 +22,13 @@
     <h2>New Password</h2>
     <p class="subtitle">Create new password to sign in to your account.</p>
 
-    <form id="changePassForm" novalidate>
+    <!-- 🔥 FIXED: Form now sends POST to Flask -->
+    <form id="changePassForm" method="POST" action="{{ url_for('pres.change_password') }}" novalidate>
+
       <!-- Password Input -->
       <div class="form-group">
         <label for="password">Password</label>
-        <input type="password" id="password" placeholder="Enter your password" />
+        <input type="password" id="password" name="new_password" placeholder="Enter your password" />
       </div>
 
       <!-- ✅ Password Checklist -->
@@ -41,11 +43,12 @@
       <!-- Confirm Password Input -->
       <div class="form-group">
         <label for="confirm-password">Confirm Password</label>
-        <input type="password" id="confirm-password" placeholder="Re-enter your password" />
+        <input type="password" id="confirm-password" name="confirm_password" placeholder="Re-enter your password" />
       </div>
 
-      <!-- Submit Button -->
-      <button id="submit-btn" type="button" class="submit-btn">Submit</button>
+      <!-- Submit Button (FIXED) -->
+      <button id="submit-btn" type="submit" class="submit-btn">Submit</button>
+
     </form>
   </div>
 
