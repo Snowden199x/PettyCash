@@ -130,7 +130,11 @@ class _HomeScreenState extends State<HomeScreen>
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => nextScreen),
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => nextScreen,
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
     );
   }
 
@@ -142,244 +146,186 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Scaffold(
-          backgroundColor: Colors.white,
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // HEADER
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // HEADER
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Hello, ${widget.orgName}',
-                            style: const TextStyle(
-                              fontFamily: 'PlayFairDisplay',
-                              fontStyle: FontStyle.italic,
-                              fontWeight: FontWeight.w400,
-                              fontSize: 32,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            currentDate,
-                            style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        'Hello, ${widget.orgName}',
+                        style: const TextStyle(
+                          fontFamily: 'PlayFairDisplay',
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.w400,
+                          fontSize: 32,
+                        ),
                       ),
-                      Image.asset(
-                        'assets/Icons/notification.png',
-                        height: 31.5,
-                        width: 27.02,
+                      const SizedBox(height: 4),
+                      Text(
+                        currentDate,
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 40),
-
-                  // OVERVIEW BOX
-                  Center(
-                    child: Container(
-                      width: 356,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        gradient: const RadialGradient(
-                          center: Alignment.center,
-                          radius: 1.2,
-                          colors: [Color(0xFFFFFFFF), Color(0xFFECDDC6)],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.black),
-                        boxShadow: [
-                          const BoxShadow(
-                            color: Colors.black26,
-                            offset: Offset(2, 4),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Overview',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Expanded(
-                            child: GridView.count(
-                              crossAxisCount: 2,
-                              mainAxisSpacing: 6,
-                              crossAxisSpacing: 6,
-                              childAspectRatio: 2.1,
-                              physics: const NeverScrollableScrollPhysics(),
-                              children: const [
-                                _OverviewCard(
-                                  title: 'Balance:',
-                                  subtitle: 'expenses',
-                                  amount: 'PHP 00.00',
-                                ),
-                                _OverviewCard(
-                                  title: 'EVENT:',
-                                  subtitle: 'expenses',
-                                  amount: 'PHP 00.00',
-                                ),
-                                _OverviewCard(
-                                  title: 'EVENT:',
-                                  subtitle: 'expenses',
-                                  amount: 'PHP 00.00',
-                                ),
-                                _OverviewCard(
-                                  title: "EVENT:",
-                                  subtitle: 'expenses',
-                                  amount: 'PHP 00.00',
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  Image.asset(
+                    'assets/Icons/notification.png',
+                    height: 31.5,
+                    width: 27.02,
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // TRANSACTION HISTORY
-                  const Text(
-                    'Transaction History',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontStyle: FontStyle.italic,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  _buildTransactionItem("EVENT", "Particulars", "Description",
-                      "PHP 00.00", "Date"),
-                  _buildTransactionItem("EVENT", "Particulars", "Description",
-                      "PHP 00.00", "Date"),
-                  _buildTransactionItem("EVENT", "Particulars", "Description",
-                      "PHP 00.00", "Date"),
                 ],
               ),
-            ),
-          ),
 
-          // ✅ FAB BUTTON (Add icon)
-          floatingActionButton: FloatingActionButton(
-            onPressed: _toggleFabMenu,
-            backgroundColor: const Color(0xFF2F4366),
-            shape: const CircleBorder(),
-            child: const Icon(
-              Icons.add,
-              color: Colors.white,
-              size: 30,
-            ),
-          ),
-          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+              const SizedBox(height: 40),
 
-          // ✅ Bottom navigation
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: _selectedIndex,
-            onTap: _onItemTapped,
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.white,
-            selectedItemColor: const Color(0xFF8B3B08),
-            unselectedItemColor: Colors.black,
-            showSelectedLabels: true,
-            showUnselectedLabels: true,
+              // OVERVIEW BOX
+              Center(
+                child: Container(
+                  width: 356,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    gradient: const RadialGradient(
+                      center: Alignment.center,
+                      radius: 1.2,
+                      colors: [Color(0xFFFFFFFF), Color(0xFFECDDC6)],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.black),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black26,
+                        offset: Offset(2, 4),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Overview',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: GridView.count(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 6,
+                          crossAxisSpacing: 6,
+                          childAspectRatio: 2.1,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: const [
+                            _OverviewCard(
+                              title: 'Balance:',
+                              subtitle: 'expenses',
+                              amount: 'PHP 00.00',
+                            ),
+                            _OverviewCard(
+                              title: 'EVENT:',
+                              subtitle: 'expenses',
+                              amount: 'PHP 00.00',
+                            ),
+                            _OverviewCard(
+                              title: 'EVENT:',
+                              subtitle: 'expenses',
+                              amount: 'PHP 00.00',
+                            ),
+                            _OverviewCard(
+                              title: "EVENT:",
+                              subtitle: 'expenses',
+                              amount: 'PHP 00.00',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
-            selectedLabelStyle: const TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            ),
-            items: [
-              _buildNavItem(0, 'Home', iconPaths['home']!),
-              _buildNavItem(1, 'History', iconPaths['history']!),
-              _buildNavItem(2, 'Wallets', iconPaths['wallet']!),
-              _buildNavItem(3, 'Profile', iconPaths['profile']!),
+              const SizedBox(height: 20),
+
+              // TRANSACTION HISTORY
+              const Text(
+                'Transaction History',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontStyle: FontStyle.italic,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              _buildTransactionItem("EVENT", "Particulars", "Description", "PHP 00.00", "Date"),
+              _buildTransactionItem("EVENT", "Particulars", "Description", "PHP 00.00", "Date"),
+              _buildTransactionItem("EVENT", "Particulars", "Description", "PHP 00.00", "Date"),
             ],
           ),
         ),
+      ),
 
-        // ✅ FAB MENU OVERLAY
-        if (_isFabMenuOpen)
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: _toggleFabMenu,
-              child: Container(color: Colors.black54),
-            ),
-          ),
+      // ✅ FAB BUTTON
+      floatingActionButton: FloatingActionButton(
+        onPressed: _toggleFabMenu,
+        backgroundColor: const Color(0xFF2F4366),
+        shape: const CircleBorder(),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+          size: 30,
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
 
-        // ✅ Floating white buttons
-        if (_isFabMenuOpen)
-          Positioned(
-            right: 24,
-            bottom: 160, // moved up 30px
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                _buildWhiteMenuButton("New Wallet"),
-                const SizedBox(height: 10),
-                _buildWhiteMenuButton("Add Receipt"),
-                const SizedBox(height: 10),
-                _buildWhiteMenuButton("New Record"),
-              ],
-            ),
-          ),
-      ],
+      // ✅ Bottom Navigation Bar
+      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
-  // ✅ Updated style here (Poppins, black text, no underline)
-  Widget _buildWhiteMenuButton(String label) {
-    return GestureDetector(
-      onTap: () {
-        debugPrint("$label clicked");
-      },
-      child: Container(
-        width: 160,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.black),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: const [
-            BoxShadow(color: Colors.black26, blurRadius: 3, offset: Offset(1, 2)),
-          ],
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: Colors.black12, width: 1)),
+      ),
+      child: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF8B3B08),
+        unselectedItemColor: Colors.black,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        selectedLabelStyle: const TextStyle(
+          fontFamily: 'Poppins',
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
         ),
-        child: Center(
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: Colors.black,
-              decoration: TextDecoration.none, // removes underline
-            ),
-          ),
-        ),
+        items: [
+          _buildNavItem(0, 'Home', iconPaths['home']!),
+          _buildNavItem(1, 'History', iconPaths['history']!),
+          _buildNavItem(2, 'Wallets', iconPaths['wallet']!),
+          _buildNavItem(3, 'Profile', iconPaths['profile']!),
+        ],
       ),
     );
   }
@@ -390,11 +336,11 @@ class _HomeScreenState extends State<HomeScreen>
 
     return BottomNavigationBarItem(
       icon: Container(
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF8B3B08) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
-        padding: const EdgeInsets.all(8),
         child: Image.asset(
           isSelected ? icons['active']! : icons['inactive']!,
           height: 28,
@@ -422,25 +368,20 @@ class _HomeScreenState extends State<HomeScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style:
-                      const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               const SizedBox(height: 2),
               Text(line1,
-                  style:
-                      const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-              Text(line2,
-                  style: const TextStyle(fontSize: 12, color: Colors.black87)),
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              Text(line2, style: const TextStyle(fontSize: 12, color: Colors.black87)),
             ],
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(amount,
-                  style:
-                      const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               const SizedBox(height: 4),
-              Text(date,
-                  style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              Text(date, style: const TextStyle(fontSize: 11, color: Colors.grey)),
             ],
           ),
         ],
@@ -476,20 +417,18 @@ class _OverviewCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.bold)),
-                Text(subtitle,
                     style:
-                        const TextStyle(fontSize: 12, color: Colors.black87)),
+                        const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                Text(subtitle,
+                    style: const TextStyle(fontSize: 12, color: Colors.black87)),
               ],
             ),
           ),
           Positioned(
             bottom: 8,
             right: 10,
-            child: Text(amount,
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 14)),
+            child:
+                Text(amount, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
           ),
         ],
       ),
