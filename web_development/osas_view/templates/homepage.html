@@ -170,20 +170,25 @@
         </div>
       </div>
 
-      <!-- DELETE MODAL -->
+      <!-- DELETE CONFIRM MODAL -->
       <div id="deleteModal" class="modal">
-        <div class="modal-box delete-box">
-          <h2>Delete Organization</h2>
-          <p>
-            Are you sure you want to delete this organization? This action cannot
-            be undone.
-          </p>
+        <div class="modal-box">
+          <div class="modal-header">
+            <h2>Confirm Deletion</h2>
+            <button class="close-btn" id="closeDeleteModal">&times;</button>
+          </div>
+          <p>Are you sure you want to delete this organization?</p>
           <div class="modal-buttons">
-            <button id="cancelDelete">Cancel</button>
-            <button id="confirmDelete" class="primary-btn">Delete</button>
+            <button id="cancelDeleteBtn">Cancel</button>
+            <button id="confirmDeleteBtn" class="primary-btn">Delete</button>
           </div>
         </div>
       </div>
+
+
+      <!-- SUCCESS/ERROR POPUP -->
+      <div id="toast" class="toast"></div>
+
 
       <!-- SIDE MENU -->
       <div id="sideMenu" class="side-menu">
