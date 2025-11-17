@@ -7,24 +7,29 @@ from supabase import create_client
 # ======================================
 # Initialize Blueprint
 # ======================================
-pres = Blueprint('pres', __name__, template_folder='templates', static_folder='static')
+pres = Blueprint(
+    'pres',
+    __name__,
+    template_folder='templates/pres',
+    static_folder='static'
+)
 
 load_dotenv()
 
-# 🔌 Supabase Setup (ADDED)
+# Supabase Setup
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ======================================
-# LANDING PAGE 
+# LANDING PAGE
 # ======================================
 @pres.route('/')
 def landingpage():
     return render_template('landingpage.html')
 
 # ======================================
-# LOGIN PAGE 
+# LOGIN PAGE
 # ======================================
 @pres.route('/login', methods=['GET', 'POST'])
 def pres_login():
@@ -32,18 +37,18 @@ def pres_login():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        # 🔍 FETCH account from organizations table
+        # Fetch account from organizations table
         result = supabase.table('organizations').select('*').eq('username', username).execute()
 
         if result.data:
             org = result.data[0]
 
-            # 🔒 Check hashed password
+            #  Check hashed password
             if check_password_hash(org['password'], password):
                 session['pres_user'] = org['username']
                 session['org_id'] = org['id']
 
-                # 🚨 FIRST-TIME LOGIN?
+                # First-time login
                 if org.get('must_change_password', True):
                     return redirect(url_for('pres.change_password'))
 
@@ -68,7 +73,7 @@ def pres_forgot_password():
     return render_template('forgot_password.html')
 
 # ======================================
-# CHANGE PASSWORD (NEW — ADDED)
+# CHANGE PASSWORD
 # ======================================
 @pres.route('/change-password', methods=['GET', 'POST'])
 def change_password():
@@ -87,10 +92,10 @@ def change_password():
             flash("Passwords do not match.", "danger")
             return redirect(url_for('pres.change_password'))
 
-        # 🔐 Hash new password
+        #  Hash new password
         hashed_pw = generate_password_hash(new_pw)
 
-        # 🔄 Update Supabase
+        #  Update Supabase
         supabase.table('organizations').update({
             'password': hashed_pw,
             'must_change_password': False

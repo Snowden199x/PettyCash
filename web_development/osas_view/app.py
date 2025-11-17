@@ -9,12 +9,14 @@ from datetime import date
 
 load_dotenv()
 
-# Blueprint
+# ======================================
+# Initialize Blueprint with template folder
+# ======================================
 osas = Blueprint(
     'osas',
     __name__,
     url_prefix='/osas',
-    template_folder='templates',
+    template_folder='templates/osas',
     static_folder='static'
 )
 
