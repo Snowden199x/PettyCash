@@ -31,7 +31,7 @@ def landingpage():
 # ======================================
 # LOGIN PAGE
 # ======================================
-@pres.route('/login', methods=['GET', 'POST'])
+@pres.route('/login/pres', methods=['GET', 'POST'])
 def pres_login():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -60,7 +60,7 @@ def pres_login():
             flash("Organization not found.", "danger")
             return redirect(url_for('pres.pres_login'))
 
-    return render_template('login.html')
+    return render_template('pres_login.html')
 
 # ======================================
 # FORGOT PASSWORD

@@ -1,5 +1,5 @@
 // Path to the login page (same folder)
-const LOGIN_PATH = '/login';
+const LOGIN_PATH = '/pres/login/pres';
 
 // Helper: wait for transitionend for opacity (fallback uses timeout)
 function waitForFadeOut(timeout = 700) {

@@ -46,7 +46,7 @@ def osas_root():
 
 @app.route('/pres')
 def pres_root():
-    return redirect(url_for('pres.landingpage'))
+    return redirect(url_for('pres.pres_login'))
 
 # ===========================
 # Run the app
