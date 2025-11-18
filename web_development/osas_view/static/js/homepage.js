@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const tableBody = document.getElementById("orgTableBody");
   const tableContainer = document.getElementById("tableContainer");
   const emptyState = document.getElementById("emptyState");
+  const searchInput = document.getElementById("searchOrgs"); // ADD THIS
 
   const addOrgModal = document.getElementById("addOrgModal");
   const addOrgBtn = document.getElementById("addOrganization");
@@ -21,7 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const toast = document.getElementById("toast");
 
-  // DELETE MODAL ELEMENTS
   const deleteModal = document.getElementById("deleteModal");
   const closeDeleteModal = document.getElementById("closeDeleteModal");
   const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
@@ -42,6 +42,19 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ============================
+  // SEARCH FUNCTIONALITY
+  // ============================
+  searchInput.addEventListener("input", (e) => {
+    const searchTerm = e.target.value.trim();
+    
+    if (searchTerm === "") {
+      renderTable();
+    } else {
+      filterOrgs(searchTerm);
+    }
+  });
+
+  // ============================
   // GENERATE USERNAME / PASSWORD
   // ============================
   genCodeBtn.addEventListener("click", () => (usernameField.value = generateUsername()));
@@ -59,9 +72,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ============================
+  // SHOW LOADING STATE
+  // ============================
+  function showLoading() {
+    tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 40px;">Loading organizations...</td></tr>';
+    tableContainer.style.display = "block";
+    emptyState.style.display = "none";
+  }
+
+  // ============================
   // LOAD ORGANIZATIONS
   // ============================
   async function loadOrganizations() {
+    showLoading();
     try {
       const res = await fetch("/osas/api/organizations");
       const data = await res.json();
@@ -72,6 +95,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (err) {
       console.error("Error loading organizations:", err);
+      showToast("Failed to load organizations", "error");
+      tableContainer.style.display = "none";
+      emptyState.style.display = "flex";
     }
   }
 
@@ -79,6 +105,51 @@ document.addEventListener("DOMContentLoaded", () => {
     totalOrganizations.textContent = orgs.length;
     pendingReports.textContent = orgs.filter(o => o.status === "Pending").length;
     approvedReports.textContent = orgs.filter(o => o.status === "Approved").length;
+  }
+
+  // ============================
+  // SEARCH/FILTER ORGANIZATIONS
+  // ============================
+  function filterOrgs(searchTerm) {
+    const filtered = orgs.filter(org => 
+      org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      org.username.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    tableBody.innerHTML = "";
+    
+    if (filtered.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 40px; color: #828282;">No organizations found matching your search</td></tr>';
+      tableContainer.style.display = "block";
+      emptyState.style.display = "none";
+      return;
+    }
+
+    filtered.forEach(org => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${org.name}</td>
+        <td>${org.username}</td>
+        <td>••••••••</td>
+        <td>${org.date || "-"}</td>
+        <td class="${org.status === 'Approved' ? 'status-approved' : 'status-pending'}">${org.status || "-"}</td>
+        <td>
+          <div class="dropdown">
+            <button class="dropdown-btn">
+              <img src="./static/images/edit_button.png" alt="Edit Options" />
+            </button>
+            <div class="dropdown-menu">
+              <button class="edit-btn" data-id="${org.id}">Edit</button>
+              <button class="delete-btn" data-id="${org.id}">Delete</button>
+            </div>
+          </div>
+        </td>
+      `;
+      tableBody.appendChild(row);
+    });
+
+    tableContainer.style.display = "block";
+    emptyState.style.display = "none";
   }
 
   // ============================
@@ -93,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${org.username}</td>
         <td>••••••••</td>
         <td>${org.date || "-"}</td>
-        <td>${org.status || "-"}</td>
+        <td class="${org.status === 'Approved' ? 'status-approved' : 'status-pending'}">${org.status || "-"}</td>
         <td>
           <div class="dropdown">
             <button class="dropdown-btn">
@@ -112,6 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tableContainer.style.display = orgs.length > 0 ? "block" : "none";
     emptyState.style.display = orgs.length === 0 ? "flex" : "none";
   }
+
 
   // ============================
   // DROPDOWN + EDIT/DELETE EVENTS
@@ -282,3 +354,43 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================
   loadOrganizations();
 });
+
+function generatePassword() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$";
+  let pass = "";
+  for (let i = 0; i < 8; i++) pass += chars[Math.floor(Math.random() * chars.length)];
+  return pass;
+}
+
+// ============================
+// SHOW LOADING STATE
+// ============================
+function showLoading() {
+  tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 40px;">Loading organizations...</td></tr>';
+  tableContainer.style.display = "block";
+  emptyState.style.display = "none";
+}
+
+// ============================
+// LOAD ORGANIZATIONS
+// ============================
+async function loadOrganizations() {
+  showLoading(); // Show loading indicator
+  
+  try {
+    const res = await fetch("/osas/api/organizations");
+    const data = await res.json();
+    if (data.organizations) {
+      orgs = data.organizations;
+      renderTable();
+      updateDashboardStats();
+    }
+  } catch (err) {
+    console.error("Error loading organizations:", err);
+    showToast("Failed to load organizations. Please try again.", "error");
+    // Show empty state on error
+    tableContainer.style.display = "none";
+    emptyState.style.display = "flex";
+  }
+}
+
