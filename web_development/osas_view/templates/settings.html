@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PockiTrack | Settings</title>
+
+    <!-- ===== CSS LINK ===== -->
+    <link rel="stylesheet" href="{{ url_for('osas.static', filename='css/settings.css') }}" />
+
+    <!-- ===== JS ===== -->
+    <script src="{{ url_for('osas.static', filename='js/settings.js') }}" defer></script>
+
+    <!-- ===== GOOGLE FONT ===== -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <!-- ========================= HEADER ========================= -->
+    <header class="admin-header">
+        <div class="logo">
+            <img src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}" alt="PockiTrack Logo" />
+            <span class="logo_name">PockiTrack</span>
+        </div>
+        <div class="menu-icon">
+            <img src="{{ url_for('osas.static', filename='images/menu.png') }}" alt="Menu" />
+        </div>
+    </header>
+
+    <!-- ========================= MAIN CONTENT ========================= -->
+    <main class="dashboard">
+        <div class="dashboard-container">
+            <!-- ---------- PAGE HEADER ---------- -->
+            <section class="page-header">
+                <h1>Settings</h1>
+                <p>Manage your admin account and application preferences</p>
+            </section>
+
+            <!-- ---------- SETTINGS PANEL ---------- -->
+            <section class="settings-panel">
+                <!-- Admin Profile Card -->
+                <div class="settings-card">
+                    <h3>Admin Profile</h3>
+                    <form id="profileForm">
+                        <div class="input-group">
+                            <label for="adminName">Name</label>
+                            <input type="text" id="adminName" name="adminName" autocomplete="name" required aria-describedby="name-error" />
+                            <span id="name-error" class="error-message" aria-live="polite"></span>
+                        </div>
+                        <div class="input-group">
+                            <label for="adminEmail">Email</label>
+                            <input type="email" id="adminEmail" name="adminEmail" autocomplete="email" required aria-describedby="email-error" />
+                            <span id="email-error" class="error-message" aria-live="polite"></span>
+                        </div>
+                        <button type="submit" class="primary-btn" aria-label="Save profile changes">Save Profile</button>
+                    </form>
+                </div>
+
+                <!-- Change Password Card -->
+                <div class="settings-card">
+                    <h3>Change Password</h3>
+                    <form id="passwordForm">
+                        <div class="input-group">
+                            <label for="currentPassword">Current Password</label>
+                            <input type="password" id="currentPassword" name="currentPassword" autocomplete="current-password" required aria-describedby="current-password-error" />
+                            <span id="current-password-error" class="error-message" aria-live="polite"></span>
+                        </div>
+                        <div class="input-group">
+                            <label for="newPassword">New Password</label>
+                            <input type="password" id="newPassword" name="newPassword" autocomplete="new-password" required aria-describedby="new-password-error" />
+                            <span id="new-password-error" class="error-message" aria-live="polite"></span>
+                        </div>
+                        <div class="input-group">
+                            <label for="confirmPassword">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" required aria-describedby="confirm-password-error" />
+                            <span id="confirm-password-error" class="error-message" aria-live="polite"></span>
+                        </div>
+                        <button type="submit" class="primary-btn" aria-label="Change password">Change Password</button>
+                    </form>
+                </div>
+
+                <!-- System Preferences Card -->
+                <div class="settings-card">
+                    <h3>System Preferences</h3>
+                    <form id="preferencesForm">
+                        <div class="input-group">
+                            <label for="timezone">Timezone</label>
+                            <select id="timezone" name="timezone" aria-describedby="timezone-error">
+                                <option value="Asia/Manila">Asia/Manila (GMT+8)</option>
+                                <option value="UTC">UTC</option>
+                                <option value="America/New_York">America/New_York (GMT-5)</option>
+                            </select>
+                            <span id="timezone-error" class="error-message" aria-live="polite"></span>
+                        </div>
+                        <div class="input-group checkbox-group">
+                            <label for="notifications">Enable Notifications</label>
+                            <input type="checkbox" id="notifications" name="notifications" />
+                        </div>
+                        <button type="submit" class="primary-btn" aria-label="Save preferences">Save Preferences</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ---------- SUCCESS/ERROR TOAST ---------- -->
+            <div id="toast" class="toast" aria-live="assertive" role="alert"></div>
+        </div>
+
+        <!-- ========================= SIDE MENU ========================= -->
+        <div id="sideMenu" class="side-menu">
+            <div class="side-menu-content">
+                <h3>Admin Menu</h3>
+                <ul>
+                    <li><a href="{{ url_for('osas.osas_dashboard') }}">Dashboard</a></li>
+                    <li><a href="{{ url_for('osas.osas_reports') }}">Reports</a></li>
+                    <li><a href="{{ url_for('osas.osas_settings') }}">Settings</a></li>
+                </ul>
+                <a href="{{ url_for('osas.osas_logout') }}" class="logout-btn">Log Out</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

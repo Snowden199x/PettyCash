@@ -62,6 +62,19 @@ def osas_logout():
     session.clear()
     return redirect(url_for('osas.osas_login'))
 
+@osas.route('/reports')
+def osas_reports():
+    if 'osas_admin' in session:
+        return render_template('reports.html')
+    return redirect(url_for('osas.osas_dashboard'))
+
+@osas.route('/settings')
+def osas_settings():
+    if 'osas_admin' in session:
+        return render_template('settings.html')
+    return redirect(url_for('osas.osas_dashboard'))
+
+
 # ==========================
 # ORGANIZATION API
 # ==========================

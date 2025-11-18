@@ -72,6 +72,16 @@
           </button>
         </div>
 
+        <!--  SEARCH INPUT -->
+              <input 
+            type="text" 
+            id="searchOrgs" 
+            placeholder="Search organizations..."
+            class="search-input"
+          />
+          
+        </div>
+
         <!-- WRAPPER BOX -->
         <div class="org-box">
           <!-- Empty State -->
@@ -195,9 +205,10 @@
         <div class="side-menu-content">
           <h3>Admin Menu</h3>
           <ul>
-            <li><a href="#">Dashboard</a></li>
-            <li><a href="#">Reports</a></li>
-            <li><a href="#">Settings</a></li>
+            <li><a href="{{ url_for('osas.osas_dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('osas.osas_reports') }}">Reports</a></li>
+            <li><a href="{{ url_for('osas.osas_settings') }}">Settings</a></li>
+
           </ul>
           <a href="{{ url_for('osas.osas_logout') }}" class="logout-btn"
             >Log Out</a
