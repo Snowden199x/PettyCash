@@ -16,7 +16,7 @@ osas = Blueprint(
     'osas',
     __name__,
     url_prefix='/osas',
-    template_folder='templates/osas',
+    template_folder='templates',
     static_folder='static'
 )
 
@@ -49,12 +49,12 @@ def osas_login():
             flash('Incorrect password.', 'danger')
         else:
             flash('Admin not found.', 'danger')
-    return render_template('login.html')
+    return render_template('osas/login.html')
 
 @osas.route('/dashboard')
 def osas_dashboard():
     if 'osas_admin' in session:
-        return render_template('homepage.html')
+        return render_template('osas/homepage.html')
     return redirect(url_for('osas.osas_login'))
 
 @osas.route('/logout')
