@@ -40,7 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================
   async function loadReports() {
     try {
-      // First load organizations
       const orgRes = await fetch("/osas/api/organizations");
       const orgData = await orgRes.json();
       
@@ -49,12 +48,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Try to load reports data (if endpoint exists)
       try {
         const reportRes = await fetch("/osas/api/reports");
         const reportData = await reportRes.json();
         
-        // Merge organization data with report data
         reports = orgData.organizations.map(org => {
           const existingReport = reportData.reports?.find(r => r.orgId === org.id);
           return {
@@ -63,30 +60,37 @@ document.addEventListener("DOMContentLoaded", () => {
             submissionDate: existingReport?.submissionDate || new Date().toISOString().split('T')[0],
             status: existingReport?.status || "pending",
             checklist: existingReport?.checklist || {
-              "balance-sheet": false,
-              "income-statement": false,
-              "cash-flow": false,
-              "budget-proposal": false,
-              "receipts": false,
-              "audit-report": false
+              "august": false,
+              "september": false,
+              "october": false,
+              "november": false,
+              "december": false,
+              "january": false,
+              "february": false,
+              "march": false,
+              "april": false,              
+              "may": false
             },
             notes: existingReport?.notes || ""
           };
         });
       } catch (err) {
-        // If reports endpoint doesn't exist, create initial reports from organizations
         reports = orgData.organizations.map(org => ({
           id: org.id,
           orgName: org.name,
           submissionDate: new Date().toISOString().split('T')[0],
           status: "pending",
           checklist: {
-            "balance-sheet": false,
-            "income-statement": false,
-            "cash-flow": false,
-            "budget-proposal": false,
-            "receipts": false,
-            "audit-report": false
+            "august": false,
+            "september": false,
+            "october": false,
+            "november": false,
+            "december": false,
+            "january": false,
+            "february": false,
+            "march": false,
+            "april": false,              
+            "may": false
           },
           notes: ""
         }));
@@ -131,13 +135,11 @@ document.addEventListener("DOMContentLoaded", () => {
     card.className = "report-card";
     card.dataset.reportId = report.id;
 
-    // Calculate progress
     const checklistValues = Object.values(report.checklist);
     const completedCount = checklistValues.filter(v => v === true).length;
     const totalCount = checklistValues.length;
     const progressPercent = Math.round((completedCount / totalCount) * 100);
 
-    // Status badge class
     const statusClass = `status-${report.status}`;
     const statusText = report.status === "pending" 
       ? "Pending Review" 
@@ -145,7 +147,6 @@ document.addEventListener("DOMContentLoaded", () => {
       ? "In Review" 
       : "Completed";
 
-    // Notes preview
     const notesPreview = report.notes 
       ? `"${report.notes}"` 
       : "No notes added yet";
@@ -156,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <h3>${report.orgName}</h3>
         <span class="status-badge ${statusClass}">${statusText}</span>
       </div>
-      <p class="report-card-date">Submitted: ${formatDate(report.submissionDate)}</p>
+      <p class="report-card-date">Accredited: ${formatDate(report.submissionDate)}</p>
       
       <div class="progress-section">
         <div class="progress-label">
@@ -187,13 +188,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================
   // SEARCH & FILTER
   // ============================
-  searchInput.addEventListener("input", (e) => {
-    filterReports();
-  });
-
-  statusFilter.addEventListener("change", () => {
-    filterReports();
-  });
+  searchInput.addEventListener("input", () => filterReports());
+  statusFilter.addEventListener("change", () => filterReports());
 
   function filterReports() {
     const searchTerm = searchInput.value.toLowerCase().trim();
@@ -201,14 +197,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let filtered = reports;
 
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(report =>
         report.orgName.toLowerCase().includes(searchTerm)
       );
     }
 
-    // Filter by status
     if (selectedStatus !== "all") {
       filtered = filtered.filter(report => report.status === selectedStatus);
     }
@@ -225,13 +219,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     currentReportId = reportId;
 
-    // Set modal content
     modalOrgName.textContent = report.orgName;
-    modalSubmissionDate.textContent = `Submitted on: ${formatDate(report.submissionDate)}`;
+    modalSubmissionDate.textContent = `Accredited on: ${formatDate(report.submissionDate)}`;
     reportStatusSelect.value = report.status;
     adminNotesTextarea.value = report.notes;
 
-    // Set checklist
     const checkboxes = documentChecklist.querySelectorAll('input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
       const docType = checkbox.dataset.doc;
@@ -249,7 +241,6 @@ document.addEventListener("DOMContentLoaded", () => {
     currentReportId = null;
   }
 
-  // Close modal when clicking outside
   window.addEventListener("click", (e) => {
     if (e.target === reportModal) {
       closeReportModal();
@@ -262,7 +253,6 @@ document.addEventListener("DOMContentLoaded", () => {
   saveReportBtn.addEventListener("click", async () => {
     if (!currentReportId) return;
 
-    // Gather data from modal
     const status = reportStatusSelect.value;
     const notes = adminNotesTextarea.value.trim();
     
@@ -280,7 +270,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      // Try to save to backend
       const res = await fetch(`/osas/api/reports/${currentReportId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -289,7 +278,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!res.ok) throw new Error("Failed to save report");
 
-      // Update local data
       const reportIndex = reports.findIndex(r => r.id === currentReportId);
       if (reportIndex !== -1) {
         reports[reportIndex] = {
@@ -303,8 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
       renderReports();
     } catch (err) {
       console.error("Error saving report:", err);
-      
-      // Still update locally even if backend fails
+
       const reportIndex = reports.findIndex(r => r.id === currentReportId);
       if (reportIndex !== -1) {
         reports[reportIndex] = {
@@ -326,10 +313,8 @@ document.addEventListener("DOMContentLoaded", () => {
     toast.textContent = message;
     toast.className = "toast";
     
-    if (type === "error") {
-      toast.classList.add("error");
-    }
-    
+    if (type === "error") toast.classList.add("error");
+
     toast.style.display = "block";
     
     setTimeout(() => {
@@ -337,8 +322,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 3000);
   }
 
-  // ============================
   // INITIAL LOAD
-  // ============================
   loadReports();
 });
