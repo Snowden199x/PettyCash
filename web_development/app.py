@@ -59,7 +59,6 @@ def pres_root():
         return jsonify({'message': 'Go to /pres/api/admin/login or /pres/api/auth_status'}), 200
     return redirect(url_for('pres.pres_login'))
 
-#---- For mobile app health check ----#
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'ok', 'app': 'PockiTrack API', 'version': '1.0'})

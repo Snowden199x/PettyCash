@@ -158,6 +158,7 @@ def add_organization():
     existing = supabase.table('organizations').select('*').or_(
         f"org_name.eq.{org_name},username.eq.{username}"
     ).execute()
+
     if existing.data and len(existing.data) > 0:
         return jsonify({'error': 'Organization name or username already exists'}), 400
     hashed_password = generate_password_hash(password)
@@ -170,6 +171,7 @@ def add_organization():
         'must_change_password': True,
         'created_by': admin['id'] if admin else None
     }).execute()
+
     if admin:
         log_activity(admin['id'], 'organization', f'Added new organization: "{org_name}"')
     return jsonify({'message': 'Organization added', 'username': username, 'password': password}), 201
@@ -189,6 +191,7 @@ def update_organization(org_id):
     old_org = supabase.table('organizations').select('*').eq('id', org_id).execute().data[0]
     supabase.table('organizations').update(update_data).eq('id', org_id).execute()
     admin = get_admin_data(session['osas_admin'])
+
     if admin:
         for key in update_data:
             if update_data[key] and old_org.get(key) != update_data[key]:
@@ -211,8 +214,6 @@ def delete_organization(org_id):
 # =========================
 # SETTINGS/BACKEND API
 # =========================
-
-# ---- Profile GET/UPDATE ----
 @osas.route('/api/admin/profile', methods=['GET'])
 def get_profile():
     if 'osas_admin' not in session:
@@ -243,10 +244,10 @@ def update_profile():
             return jsonify({"error": "Username already exists."}), 400
         update_data["username"] = data["username"]
         log_admin_audit(old_admin['id'], "username", old_admin.get("username"), data["username"])
-    supabase.table('osas_admin').update(update_data).eq('username', username).execute()
+        supabase.table('osas_admin').update(update_data).eq('username', username).execute()
     if "username" in update_data:
         session["osas_admin"] = update_data["username"]
-    admin = get_admin_data(update_data.get("username", username))
+        admin = get_admin_data(update_data.get("username", username))
     if admin:
         log_activity(admin['id'], 'settings', "Profile updated")
     return jsonify({"message": "Profile updated!", "updated": update_data})
@@ -319,7 +320,6 @@ def request_password_reset():
         'expires_at': expires_at,
         'used': False
     }).execute()
-    # NOTE: Send token via email in production
     return jsonify({'message': 'Password reset token generated', 'token': token})
 
 @osas.route('/api/admin/reset_password', methods=['POST'])

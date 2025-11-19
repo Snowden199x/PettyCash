@@ -75,7 +75,6 @@ def pres_login():
                     if org.get('must_change_password', False):
                         return jsonify({'success': True, 'must_change_password': True, 'org_id': org['id'], 'org_name': org['org_name']})
                     return jsonify({'success': True, 'org_id': org['id'], 'org_name': org['org_name']})
-                # Web: redirect logic
                 if org.get('must_change_password', False):
                     return redirect(url_for('pres.change_password'))
                 return redirect(url_for('pres.homepage'))
@@ -91,8 +90,7 @@ def pres_login():
                 return jsonify({'success': False, 'error': error_msg}), 404
             flash(error_msg, "danger")
             return redirect(url_for('pres.pres_login'))
-
-    # GET: serve login page for web, basic JSON for mobile
+        
     if request.accept_mimetypes.best == 'application/json':
         return jsonify({'info': 'POST username and password to this endpoint.'})
     return render_template('pres_login.html')
@@ -116,7 +114,6 @@ def pres_auth_status():
 def pres_forgot_password():
     if request.method == 'POST':
         username = request.form.get('username')
-        # TODO: Implement actual reset email logic
         flash("Password reset instructions sent!", "success")
     return render_template('forgot_password.html')
 
@@ -132,11 +129,9 @@ def change_password():
         return redirect(url_for('pres.pres_login'))
 
     if request.method == 'POST':
-        # Web form
         new_pw = request.form.get('new_password') or (request.json.get('new_password') if request.is_json else None)
         confirm_pw = request.form.get('confirm_password') or (request.json.get('confirm_password') if request.is_json else None)
 
-        # Checks
         if not new_pw or not confirm_pw:
             error_msg = "Please fill out all fields."
             if request.accept_mimetypes.best == 'application/json':
@@ -168,7 +163,7 @@ def change_password():
             return jsonify({'success': True, 'message': 'Password changed'})
         flash("Password changed successfully!", "success")
         return redirect(url_for('pres.homepage'))
-    # GET
+    
     if request.accept_mimetypes.best == 'application/json':
         return jsonify({'info': 'POST new_password and confirm_password'})
     return render_template('change_password.html')
