@@ -98,25 +98,44 @@ def pres_forgot_password():
 @pres.route('/change-password', methods=['GET', 'POST'])
 def change_password():
     if not session.get('pres_user'):
+        return redirect(url_for('pres.pres_login'))\
+    
+    if not session.get('pres_user'):
+        return redirect(url_for('pres.pres_login'))
+
+    if 'org_id' not in session:
+        flash("Session expired. Please log in again.", "danger")
         return redirect(url_for('pres.pres_login'))
 
     if request.method == 'POST':
         new_pw = request.form.get('new_password')
         confirm_pw = request.form.get('confirm_password')
 
+        print("FORM:", request.form)
+        print("RAW DATA:", request.data)
+
+
         if not new_pw or not confirm_pw:
+            print("no fileds")
             flash("Please fill out all fields.", "danger")
             return render_template('change_password.html')
 
         if new_pw != confirm_pw:
+            print("pass not match")
             flash("Passwords do not match.", "danger")
             return render_template('change_password.html')
 
         errors = validate_password(new_pw)
         if errors:
+            print("not in session")
             for e in errors:
                 flash(e, "danger")
             return render_template('change_password.html')
+        
+        if 'org_id' not in session:
+            print("not in session")
+            flash("Session expired. Please log in again.", "danger")
+            return redirect(url_for('pres.pres_login'))
 
         hashed_pw = generate_password_hash(new_pw)
         supabase.table('organizations').update({

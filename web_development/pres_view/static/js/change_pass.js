@@ -30,8 +30,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(value);
     const hasLength = value.length >= 8;
 
-    document.querySelector(".lowercase").classList.toggle("checked", hasLowercase);
-    document.querySelector(".uppercase").classList.toggle("checked", hasUppercase);
+    document
+      .querySelector(".lowercase")
+      .classList.toggle("checked", hasLowercase);
+    document
+      .querySelector(".uppercase")
+      .classList.toggle("checked", hasUppercase);
     document.querySelector(".number").classList.toggle("checked", hasNumber);
     document.querySelector(".special").classList.toggle("checked", hasSpecial);
     document.querySelector(".length").classList.toggle("checked", hasLength);
@@ -44,7 +48,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ✅ Validation when pressing Submit
-  submitBtn.addEventListener("click", () => {
+  submitBtn.addEventListener("click", (e) => {
+    e.preventDefault(); // stop default for validation
+
     const password = passwordInput.value.trim();
     const confirm = confirmPasswordInput.value.trim();
 
@@ -70,12 +76,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // ✅ Success message
-    showPopup("Password successfully set!", true);
-    passwordInput.value = "";
-    confirmPasswordInput.value = "";
-    checklist.style.display = "none";
-    hasStartedTyping = false;
-    document.querySelectorAll(".checklist li").forEach(li => li.classList.remove("checked"));
+    // ✅ All checks passed → submit the form
+    document.getElementById("changePassForm").submit();
   });
 });
+
+// ------------------------------------------------------------------------------------------------------\
