@@ -18,23 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
   
   const toast = document.getElementById("toast");
 
-  // --- SIDE MENU ---
-  const menuIcon = document.querySelector(".menu-icon img");
-  const sideMenu = document.getElementById("sideMenu");
-
-  let reports = [];
-  let currentReportId = null;
-
-  // ============================
-  // MENU TOGGLE
-  // ============================
-  menuIcon.addEventListener("click", () => sideMenu.classList.toggle("active"));
-  window.addEventListener("click", (e) => {
-    if (!sideMenu.contains(e.target) && !menuIcon.contains(e.target)) {
-      sideMenu.classList.remove("active");
-    }
-  });
-
   // ============================
   // LOAD REPORTS
   // ============================

@@ -3,7 +3,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const tableBody = document.getElementById("orgTableBody");
   const tableContainer = document.getElementById("tableContainer");
   const emptyState = document.getElementById("emptyState");
-  const searchInput = document.getElementById("searchOrgs"); // ADD THIS
+  const searchInput = document.getElementById("searchOrgs");
+  const departmentFilter = document.getElementById("departmentFilter");
 
   const addOrgModal = document.getElementById("addOrgModal");
   const addOrgBtn = document.getElementById("addOrganization");
@@ -27,32 +28,99 @@ document.addEventListener("DOMContentLoaded", () => {
   const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
   const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
 
+  const logoLink = document.getElementById("logoLink");
+
   let orgs = [];
   let editingOrgId = null;
   let orgIdToDelete = null;
 
   // ============================
-  // MENU TOGGLE
+  // LOGO CLICK - SCROLL TO TOP
   // ============================
-  const menuIcon = document.querySelector(".menu-icon img");
-  const sideMenu = document.getElementById("sideMenu");
-  menuIcon.addEventListener("click", () => sideMenu.classList.toggle("active"));
-  window.addEventListener("click", (e) => {
-    if (!sideMenu.contains(e.target) && !menuIcon.contains(e.target)) sideMenu.classList.remove("active");
+  logoLink.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
   // ============================
   // SEARCH FUNCTIONALITY
   // ============================
-  searchInput.addEventListener("input", (e) => {
-    const searchTerm = e.target.value.trim();
-    
-    if (searchTerm === "") {
-      renderTable();
-    } else {
-      filterOrgs(searchTerm);
-    }
+  searchInput.addEventListener("input", () => {
+    applyFilters();
   });
+
+  // ============================
+  // DEPARTMENT FILTER
+  // ============================
+  departmentFilter.addEventListener("change", () => {
+    applyFilters();
+  });
+
+  // ============================
+  // APPLY FILTERS (SEARCH + DEPARTMENT)
+  // ============================
+  function applyFilters() {
+    const searchTerm = searchInput.value.trim().toLowerCase();
+    const selectedDept = departmentFilter.value;
+
+    let filtered = orgs;
+
+    // Filter by department
+    if (selectedDept) {
+      filtered = filtered.filter(org => org.department === selectedDept);
+    }
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(org => 
+        org.name.toLowerCase().includes(searchTerm) ||
+        org.username.toLowerCase().includes(searchTerm) ||
+        (org.department && org.department.toLowerCase().includes(searchTerm))
+      );
+    }
+
+    renderFilteredTable(filtered);
+  }
+
+  // ============================
+  // RENDER FILTERED TABLE
+  // ============================
+  function renderFilteredTable(filtered) {
+    tableBody.innerHTML = "";
+    
+    if (filtered.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 40px; color: #828282;">No organizations found matching your filters</td></tr>';
+      tableContainer.style.display = "block";
+      emptyState.style.display = "none";
+      return;
+    }
+
+    filtered.forEach(org => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${org.name}</td>
+        <td>${org.department || "-"}</td>
+        <td>${org.username}</td>
+        <td>••••••••</td>
+        <td>${org.date || "-"}</td>
+        <td class="${org.status === 'Approved' ? 'status-approved' : 'status-pending'}">${org.status || "-"}</td>
+        <td>
+          <div class="dropdown">
+            <button class="dropdown-btn">
+              <img src="./static/images/edit_button.png" alt="Edit Options" />
+            </button>
+            <div class="dropdown-menu">
+              <button class="edit-btn" data-id="${org.id}">Edit</button>
+              <button class="delete-btn" data-id="${org.id}">Delete</button>
+            </div>
+          </div>
+        </td>
+      `;
+      tableBody.appendChild(row);
+    });
+
+    tableContainer.style.display = "block";
+    emptyState.style.display = "none";
+  }
 
   // ============================
   // GENERATE USERNAME / PASSWORD
@@ -75,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // SHOW LOADING STATE
   // ============================
   function showLoading() {
-    tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 40px;">Loading organizations...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 40px;">Loading organizations...</td></tr>';
     tableContainer.style.display = "block";
     emptyState.style.display = "none";
   }
@@ -108,51 +176,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ============================
-  // SEARCH/FILTER ORGANIZATIONS
-  // ============================
-  function filterOrgs(searchTerm) {
-    const filtered = orgs.filter(org => 
-      org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      org.username.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    
-    tableBody.innerHTML = "";
-    
-    if (filtered.length === 0) {
-      tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 40px; color: #828282;">No organizations found matching your search</td></tr>';
-      tableContainer.style.display = "block";
-      emptyState.style.display = "none";
-      return;
-    }
-
-    filtered.forEach(org => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${org.name}</td>
-        <td>${org.username}</td>
-        <td>••••••••</td>
-        <td>${org.date || "-"}</td>
-        <td class="${org.status === 'Approved' ? 'status-approved' : 'status-pending'}">${org.status || "-"}</td>
-        <td>
-          <div class="dropdown">
-            <button class="dropdown-btn">
-              <img src="./static/images/edit_button.png" alt="Edit Options" />
-            </button>
-            <div class="dropdown-menu">
-              <button class="edit-btn" data-id="${org.id}">Edit</button>
-              <button class="delete-btn" data-id="${org.id}">Delete</button>
-            </div>
-          </div>
-        </td>
-      `;
-      tableBody.appendChild(row);
-    });
-
-    tableContainer.style.display = "block";
-    emptyState.style.display = "none";
-  }
-
-  // ============================
   // RENDER TABLE
   // ============================
   function renderTable() {
@@ -161,6 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${org.name}</td>
+        <td>${org.department || "-"}</td>
         <td>${org.username}</td>
         <td>••••••••</td>
         <td>${org.date || "-"}</td>
@@ -183,7 +207,6 @@ document.addEventListener("DOMContentLoaded", () => {
     tableContainer.style.display = orgs.length > 0 ? "block" : "none";
     emptyState.style.display = orgs.length === 0 ? "flex" : "none";
   }
-
 
   // ============================
   // DROPDOWN + EDIT/DELETE EVENTS
@@ -263,6 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("modalSubtitle").textContent = "Update accredited organization details";
     saveBtn.textContent = "Save";
 
+    document.getElementById("orgDepartment").value = org.department || "";
     document.getElementById("orgName").value = org.name;
     usernameField.value = org.username;
     passwordField.value = "";
@@ -276,6 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const orgData = {
+      orgDepartment: document.getElementById("orgDepartment").value,
       orgName: document.getElementById("orgName").value,
       username: usernameField.value,
       password: passwordField.value,
@@ -354,43 +379,3 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================
   loadOrganizations();
 });
-
-function generatePassword() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$";
-  let pass = "";
-  for (let i = 0; i < 8; i++) pass += chars[Math.floor(Math.random() * chars.length)];
-  return pass;
-}
-
-// ============================
-// SHOW LOADING STATE
-// ============================
-function showLoading() {
-  tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 40px;">Loading organizations...</td></tr>';
-  tableContainer.style.display = "block";
-  emptyState.style.display = "none";
-}
-
-// ============================
-// LOAD ORGANIZATIONS
-// ============================
-async function loadOrganizations() {
-  showLoading(); // Show loading indicator
-  
-  try {
-    const res = await fetch("/osas/api/organizations");
-    const data = await res.json();
-    if (data.organizations) {
-      orgs = data.organizations;
-      renderTable();
-      updateDashboardStats();
-    }
-  } catch (err) {
-    console.error("Error loading organizations:", err);
-    showToast("Failed to load organizations. Please try again.", "error");
-    // Show empty state on error
-    tableContainer.style.display = "none";
-    emptyState.style.display = "flex";
-  }
-}
-
