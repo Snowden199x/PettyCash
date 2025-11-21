@@ -27,31 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const confirmMessage = document.getElementById("confirmMessage");
   const toast = document.getElementById("toast");
 
-  // SIDE MENU
-  const menuIcon = document.querySelector(".menu-icon img");
-  const sideMenu = document.getElementById("sideMenu");
-  let confirmCallback = null;
-  let activityLogs = [];
-
-  // ========== MENU TOGGLE ==========
-  menuIcon.addEventListener("click", () => sideMenu.classList.toggle("active"));
-  window.addEventListener("click", (e) => {
-    if (!sideMenu.contains(e.target) && !menuIcon.contains(e.target)) {
-      sideMenu.classList.remove("active");
-    }
-  });
-
-  // ========== SIDEBAR NAV ==========
-  navItems.forEach((item) => {
-    item.addEventListener("click", () => {
-      navItems.forEach((nav) => nav.classList.remove("active"));
-      settingsSections.forEach((section) => section.classList.remove("active"));
-      item.classList.add("active");
-      const sectionId = item.dataset.section;
-      const section = document.getElementById(sectionId);
-      if (section) section.classList.add("active");
-    });
-  });
 
   // ========== LOAD ADMIN PROFILE ==========
   async function loadAdminProfile() {

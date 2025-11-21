@@ -115,13 +115,13 @@ def osas_logout():
 @osas.route('/reports')
 def osas_reports():
     if 'osas_admin' in session:
-        return render_template('reports.html')
+        return render_template('osas/reports.html')
     return redirect(url_for('osas.osas_dashboard'))
 
 @osas.route('/settings')
 def osas_settings():
     if 'osas_admin' in session:
-        return render_template('settings.html')
+        return render_template('osas/settings.html')
     return redirect(url_for('osas.osas_dashboard'))
 
 # =========================

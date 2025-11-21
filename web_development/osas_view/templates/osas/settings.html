@@ -23,21 +23,12 @@
 
   <body>
     <!-- HEADER -->
-    <header class="admin-header">
-      <div class="logo">
-        <img
-          src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}"
-          alt="PockiTrack Logo"
-        />
-        <span class="logo_name">PockiTrack</span>
-      </div>
-      <div class="menu-icon">
-        <img
-          src="{{ url_for('osas.static', filename='images/menu.png') }}"
-          alt="Menu"
-        />
-      </div>
-    </header>
+<header class="admin-header">
+  <div class="logo" id="logoLink">
+    <img src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}" alt="PockiTrack Logo" />
+    <span class="logo_name">PockiTrack</span>
+  </div>
+</header>
 
     <!-- MAIN CONTENT -->
     <main class="dashboard">
@@ -360,18 +351,16 @@
         </div>
       </div>
 
-      <!-- SIDE MENU -->
-      <div id="sideMenu" class="side-menu">
-        <div class="side-menu-content">
-          <h3>Admin Menu</h3>
-          <ul>
-            <li><a href="{{ url_for('osas.osas_dashboard') }}">Dashboard</a></li>
-            <li><a href="{{ url_for('osas.osas_reports') }}">Reports</a></li>
-            <li><a href="{{ url_for('osas.osas_settings') }}">Settings</a></li>
-          </ul>
-          <a href="{{ url_for('osas.osas_logout') }}" class="logout-btn">Log Out</a>
-        </div>
-      </div>
+      <!-- SIDEBAR: This starts *after* the header, fixed on the left -->
+<aside class="sidebar">
+  <nav class="nav-menu">
+    <a href="{{ url_for('osas.osas_dashboard') }}" class="nav-item">Dashboard</a>
+    <a href="{{ url_for('osas.osas_reports') }}" class="nav-item">Reports</a>
+    <a href="{{ url_for('osas.osas_settings') }}" class="nav-item active">Settings</a>
+  </nav>
+  <a href="{{ url_for('osas.osas_logout') }}" class="logout-btn">Logout</a>
+</aside>
+
     </main>
   </body>
 </html>

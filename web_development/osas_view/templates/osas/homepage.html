@@ -26,21 +26,23 @@
 
   <body>
     <!-- HEADER -->
-    <header class="admin-header">
-      <div class="logo">
-        <img
-          src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}"
-          alt="PockiTrack Logo"
-        />
-        <span class="logo_name">PockiTrack</span>
-      </div>
-      <div class="menu-icon">
-        <img
-          src="{{ url_for('osas.static', filename='images/menu.png') }}"
-          alt="Menu"
-        />
-      </div>
-    </header>
+<header class="admin-header">
+  <div class="logo" id="logoLink">
+    <img src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}" alt="PockiTrack Logo" />
+    <span class="logo_name">PockiTrack</span>
+  </div>
+</header>
+
+<!-- SIDEBAR: This starts *after* the header, fixed on the left -->
+<aside class="sidebar">
+  <nav class="nav-menu">
+    <a href="{{ url_for('osas.osas_dashboard') }}" class="nav-item active">Dashboard</a>
+    <a href="{{ url_for('osas.osas_reports') }}" class="nav-item">Reports</a>
+    <a href="{{ url_for('osas.osas_settings') }}" class="nav-item">Settings</a>
+  </nav>
+  <a href="{{ url_for('osas.osas_logout') }}" class="logout-btn">Logout</a>
+</aside>
+
 
     <!-- MAIN CONTENT -->
     <main class="dashboard">
@@ -67,20 +69,36 @@
             <h3>Accredited Organizations</h3>
             <p>Manage organizations and their login credentials</p>
           </div>
-          <button id="addOrganization" class="add-btn">
-            + Add Organization
-          </button>
+          <div class="header-actions">
+            <!-- Department Filter Dropdown -->
+            <div class="filter-dropdown">
+              <select id="departmentFilter" class="filter-select">
+                <option value="">All Departments</option>
+                <option value="College of Computer Studies (CCS)">College of Computer Studies (CCS)</option>
+                <option value="College of Teacher Education (CTE)">College of Teacher Education (CTE)</option>
+                <option value="College of Arts and Sciences (CAS)">College of Arts and Sciences (CAS)</option>
+                <option value="College of Business Administration and Accountancy (CBAA)">College of Business Administration and Accountancy (CBAA)</option>
+                <option value="College of Criminal Justice Education (CCJE)">College of Criminal Justice Education (CCJE)</option>
+                <option value="College of Industrial Technology (CIT)">College of Industrial Technology (CIT)</option>
+                <option value="College of Nursing and Allied Health (CONAH)">College of Nursing and Allied Health (CONAH)</option>
+                <option value="College of Engineering (COE)">College of Engineering (COE)</option>
+                <option value="College of International Hospitality and Tourism Management (CIHTM)">College of International Hospitality and Tourism Management (CIHTM)</option>
+                <option value="Non-Academic Organization">Non-Academic Organization</option>
+              </select>
+            </div>
+            <button id="addOrganization" class="add-btn">
+              + Add Organization
+            </button>
+          </div>
         </div>
 
         <!--  SEARCH INPUT -->
-              <input 
-            type="text" 
-            id="searchOrgs" 
-            placeholder="Search organizations..."
-            class="search-input"
-          />
-          
-        </div>
+        <input 
+          type="text" 
+          id="searchOrgs" 
+          placeholder="Search organizations..."
+          class="search-input"
+        />
 
         <!-- WRAPPER BOX -->
         <div class="org-box">
@@ -103,6 +121,7 @@
               <thead>
                 <tr>
                   <th>Organization Name</th>
+                  <th>Department</th>
                   <th>Username</th>
                   <th>Password</th>
                   <th>Accreditation Date</th>
@@ -127,6 +146,23 @@
 
           <form id="addOrgForm">
             <div class="input-group">
+              <label>Department</label>
+              <select id="orgDepartment" name="orgDepartment" required>
+                <option value="">Select Department</option>
+                <option value="College of Computer Studies (CCS)">College of Computer Studies (CCS)</option>
+                <option value="College of Teacher Education (CTE)">College of Teacher Education (CTE)</option>
+                <option value="College of Arts and Sciences (CAS)">College of Arts and Sciences (CAS)</option>
+                <option value="College of Business Administration and Accountancy (CBAA)">College of Business Administration and Accountancy (CBAA)</option>
+                <option value="College of Criminal Justice Education (CCJE)">College of Criminal Justice Education (CCJE)</option>
+                <option value="College of Industrial Technology (CIT)">College of Industrial Technology (CIT)</option>
+                <option value="College of Nursing and Allied Health (CONAH)">College of Nursing and Allied Health (CONAH)</option>
+                <option value="College of Engineering (COE)">College of Engineering (COE)</option>
+                <option value="College of International Hospitality and Tourism Management (CIHTM)">College of International Hospitality and Tourism Management (CIHTM)</option>
+                <option value="Non-Academic Organization">Non-Academic Organization</option>
+              </select>
+            </div>
+
+            <div class="input-group">
               <label>Organization Name</label>
               <input type="text" id="orgName" name="orgName" required />
             </div>
@@ -144,7 +180,6 @@
             <div class="input-group">
               <label>Password</label>
               <div class="input-with-btn">
-                <!-- REMOVED required so it's optional on edit -->
                 <input type="text" id="orgPassword" name="orgPassword" />
                 <button type="button" id="genPass" class="generate-btn">
                   Generate
@@ -195,26 +230,8 @@
         </div>
       </div>
 
-
       <!-- SUCCESS/ERROR POPUP -->
       <div id="toast" class="toast"></div>
-
-
-      <!-- SIDE MENU -->
-      <div id="sideMenu" class="side-menu">
-        <div class="side-menu-content">
-          <h3>Admin Menu</h3>
-          <ul>
-            <li><a href="{{ url_for('osas.osas_dashboard') }}">Dashboard</a></li>
-            <li><a href="{{ url_for('osas.osas_reports') }}">Reports</a></li>
-            <li><a href="{{ url_for('osas.osas_settings') }}">Settings</a></li>
-
-          </ul>
-          <a href="{{ url_for('osas.osas_logout') }}" class="logout-btn"
-            >Log Out</a
-          >
-        </div>
-      </div>
     </main>
   </body>
 </html>

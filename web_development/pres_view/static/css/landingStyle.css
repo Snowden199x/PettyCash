@@ -193,6 +193,7 @@ header.sticky {
   display: flex;
   justify-content: space-between;
   font-size: 16px; /* bigger income/expense text */
+  gap: 70px;
   color: #e59e2c;
 }
 
