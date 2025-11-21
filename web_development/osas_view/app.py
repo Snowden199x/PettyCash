@@ -232,6 +232,7 @@ def update_profile():
     data = request.get_json()
     update_data = {}
     old_admin = get_admin_data(username)
+    
     if data.get("full_name") and data["full_name"] != old_admin.get("full_name", None):
         update_data["full_name"] = data["full_name"]
         log_admin_audit(old_admin['id'], "full_name", old_admin.get("full_name"), data["full_name"])
