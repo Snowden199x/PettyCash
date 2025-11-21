@@ -30,157 +30,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const logoLink = document.getElementById("logoLink");
 
+  const departmentSelect = document.getElementById("orgDepartment"); // For modal "Add/Edit"
+  let departments = [];
   let orgs = [];
   let editingOrgId = null;
   let orgIdToDelete = null;
 
   // ============================
-  // LOGO CLICK - SCROLL TO TOP
+  // POPULATE DEPARTMENT FILTER (for main filter dropdown)
   // ============================
-  logoLink.addEventListener("click", () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
-
-  // ============================
-  // SEARCH FUNCTIONALITY
-  // ============================
-  searchInput.addEventListener("input", () => {
-    applyFilters();
-  });
-
-  // ============================
-  // DEPARTMENT FILTER
-  // ============================
-  departmentFilter.addEventListener("change", () => {
-    applyFilters();
-  });
-
-  // ============================
-  // APPLY FILTERS (SEARCH + DEPARTMENT)
-  // ============================
-  function applyFilters() {
-    const searchTerm = searchInput.value.trim().toLowerCase();
-    const selectedDept = departmentFilter.value;
-
-    let filtered = orgs;
-
-    // Filter by department
-    if (selectedDept) {
-      filtered = filtered.filter(org => org.department === selectedDept);
-    }
-
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(org => 
-        org.name.toLowerCase().includes(searchTerm) ||
-        org.username.toLowerCase().includes(searchTerm) ||
-        (org.department && org.department.toLowerCase().includes(searchTerm))
-      );
-    }
-
-    renderFilteredTable(filtered);
-  }
-
-  // ============================
-  // RENDER FILTERED TABLE
-  // ============================
-  function renderFilteredTable(filtered) {
-    tableBody.innerHTML = "";
-    
-    if (filtered.length === 0) {
-      tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 40px; color: #828282;">No organizations found matching your filters</td></tr>';
-      tableContainer.style.display = "block";
-      emptyState.style.display = "none";
-      return;
-    }
-
-    filtered.forEach(org => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${org.name}</td>
-        <td>${org.department || "-"}</td>
-        <td>${org.username}</td>
-        <td>••••••••</td>
-        <td>${org.date || "-"}</td>
-        <td class="${org.status === 'Approved' ? 'status-approved' : 'status-pending'}">${org.status || "-"}</td>
-        <td>
-          <div class="dropdown">
-            <button class="dropdown-btn">
-              <img src="./static/images/edit_button.png" alt="Edit Options" />
-            </button>
-            <div class="dropdown-menu">
-              <button class="edit-btn" data-id="${org.id}">Edit</button>
-              <button class="delete-btn" data-id="${org.id}">Delete</button>
-            </div>
-          </div>
-        </td>
-      `;
-      tableBody.appendChild(row);
-    });
-
-    tableContainer.style.display = "block";
-    emptyState.style.display = "none";
-  }
-
-  // ============================
-  // GENERATE USERNAME / PASSWORD
-  // ============================
-  genCodeBtn.addEventListener("click", () => (usernameField.value = generateUsername()));
-  genPassBtn.addEventListener("click", () => (passwordField.value = generatePassword()));
-
-  function generateUsername() {
-    return `0125-${Math.floor(1000 + Math.random() * 9000)}`;
-  }
-
-  function generatePassword() {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$";
-    let pass = "";
-    for (let i = 0; i < 8; i++) pass += chars[Math.floor(Math.random() * chars.length)];
-    return pass;
-  }
-
-  // ============================
-  // SHOW LOADING STATE
-  // ============================
-  function showLoading() {
-    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 40px;">Loading organizations...</td></tr>';
-    tableContainer.style.display = "block";
-    emptyState.style.display = "none";
-  }
-
-  // ============================
-  // LOAD ORGANIZATIONS
-  // ============================
-  async function loadOrganizations() {
-    showLoading();
+  async function loadDepartmentFilter() {
     try {
-      const res = await fetch("/osas/api/organizations");
+      const res = await fetch("/osas/api/departments");
       const data = await res.json();
-      if (data.organizations) {
-        orgs = data.organizations;
-        renderTable();
-        updateDashboardStats();
-      }
+      departments = data.departments || [];
+      departmentFilter.innerHTML = `<option value="">All Departments</option>`;
+      departments.forEach((dep) => {
+        departmentFilter.innerHTML += `<option value="${dep.name}">${dep.name}</option>`;
+      });
     } catch (err) {
-      console.error("Error loading organizations:", err);
-      showToast("Failed to load organizations", "error");
-      tableContainer.style.display = "none";
-      emptyState.style.display = "flex";
+      departmentFilter.innerHTML = `<option value="">All Departments</option>`;
     }
   }
 
-  function updateDashboardStats() {
-    totalOrganizations.textContent = orgs.length;
-    pendingReports.textContent = orgs.filter(o => o.status === "Pending").length;
-    approvedReports.textContent = orgs.filter(o => o.status === "Approved").length;
+  // ============================
+  // POPULATE DEPARTMENT SELECT (modal add/edit dropdown)
+  // ============================
+  async function loadDepartmentsSelect(selectedId = "") {
+    try {
+      if (!departments.length) {
+        const res = await fetch("/osas/api/departments");
+        const data = await res.json();
+        departments = data.departments || [];
+      }
+      departmentSelect.innerHTML = `<option value="">Select Department</option>`;
+      departments.forEach((dep) => {
+        departmentSelect.innerHTML += `<option value="${dep.id}" ${
+          String(dep.id) === String(selectedId) ? "selected" : ""
+        }>${dep.name}</option>`;
+      });
+    } catch (err) {
+      departmentSelect.innerHTML = `<option value="">No Departments Found</option>`;
+    }
   }
 
   // ============================
-  // RENDER TABLE
+  // ORGANIZATION TABLE RENDERING
   // ============================
   function renderTable() {
     tableBody.innerHTML = "";
-    orgs.forEach(org => {
+    orgs.forEach((org) => {
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${org.name}</td>
@@ -188,7 +87,9 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${org.username}</td>
         <td>••••••••</td>
         <td>${org.date || "-"}</td>
-        <td class="${org.status === 'Approved' ? 'status-approved' : 'status-pending'}">${org.status || "-"}</td>
+        <td class="${
+          org.status === "Approved" ? "status-approved" : "status-pending"
+        }">${org.status || "-"}</td>
         <td>
           <div class="dropdown">
             <button class="dropdown-btn">
@@ -209,58 +110,114 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ============================
-  // DROPDOWN + EDIT/DELETE EVENTS
+  // ORGANIZATION LOADING
   // ============================
-  tableBody.addEventListener("click", (e) => {
-    const target = e.target;
-
-    // DROPDOWN BUTTON
-    if (target.closest(".dropdown-btn")) {
-      e.stopPropagation();
-      const btn = target.closest(".dropdown-btn");
-      const menu = btn.nextElementSibling;
-      menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+  async function loadOrganizations() {
+    showLoading();
+    try {
+      const res = await fetch("/osas/api/organizations");
+      const data = await res.json();
+      orgs = data.organizations || [];
+      renderTable();
+      updateDashboardStats();
+    } catch (err) {
+      console.error("Error loading organizations:", err);
+      showToast("Failed to load organizations", "error");
+      tableContainer.style.display = "none";
+      emptyState.style.display = "flex";
     }
+  }
 
-    // EDIT BUTTON
-    if (target.classList.contains("edit-btn")) {
-      e.stopPropagation();
-      openEditModal(target.dataset.id);
-    }
+  function showLoading() {
+    tableBody.innerHTML =
+      '<tr><td colspan="7" style="text-align:center; padding: 40px;">Loading organizations...</td></tr>';
+    tableContainer.style.display = "block";
+    emptyState.style.display = "none";
+  }
 
-    // DELETE BUTTON
-    if (target.classList.contains("delete-btn")) {
-      e.stopPropagation();
-      orgIdToDelete = target.dataset.id;
-      deleteModal.style.display = "flex";
-    }
-  });
-
-  // Close dropdown if clicked outside
-  window.addEventListener("click", (e) => {
-    document.querySelectorAll(".dropdown-menu").forEach(menu => {
-      if (!menu.parentElement.contains(e.target)) {
-        menu.style.display = "none";
-      }
-    });
-  });
-
-  // ============================
-  // TOAST MESSAGE
-  // ============================
-  function showToast(message, type = "success") {
-    toast.textContent = message;
-    toast.style.backgroundColor = type === "success" ? "#2d8a47" : "#e74c3c";
-    toast.style.display = "block";
-    setTimeout(() => (toast.style.display = "none"), 2500);
+  function updateDashboardStats() {
+    totalOrganizations.textContent = orgs.length;
+    pendingReports.textContent = orgs.filter(
+      (o) => o.status === "Pending"
+    ).length;
+    approvedReports.textContent = orgs.filter(
+      (o) => o.status === "Approved"
+    ).length;
   }
 
   // ============================
-  // ADD / EDIT MODAL
+  // FILTERS AND SEARCH
+  // ============================
+  searchInput.addEventListener("input", applyFilters);
+  departmentFilter.addEventListener("change", applyFilters);
+
+  function applyFilters() {
+    const searchTerm = searchInput.value.trim().toLowerCase();
+    const selectedDept = departmentFilter.value;
+    let filtered = orgs;
+    if (selectedDept)
+      filtered = filtered.filter((org) => org.department === selectedDept);
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (org) =>
+          org.name.toLowerCase().includes(searchTerm) ||
+          org.username.toLowerCase().includes(searchTerm) ||
+          (org.department && org.department.toLowerCase().includes(searchTerm))
+      );
+    }
+    renderFilteredTable(filtered);
+  }
+
+  function renderFilteredTable(filtered) {
+    tableBody.innerHTML = "";
+    if (filtered.length === 0) {
+      tableBody.innerHTML =
+        '<tr><td colspan="7" style="text-align:center; padding: 40px; color: #828282;">No organizations found matching your filters</td></tr>';
+      tableContainer.style.display = "block";
+      emptyState.style.display = "none";
+      return;
+    }
+    filtered.forEach((org) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${org.name}</td>
+        <td>${org.department || "-"}</td>
+        <td>${org.username}</td>
+        <td>••••••••</td>
+        <td>${org.date || "-"}</td>
+        <td class="${
+          org.status === "Approved" ? "status-approved" : "status-pending"
+        }">${org.status || "-"}</td>
+        <td>
+          <div class="dropdown">
+            <button class="dropdown-btn">
+              <img src="./static/images/edit_button.png" alt="Edit Options" />
+            </button>
+            <div class="dropdown-menu">
+              <button class="edit-btn" data-id="${org.id}">Edit</button>
+              <button class="delete-btn" data-id="${org.id}">Delete</button>
+            </div>
+          </div>
+        </td>
+      `;
+      tableBody.appendChild(row);
+    });
+    tableContainer.style.display = "block";
+    emptyState.style.display = "none";
+  }
+
+  // ============================
+  // MODALS & BUTTONS
   // ============================
   addOrgBtn.addEventListener("click", openAddModal);
-  closeModalBtn.addEventListener("click", () => (addOrgModal.style.display = "none"));
-  cancelModalBtn.addEventListener("click", () => (addOrgModal.style.display = "none"));
+  closeModalBtn.addEventListener(
+    "click",
+    () => (addOrgModal.style.display = "none")
+  );
+  cancelModalBtn.addEventListener(
+    "click",
+    () => (addOrgModal.style.display = "none")
+  );
   window.addEventListener("click", (e) => {
     if (e.target === addOrgModal) addOrgModal.style.display = "none";
   });
@@ -270,37 +227,45 @@ document.addEventListener("DOMContentLoaded", () => {
     editingOrgId = null;
     addOrgModal.style.display = "flex";
     document.getElementById("modalTitle").textContent = "Add New Organization";
-    document.getElementById("modalSubtitle").textContent = "Create a new accredited organization account";
+    document.getElementById("modalSubtitle").textContent =
+      "Create a new accredited organization account";
     saveBtn.textContent = "Create";
     usernameField.value = generateUsername();
     passwordField.value = generatePassword();
+    loadDepartmentsSelect();
   }
 
-  function openEditModal(id) {
-    const org = orgs.find(o => o.id == id);
+  async function openEditModal(id) {
+    const org = orgs.find((o) => o.id == id);
     if (!org) return;
-
     editingOrgId = id;
     addOrgModal.style.display = "flex";
     document.getElementById("modalTitle").textContent = "Edit Organization";
-    document.getElementById("modalSubtitle").textContent = "Update accredited organization details";
+    document.getElementById("modalSubtitle").textContent =
+      "Update accredited organization details";
     saveBtn.textContent = "Save";
-
-    document.getElementById("orgDepartment").value = org.department || "";
     document.getElementById("orgName").value = org.name;
     usernameField.value = org.username;
     passwordField.value = "";
     document.getElementById("accreditationDate").value = org.date;
     document.getElementById("orgStatus").value = org.status;
+    // Set correct department
+    let deptId = "";
+    if (org.department) {
+      const dep = departments.find((d) => d.name === org.department);
+      if (dep) deptId = dep.id;
+    }
+    await loadDepartmentsSelect(deptId);
   }
 
   // ============================
-  // FORM SUBMIT
+  // FORM SUBMISSION
   // ============================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    const department_id = parseInt(departmentSelect.value, 10) || null;
     const orgData = {
-      orgDepartment: document.getElementById("orgDepartment").value,
+      department_id,
       orgName: document.getElementById("orgName").value,
       username: usernameField.value,
       password: passwordField.value,
@@ -326,7 +291,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!res.ok) throw new Error("Failed to add organization");
         showToast("Organization added successfully!");
       }
-
       form.reset();
       addOrgModal.style.display = "none";
       await loadOrganizations();
@@ -337,7 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ============================
-  // DELETE MODAL FUNCTIONALITY
+  // DELETE FUNCTIONALITY
   // ============================
   closeDeleteModal.addEventListener("click", () => {
     deleteModal.style.display = "none";
@@ -351,9 +315,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   confirmDeleteBtn.addEventListener("click", async () => {
     if (!orgIdToDelete) return;
-
     try {
-      const res = await fetch(`/osas/api/organizations/${orgIdToDelete}`, { method: "DELETE" });
+      const res = await fetch(`/osas/api/organizations/${orgIdToDelete}`, {
+        method: "DELETE",
+      });
       if (!res.ok) throw new Error("Failed to delete organization");
       showToast("Organization deleted successfully!");
       await loadOrganizations();
@@ -366,7 +331,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Close delete modal if clicked outside
   window.addEventListener("click", (e) => {
     if (e.target === deleteModal) {
       deleteModal.style.display = "none";
@@ -375,7 +339,78 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ============================
+  // GEN BUTTONS
+  // ============================
+  genCodeBtn.addEventListener(
+    "click",
+    () => (usernameField.value = generateUsername())
+  );
+  genPassBtn.addEventListener(
+    "click",
+    () => (passwordField.value = generatePassword())
+  );
+
+  function generateUsername() {
+    return `0125-${Math.floor(1000 + Math.random() * 9000)}`;
+  }
+
+  function generatePassword() {
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$";
+    let pass = "";
+    for (let i = 0; i < 8; i++)
+      pass += chars[Math.floor(Math.random() * chars.length)];
+    return pass;
+  }
+
+  // ============================
+  // TABLE EVENTS (Edit/Delete)
+  // ============================
+  tableBody.addEventListener("click", (e) => {
+    const target = e.target;
+    if (target.closest(".dropdown-btn")) {
+      e.stopPropagation();
+      const btn = target.closest(".dropdown-btn");
+      const menu = btn.nextElementSibling;
+      menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+    }
+    if (target.classList.contains("edit-btn")) {
+      e.stopPropagation();
+      openEditModal(target.dataset.id);
+    }
+    if (target.classList.contains("delete-btn")) {
+      e.stopPropagation();
+      orgIdToDelete = target.dataset.id;
+      deleteModal.style.display = "flex";
+    }
+  });
+
+  // Global dropdown close
+  window.addEventListener("click", (e) => {
+    document.querySelectorAll(".dropdown-menu").forEach((menu) => {
+      if (!menu.parentElement.contains(e.target)) {
+        menu.style.display = "none";
+      }
+    });
+  });
+
+  // TOAST
+  function showToast(message, type = "success") {
+    toast.textContent = message;
+    toast.style.backgroundColor = type === "success" ? "#2d8a47" : "#e74c3c";
+    toast.style.display = "block";
+    setTimeout(() => (toast.style.display = "none"), 2500);
+  }
+
+  // Dashboard logo click
+  logoLink.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  // ============================
   // INITIAL LOAD
   // ============================
+  loadDepartmentFilter();
+  loadDepartmentsSelect();
   loadOrganizations();
 });

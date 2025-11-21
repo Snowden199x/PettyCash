@@ -127,23 +127,44 @@ def osas_settings():
 # =========================
 # ORGANIZATION API
 # =========================
+# --- GET: Organizations (with department names) ---
+# --- GET: Organizations (with department names, filtered) ---
 @osas.route('/api/organizations', methods=['GET'])
 def get_organizations():
-    result = supabase.table('organizations').select('*').execute()
+    department = request.args.get('department')
+    # Get orgs, with department name
     orgs = []
+    # If filter, get department id
+    dept_id = None
+    if department and department != "All Departments":
+        dept_result = supabase.table('departments').select('id').eq('dept_name', department).execute()
+        if dept_result.data:
+            dept_id = dept_result.data[0]['id']
+    # Select orgs
+    org_query = supabase.table('organizations').select('*')
+    if dept_id:
+        org_query = org_query.eq('department_id', dept_id)
+    result = org_query.execute()
     if result.data:
         for org in result.data:
+            dept_name = "-"
+            if org.get('department_id'):
+                d = supabase.table('departments').select('dept_name').eq('id', org['department_id']).execute()
+                if d.data and isinstance(d.data, list):
+                    dept_name = d.data[0]['dept_name']
             orgs.append({
                 'id': org['id'],
                 'name': org['org_name'],
+                'department': dept_name,
                 'username': org['username'],
                 'password': org['password'],
-                'date': org['accreditation_date'],
+                'date': str(org.get('accreditation_date')),
                 'status': org['status'],
                 'created_by': org.get('created_by')
             })
     return jsonify({'organizations': orgs})
 
+# --- POST: Add Organization ---
 @osas.route('/add_organization', methods=['POST'])
 def add_organization():
     if 'osas_admin' not in session:
@@ -154,11 +175,11 @@ def add_organization():
     password = data.get('password') or generate_password()
     accreditation_date = data.get('accreditationDate')
     status = data.get('orgStatus')
+    department_id = data.get('department_id')
     admin = get_admin_data(session['osas_admin'])
-    existing = supabase.table('organizations').select('*').or_(
+    existing = supabase.table('organizations').select('id').or_(
         f"org_name.eq.{org_name},username.eq.{username}"
     ).execute()
-
     if existing.data and len(existing.data) > 0:
         return jsonify({'error': 'Organization name or username already exists'}), 400
     hashed_password = generate_password_hash(password)
@@ -168,14 +189,20 @@ def add_organization():
         'password': hashed_password,
         'accreditation_date': accreditation_date,
         'status': status,
+        'department_id': department_id,
         'must_change_password': True,
         'created_by': admin['id'] if admin else None
     }).execute()
-
+    dept_name = "-"
+    if department_id:
+        d = supabase.table('departments').select('dept_name').eq('id', department_id).execute()
+        if d.data and isinstance(d.data, list):
+            dept_name = d.data[0]['dept_name']
     if admin:
-        log_activity(admin['id'], 'organization', f'Added new organization: "{org_name}"')
+        log_activity(admin['id'], 'organization', f'Added new organization: "{org_name}" in {dept_name}')
     return jsonify({'message': 'Organization added', 'username': username, 'password': password}), 201
 
+# --- PUT: Update Organization ---
 @osas.route('/api/organizations/<int:org_id>', methods=['PUT'])
 def update_organization(org_id):
     if 'osas_admin' not in session:
@@ -184,32 +211,51 @@ def update_organization(org_id):
     update_data = {
         'org_name': data.get('orgName'),
         'username': data.get('username'),
-        'password': generate_password_hash(data.get('password')),
+        'password': generate_password_hash(data.get('password')) if data.get('password') else None,
         'accreditation_date': data.get('accreditationDate'),
-        'status': data.get('orgStatus')
+        'status': data.get('orgStatus'),
+        'department_id': data.get('department_id')
     }
-    old_org = supabase.table('organizations').select('*').eq('id', org_id).execute().data[0]
+    update_data = {k: v for k, v in update_data.items() if v is not None}
+    result = supabase.table('organizations').select('*').eq('id', org_id).execute()
+    old_org = result.data[0] if result.data and isinstance(result.data, list) else {}
     supabase.table('organizations').update(update_data).eq('id', org_id).execute()
     admin = get_admin_data(session['osas_admin'])
-
     if admin:
         for key in update_data:
-            if update_data[key] and old_org.get(key) != update_data[key]:
-                log_admin_audit(admin['id'], key, old_org.get(key), update_data[key])
+            old = old_org.get(key)
+            new = update_data[key]
+            if old != new:
+                log_admin_audit(admin['id'], key, old, new)
         log_activity(admin['id'], 'organization', f'Updated organization [{org_id}]')
     return jsonify({'message': 'Organization updated'})
 
+# --- DELETE: Delete Organization ---
 @osas.route('/api/organizations/<int:org_id>', methods=['DELETE'])
 def delete_organization(org_id):
     if 'osas_admin' not in session:
         return jsonify({'error': 'Login required'}), 401
-    old_org = supabase.table('organizations').select('*').eq('id', org_id).execute().data[0]
+    result = supabase.table('organizations').select('*').eq('id', org_id).execute()
+    old_org = result.data[0] if result.data and isinstance(result.data, list) else {}
+    dept_name = "-"
+    if old_org.get("department_id"):
+        d = supabase.table('departments').select('dept_name').eq('id', old_org['department_id']).execute()
+        if d.data and isinstance(d.data, list):
+            dept_name = d.data[0]['dept_name']
     supabase.table('organizations').delete().eq('id', org_id).execute()
     admin = get_admin_data(session['osas_admin'])
     if admin:
-        log_admin_audit(admin['id'], "organization_deleted", str(old_org.get('org_name')), None)
-        log_activity(admin['id'], 'organization', f'Deleted organization [{org_id}]')
+        log_admin_audit(admin['id'], "organization_deleted", str(old_org.get('org_name', '')), None)
+        log_activity(admin['id'], 'organization', f"Deleted organization [{org_id}] in {dept_name}")
     return jsonify({'message': 'Organization deleted'})
+
+# --- GET: Departments ---
+@osas.route('/api/departments', methods=['GET'])
+def get_departments():
+    result = supabase.table('departments').select('id,dept_name').execute()
+    departments = [{"id": d["id"], "name": d["dept_name"]} for d in result.data if isinstance(result.data, list)]
+    return jsonify({"departments": departments})
+
 
 # =========================
 # SETTINGS/BACKEND API
