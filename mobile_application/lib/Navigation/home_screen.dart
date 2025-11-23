@@ -6,7 +6,6 @@ import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String orgName;
-
   const HomeScreen({super.key, required this.orgName});
 
   @override
@@ -43,9 +42,10 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
     _updateDate();
-    _animationController =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
-
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showLoginSuccessNotification();
     });
@@ -55,6 +55,111 @@ class _HomeScreenState extends State<HomeScreen>
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  // Shows the 254x173 dialog for "New Wallet"
+  void _showNewWalletDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          elevation: 8,
+          backgroundColor: Colors.white,
+          child: SizedBox(
+            width: 254,
+            height: 173,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 16),
+                // Title centered, fontsize 14
+                const Text(
+                  "New Wallet",
+                  style: TextStyle(
+                    fontFamily: "Poppins",
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                // Centered text box row
+                Center(
+                  child: Container(
+                    width: 210, // less than dialog width for centering
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF2F2F2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: "Name",
+                        hintStyle: const TextStyle(
+                          color: Color(0xFFE59E2C),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          fontFamily: "Poppins",
+                        ),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        border: InputBorder.none,
+                        enabledBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Color(0xFFE59E2C),
+                            width: 2,
+                          ),
+                          borderRadius:
+                              BorderRadius.vertical(bottom: Radius.circular(8)),
+                        ),
+                        focusedBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Color(0xFFE59E2C),
+                            width: 2,
+                          ),
+                          borderRadius:
+                              BorderRadius.vertical(bottom: Radius.circular(8)),
+                        ),
+                      ),
+                      style: const TextStyle(
+                        fontFamily: "Poppins",
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                // Cancel aligned bottom right, font size 14
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Padding(
+                        padding: EdgeInsets.only(right: 6, bottom: 4),
+                        child: Text(
+                          "Cancel",
+                          style: TextStyle(
+                            color: Color(0xFF8B5A2B),
+                            fontFamily: "Poppins",
+                            fontWeight: FontWeight.w300,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _updateDate() {
@@ -102,14 +207,12 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
     );
-
     overlay.insert(overlayEntry);
     Future.delayed(const Duration(seconds: 1)).then((_) => overlayEntry.remove());
   }
 
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
-
     Widget nextScreen;
     switch (index) {
       case 0:
@@ -127,7 +230,6 @@ class _HomeScreenState extends State<HomeScreen>
       default:
         return;
     }
-
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
@@ -148,7 +250,6 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       body: Stack(
         children: [
           SafeArea(
@@ -157,6 +258,7 @@ class _HomeScreenState extends State<HomeScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Greeting and header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -191,9 +293,8 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 40),
-
+                  // Overview card
                   Center(
                     child: Container(
                       width: 356,
@@ -261,9 +362,7 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
                   const Text(
                     'Transaction History',
                     style: TextStyle(
@@ -274,7 +373,6 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ),
                   const SizedBox(height: 8),
-
                   _buildTransactionItem("EVENT", "Particulars", "Description", "PHP 00.00", "Date"),
                   _buildTransactionItem("EVENT", "Particulars", "Description", "PHP 00.00", "Date"),
                   _buildTransactionItem("EVENT", "Particulars", "Description", "PHP 00.00", "Date"),
@@ -283,20 +381,27 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
 
-          // ✔ FIXED: replaced deprecated withOpacity()
           if (_isFabMenuOpen)
-            AnimatedOpacity(
-              opacity: _isFabMenuOpen ? 1.0 : 0.9,
-              duration: const Duration(milliseconds: 200),
-              child: Container(
-                color: Colors.white.withValues(alpha: 0.6), // ← FIXED HERE
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 20, bottom: 100),
+            Positioned.fill(
+              child: Stack(
+                children: [
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      setState(() {
+                        _isFabMenuOpen = false;
+                      });
+                    },
+                    child: Container(
+                      color: const Color.fromARGB(179, 255, 255, 255),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 24, bottom: 80),
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           _fabMenuButton("New Wallet"),
@@ -307,13 +412,12 @@ class _HomeScreenState extends State<HomeScreen>
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
         ],
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: _toggleFabMenu,
         backgroundColor: const Color(0xFF2F4366),
@@ -325,25 +429,36 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
   Widget _fabMenuButton(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black, width: 1),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontFamily: "Poppins",
-          fontWeight: FontWeight.w600,
-          fontSize: 18,
+    return SizedBox(
+      width: 165,
+      height: 49,
+      child: GestureDetector(
+        onTap: () {
+          if (text == 'New Wallet') {
+            _showNewWalletDialog();
+          }
+        },
+        child: Container(
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.black, width: 1),
+          ),
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: "Poppins",
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+            ),
+          ),
         ),
       ),
     );
@@ -381,7 +496,6 @@ class _HomeScreenState extends State<HomeScreen>
   BottomNavigationBarItem _buildNavItem(
       int index, String label, Map<String, String> icons) {
     final isSelected = _selectedIndex == index;
-
     return BottomNavigationBarItem(
       icon: Container(
         padding: const EdgeInsets.all(8),
@@ -442,7 +556,6 @@ class _OverviewCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final String amount;
-
   const _OverviewCard({
     required this.title,
     required this.subtitle,
@@ -475,8 +588,10 @@ class _OverviewCard extends StatelessWidget {
           Positioned(
             bottom: 8,
             right: 10,
-            child:
-                Text(amount, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            child: Text(
+              amount,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
           ),
         ],
       ),

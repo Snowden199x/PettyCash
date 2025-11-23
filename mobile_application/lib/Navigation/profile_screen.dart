@@ -113,7 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const CircleAvatar(
                     radius: 50,
                     backgroundImage:
-                        AssetImage('assets/profile_placeholder.png'),
+                        AssetImage('assets/profile_pictures/ituh_logo.jpg'),
                   ),
                   Positioned(
                     right: 4,
