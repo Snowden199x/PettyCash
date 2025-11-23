@@ -73,13 +73,40 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     });
   }
 
+  Future<void> _selectMonth(BuildContext context) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000, 1),
+      lastDate: DateTime(now.year + 5, 12),
+      initialEntryMode: DatePickerEntryMode.calendarOnly,
+      helpText: "Select Month",
+      fieldHintText: "Month/Year",
+      builder: (context, child) => Theme(
+        data: ThemeData.light().copyWith(
+          colorScheme: ColorScheme.light(
+            primary: Color(0xFF8B3B08),
+            onPrimary: Colors.white,
+            onSurface: Colors.black,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = DateTime(picked.year, picked.month);
+      });
+    }
+  }
+
   String get formattedMonthYear => DateFormat.yMMMM().format(_selectedDate);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
@@ -95,14 +122,13 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           ),
         ),
       ),
-
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // Month Selector
+                // Month Selector with fixed-size clickable month box, no drop-down icon
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -110,16 +136,21 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                       icon: const Icon(Icons.chevron_left),
                       onPressed: () => _changeMonth(-1),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        formattedMonthYear,
-                        style: const TextStyle(fontWeight: FontWeight.w500),
+                    GestureDetector(
+                      onTap: () => _selectMonth(context),
+                      child: Container(
+                        width: 160, // Fixed width
+                        height: 36, // Fixed height
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          formattedMonthYear,
+                          style:
+                              const TextStyle(fontWeight: FontWeight.w500),
+                        ),
                       ),
                     ),
                     IconButton(
@@ -220,7 +251,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           ),
         ),
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
         backgroundColor: const Color(0xFF2F4366),
@@ -232,7 +262,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
