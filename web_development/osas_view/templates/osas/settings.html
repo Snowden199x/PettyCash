@@ -33,29 +33,29 @@
 
     <!-- SIDEBAR -->
     <aside class="sidebar hover-sidebar">
-  <nav class="nav-menu">
-    <a href="{{ url_for('osas.osas_dashboard') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
-      <img src="{{ url_for('osas.static', filename='images/dashboard_menu.png') }}" class="nav-icon-img" alt="Dashboard" />
-      <span class="nav-label">Dashboard</span>
-    </a>
-    <a href="{{ url_for('osas.osas_orgs') }}" class="nav-item {% if active_page == 'orgs' %}active{% endif %}">
-      <img src="{{ url_for('osas.static', filename='images/organization_menu.png') }}" class="nav-icon-img" alt="Organizations" />
-      <span class="nav-label">Accredited Organizations</span>
-    </a>
-    <a href="{{ url_for('osas.osas_reports') }}" class="nav-item {% if active_page == 'reports' %}active{% endif %}">
-      <img src="{{ url_for('osas.static', filename='images/reports_menu.png') }}" class="nav-icon-img" alt="Reports" />
-      <span class="nav-label">Reports</span>
-    </a>
-    <a href="{{ url_for('osas.osas_archive') }}" class="nav-item {% if active_page == 'archive' %}active{% endif %}">
-      <img src="{{ url_for('osas.static', filename='images/archive_menu.png') }}" class="nav-icon-img" alt="Archive" />
-      <span class="nav-label">Archive</span>
-    </a>
-    <a href="{{ url_for('osas.osas_settings') }}" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
-      <img src="{{ url_for('osas.static', filename='images/settings_menu.png') }}" class="nav-icon-img" alt="Settings" />
-      <span class="nav-label">Settings</span>
-    </a>
-  </nav>
-</aside>
+      <nav class="nav-menu">
+        <a href="{{ url_for('osas.osas_dashboard') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+          <img src="{{ url_for('osas.static', filename='images/dashboard_menu.png') }}" class="nav-icon-img" alt="Dashboard" />
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="{{ url_for('osas.osas_orgs') }}" class="nav-item {% if active_page == 'orgs' %}active{% endif %}">
+          <img src="{{ url_for('osas.static', filename='images/organization_menu.png') }}" class="nav-icon-img" alt="Organizations" />
+          <span class="nav-label">Accredited Organizations</span>
+        </a>
+        <a href="{{ url_for('osas.osas_reports') }}" class="nav-item {% if active_page == 'reports' %}active{% endif %}">
+          <img src="{{ url_for('osas.static', filename='images/reports_menu.png') }}" class="nav-icon-img" alt="Reports" />
+          <span class="nav-label">Reports</span>
+        </a>
+        <a href="{{ url_for('osas.osas_archive') }}" class="nav-item {% if active_page == 'archive' %}active{% endif %}">
+          <img src="{{ url_for('osas.static', filename='images/archive_menu.png') }}" class="nav-icon-img" alt="Archive" />
+          <span class="nav-label">Archive</span>
+        </a>
+        <a href="{{ url_for('osas.osas_settings') }}" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
+          <img src="{{ url_for('osas.static', filename='images/settings_menu.png') }}" class="nav-icon-img" alt="Settings" />
+          <span class="nav-label">Settings</span>
+        </a>
+      </nav>
+    </aside>
 
     <!-- MAIN CONTENT -->
     <main class="dashboard with-sidebar">
@@ -83,10 +83,6 @@
             <button class="nav-item" data-section="activity">
               <span class="nav-icon">📋</span>
               <span>Activity Logs</span>
-            </button>
-            <button class="nav-item" data-section="display">
-              <span class="nav-icon">🎨</span>
-              <span>Display & Theme</span>
             </button>
             <button class="nav-item" data-section="about">
               <span class="nav-icon">ℹ️</span>
@@ -158,42 +154,176 @@
                 </div>
               </form>
             </div>
-
-            <div class="settings-card">
-              <h3>Active Sessions</h3>
-              <p class="card-description">Manage devices that are currently logged into your account</p>
-
-              <div class="session-list" id="sessionList">
-                <!-- Will be filled from /api/admin/sessions if you add that to JS -->
-              </div>
-
-              <div class="form-actions">
-                <button type="button" id="logoutAllBtn" class="danger-btn">Log Out All Other Devices</button>
-              </div>
-            </div>
           </section>
 
-          <!-- ACTIVITY, DISPLAY, ABOUT sections -->
-          <!-- (Use exactly the HTML you already have; it works with settings.js) -->
+          <!-- Session Management Card -->
+          <div class="settings-card">
+            <h3>Active Sessions</h3>
+            <p class="card-description">Manage devices that are currently logged into your account</p>
 
-        </div>
-      </div>
+            <div class="session-list" id="sessionList">
+              <div class="session-item current">
+                <div class="session-info">
+                  <p class="session-device">💻 Current Device</p>
+                  <p class="session-details">Chrome on Windows • Last active: Just now</p>
+                </div>
+                <span class="session-badge">Active</span>
+              </div>
+            </div>
 
-      <div id="toast" class="toast"></div>
-
-      <div id="confirmModal" class="modal">
-        <div class="modal-box">
-          <div class="modal-header">
-            <h2>Confirm Action</h2>
-            <button class="close-btn" id="closeConfirmModal">&times;</button>
+            <div class="form-actions">
+              <button type="button" id="logoutAllBtn" class="danger-btn">Log Out All Other Devices</button>
+            </div>
           </div>
-          <p id="confirmMessage">Are you sure you want to proceed?</p>
-          <div class="modal-buttons">
-            <button id="cancelConfirmBtn" class="secondary-btn">Cancel</button>
-            <button id="proceedConfirmBtn" class="primary-btn">Confirm</button>
+        </section>
+
+        <!-- ACTIVITY LOGS SECTION -->
+        <section class="settings-section" id="activity">
+          <div class="section-header">
+            <h2>Activity Logs</h2>
+            <p>Track all administrative actions and changes</p>
           </div>
-        </div>
+
+          <div class="settings-card">
+            <!-- Filter Controls -->
+            <div class="activity-filters">
+              <input type="date" id="activityDateFilter" class="filter-input" />
+              <select id="activityTypeFilter" class="filter-select">
+                <option value="all">All Actions</option>
+                <option value="login">Login</option>
+                <option value="organization">Organization</option>
+                <option value="report">Report</option>
+                <option value="settings">Settings</option>
+              </select>
+            </div>
+
+            <!-- Activity List -->
+            <div class="activity-list" id="activityList">
+              <div class="activity-item">
+                <div class="activity-icon">🔑</div>
+                <div class="activity-details">
+                  <p class="activity-action">Logged in</p>
+                  <p class="activity-date">Today at 2:45 PM</p>
+                </div>
+              </div>
+
+              <div class="activity-item">
+                <div class="activity-icon">➕</div>
+                <div class="activity-details">
+                  <p class="activity-action">Added new organization: "Student Council"</p>
+                  <p class="activity-date">Nov 18, 2025 at 1:30 PM</p>
+                </div>
+              </div>
+
+              <div class="activity-item">
+                <div class="activity-icon">✏️</div>
+                <div class="activity-details">
+                  <p class="activity-action">Updated report status for "Dance Club"</p>
+                  <p class="activity-date">Nov 17, 2025 at 4:15 PM</p>
+                </div>
+              </div>
+
+              <div class="activity-item">
+                <div class="activity-icon">🗑️</div>
+                <div class="activity-details">
+                  <p class="activity-action">Deleted organization: "Inactive Org"</p>
+                  <p class="activity-date">Nov 16, 2025 at 10:20 AM</p>
+                </div>
+              </div>
+            </div>
+
+            <button class="secondary-btn load-more-btn" id="loadMoreLogs">Load More</button>
+          </div>
+        </section>
+
+        <!-- ABOUT SYSTEM SECTION -->
+        <section class="settings-section" id="about">
+          <div class="section-header">
+            <h2>About System</h2>
+            <p>System information and contact details</p>
+          </div>
+
+          <!-- App Info Card -->
+          <div class="settings-card">
+            <h3>PockiTrack System</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Version</span>
+                <span class="info-value">v1.0.0</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Last Updated</span>
+                <span class="info-value">November 2025</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Platform</span>
+                <span class="info-value">Web Application</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Institution Info Card -->
+          <div class="settings-card">
+            <h3>Institution Details</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">School Name</span>
+                <span class="info-value">Laguna State Polytechnic University Campus</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Department</span>
+                <span class="info-value">Office of Student Affairs and Services</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Contact</span>
+                <span class="info-value">osas@university.edu</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Developer Contact Card -->
+          <div class="settings-card">
+            <h3>Developer Contact</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Support Email</span>
+                <span class="info-value">support@pockitrack.com</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Documentation</span>
+                <span class="info-value"><a href="#" class="info-link">View User Guide</a></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Legal Card -->
+          <div class="settings-card">
+            <h3>Legal & Privacy</h3>
+            <div class="legal-links">
+              <a href="#" class="legal-link">Terms of Service</a>
+              <a href="#" class="legal-link">Privacy Policy</a>
+              <a href="#" class="legal-link">Data Protection</a>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
+
+    <!-- SUCCESS/ERROR TOAST -->
+    <div id="toast" class="toast"></div>
+
+    <div id="confirmModal" class="modal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2>Confirm Action</h2>
+          <button class="close-btn" id="closeConfirmModal">&times;</button>
+        </div>
+        <p id="confirmMessage">Are you sure you want to proceed?</p>
+        <div class="modal-buttons">
+          <button id="cancelConfirmBtn" class="secondary-btn">Cancel</button>
+          <button id="proceedConfirmBtn" class="primary-btn">Confirm</button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

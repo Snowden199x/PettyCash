@@ -15,10 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const activityTypeFilter = document.getElementById("activityTypeFilter");
   const activityList = document.getElementById("activityList");
 
-  // Theme Options
-  const themeOptions = document.querySelectorAll(".theme-option");
-  const fontSizeSelect = document.getElementById("fontSize");
-
   // Modals/Toasts
   const confirmModal = document.getElementById("confirmModal");
   const closeConfirmModal = document.getElementById("closeConfirmModal");
@@ -27,6 +23,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const confirmMessage = document.getElementById("confirmMessage");
   const toast = document.getElementById("toast");
 
+  // --- SIDEBAR NAVIGATION (tabs) ---
+document.querySelectorAll('.settings-nav .nav-item').forEach((btn) => {
+  btn.addEventListener('click', function() {
+    // Remove 'active' class from all nav buttons
+    document.querySelectorAll('.settings-nav .nav-item').forEach(b => b.classList.remove('active'));
+    // Add 'active' to the clicked nav button
+    btn.classList.add('active');
+
+    // Hide all settings sections
+    document.querySelectorAll('.settings-content .settings-section').forEach(sec => sec.classList.remove('active'));
+
+    // Show the one section matching the data-section attribute
+    const sectionId = btn.getAttribute('data-section');
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) targetSection.classList.add('active');
+  });
+});
+
+  // ============================
+  // LOGO CLICK
+  // ============================
+  if (logoLink) {
+    logoLink.addEventListener("click", () => {
+      window.location.href = "/osas/dashboard";
+    });
+  }
 
   // ========== LOAD ADMIN PROFILE ==========
   async function loadAdminProfile() {
@@ -214,47 +236,6 @@ document.addEventListener("DOMContentLoaded", () => {
     showToast("All logs loaded", "warning");
   });
 
-  // ========== THEME & DISPLAY ==========
-  themeOptions.forEach((option) => {
-    option.addEventListener("click", () => {
-      themeOptions.forEach((opt) => opt.classList.remove("active"));
-      option.classList.add("active");
-    });
-  });
-
-  saveDisplayBtn.addEventListener("click", () => {
-    const selectedTheme = document.querySelector(
-      'input[name="theme"]:checked'
-    ).value;
-    const fontSize = fontSizeSelect.value;
-    localStorage.setItem("theme", selectedTheme);
-    localStorage.setItem("fontSize", fontSize);
-    if (selectedTheme === "dark") {
-      showToast("Dark mode coming soon!", "warning");
-    } else {
-      showToast("Display preferences saved!");
-    }
-  });
-
-  // Load saved preferences
-  const savedTheme = localStorage.getItem("theme");
-  const savedFontSize = localStorage.getItem("fontSize");
-  if (savedTheme) {
-    const themeInput = document.querySelector(
-      `input[name="theme"][value="${savedTheme}"]`
-    );
-    if (themeInput) {
-      themeInput.checked = true;
-      themeInput.closest(".theme-option").classList.add("active");
-      themeOptions.forEach((opt) => {
-        if (opt !== themeInput.closest(".theme-option"))
-          opt.classList.remove("active");
-      });
-    }
-  }
-  if (savedFontSize) {
-    fontSizeSelect.value = savedFontSize;
-  }
 
   // ========== CONFIRMATION MODAL ==========
   function showConfirmModal(message, callback) {

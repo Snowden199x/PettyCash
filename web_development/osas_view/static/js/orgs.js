@@ -32,6 +32,15 @@ document.addEventListener("DOMContentLoaded", () => {
   let editingOrgId = null;
   let orgIdToDelete = null;
 
+    // ============================
+  // LOGO CLICK
+  // ============================
+  if (logoLink) {
+    logoLink.addEventListener("click", () => {
+      window.location.href = "/osas/dashboard";
+    });
+  }
+
   // ============================
   // POPULATE DEPARTMENT FILTER (for main filter dropdown)
   // ============================

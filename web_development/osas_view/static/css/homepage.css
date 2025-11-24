@@ -178,6 +178,16 @@ body {
   margin-left: 50px;
 }
 
+.dashboard.with-sidebar {
+  margin-left: 60px;
+  transition: margin-left 0.25s;
+}
+/* When the sidebar is hovered (i.e., open), shift the main content */
+.sidebar.hover-sidebar:hover ~ .dashboard.with-sidebar {
+  margin-left: 260px;
+}
+
+
 /* =========================================
    WELCOME SECTION
 ========================================= */
@@ -375,14 +385,32 @@ body {
   color: #2E7D32;
 }
 
-.filter-select-small {
-  padding: 6px 12px;
+.filter-dropdown {
+  position: relative;
+}
+
+.filter-select {
+  padding: 12px 20px;
   width: 150px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 13px;
-  font-family: 'Poppins', sans-serif;
+  border-radius: 10px;
+  border: 1px solid rgba(130, 130, 130, 0.5);
+  background-color: #FFFFFF;
+  font-family: Poppins;
+  font-size: 16px;
+  font-weight: 400;
+  color: #000000;
   cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.filter-select:hover {
+  border-color: #8B3B08;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #8B3B08;
 }
 
 .view-all-link {
@@ -399,80 +427,73 @@ body {
 
 /* Chart Container */
 .chart-container {
-  height: 250px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 15px;
+  min-height: 200px;
+}
+canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 250px;
 }
 
-.chart-container canvas {
-  max-width: 100%;
-  max-height: 100%;
-}
 
 /* Chart Legend */
 .chart-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 12px;
+  margin-top: 15px;
   justify-content: center;
 }
-
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  font-size: 10px;
+}
+.legend-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 4px;
+  margin-right: 7px;
+  border: 1px solid #eee;
 }
 
-.legend-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-}
 
 /* Status Breakdown */
 .status-breakdown {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  margin-top: 18px;
 }
-
 .status-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  margin-bottom: 8px;
+  gap: 12px;
 }
-
 .status-label {
-  font-size: 14px;
-  font-weight: 500;
-  min-width: 100px;
-  color: #333;
+  width: 80px;
+  font-size: 15px;
 }
-
 .status-progress {
   flex: 1;
-  height: 8px;
-  background-color: #E0E0E0;
-  border-radius: 10px;
+  background: #f4f4f4;
+  border-radius: 5px;
+  height: 10px;
+  margin: 0 6px;
   overflow: hidden;
 }
-
 .status-fill {
   height: 100%;
-  border-radius: 10px;
-  transition: width 0.5s ease;
+  border-radius: 5px;
+  transition: width 0.6s;
 }
-
 .status-count {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
   min-width: 30px;
   text-align: right;
+  font-weight: 500;
 }
+
 
 /* Activity Feed */
 .activity-feed {
