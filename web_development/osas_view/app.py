@@ -135,6 +135,7 @@ def get_organizations():
     department = request.args.get('department')
     orgs = []
     dept_id = None
+    
     if department and department != "All Departments":
         dept_result = supabase.table('departments').select('id').eq('dept_name', department).execute()
         if dept_result.data:
