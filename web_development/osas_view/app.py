@@ -127,20 +127,17 @@ def osas_settings():
 # =========================
 # ORGANIZATION API
 # =========================
-# --- GET: Organizations (with department names) ---
-# --- GET: Organizations (with department names, filtered) ---
 @osas.route('/api/organizations', methods=['GET'])
 def get_organizations():
     department = request.args.get('department')
-    # Get orgs, with department name
     orgs = []
-    # If filter, get department id
     dept_id = None
+    
     if department and department != "All Departments":
         dept_result = supabase.table('departments').select('id').eq('dept_name', department).execute()
         if dept_result.data:
             dept_id = dept_result.data[0]['id']
-    # Select orgs
+
     org_query = supabase.table('organizations').select('*')
     if dept_id:
         org_query = org_query.eq('department_id', dept_id)
