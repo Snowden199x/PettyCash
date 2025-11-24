@@ -159,21 +159,20 @@
         <div class="analytics-grid">
           <!-- CHART: Organizations by Department -->
           <div class="analytics-card">
-            <div class="card-header">
-              <h3>Organizations by Department</h3>
-              <select id="deptFilter" class="filter-select-small">
-                <option value="all">All Departments</option>
-                <option value="academic">Academic</option>
-                <option value="cultural">Cultural</option>
-                <option value="sports">Sports</option>
-                <option value="community">Community Service</option>
-              </select>
-            </div>
-            <div class="chart-container">
-              <vas id="departmententChart"></canvas>
-            </div>
-            <div class="chart-legend" id="deptLegend"></div>
-          </div>
+  <div class="card-header">
+    <h3>Organizations by Department</h3>
+    <select id="dashboardDeptFilter" class="filter-select">
+      <option value="">All Departments</option>
+      <!-- options will be filled by JS -->
+    </select>
+  </div>
+  <div class="chart-container">
+  <canvas id="departmentChart" width="250" height="250"></canvas>
+</div>
+<div class="chart-legend" id="deptLegend"></div>
+</div>
+
+          
 
           <!-- CHART: Report Status Distribution -->
           <div class="analytics-card">
@@ -182,9 +181,9 @@
               <span class="card-badge">Real-time</span>
             </div>
             <div class="chart-container">
-              <vas id="statustusChart"></canvas>
-            </div>
-            <div class="status-breakdown" id="statusBreakdown"></div>
+  <canvas id="statusChart" width="250" height="250"></canvas>
+</div>
+<div class="status-breakdown" id="statusBreakdown"></div>
           </div>
 
           <!-- RECENT ACTIVITIES -->
@@ -207,78 +206,6 @@
               </div>
             </div>
           </div>
-
-          <!-- MONTHLY TREND -->
-          <div class="analytics-card wide">
-            <div class="card-header">
-              <h3>Monthly Report Submissions</h3>
-              <div class="time-range-tabs">
-                <button class="tab-btn active" data-range="6m">6 Months</button>
-                <button class="tab-btn" data-range="1y">1 Year</button>
-              </div>
-            </div>
-            <div class="chart-container">
-              <vas id="trendendChart"></canvas>
-            </div>
-          </div>
-
-          <!-- TOP ORGANIZATIONS -->
-          <div class="analytics-card">
-            <div class="card-header">
-              <h3>Top Performing Organizations</h3>
-              <span class="card-badge success">This Month</span>
-            </div>
-            <div class="top-orgs-list" id="topOrgsList">
-              <div class="top-org-item">
-                <div class="rank-badge gold">1</div>
-                <div class="org-info">
-                  <p class="org-name">Loading...</p>
-                  <p class="org-stat">--% completion</p>
-                </div>
-                <div class="org-score">--</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- QUICK STATS -->
-          <div class="analytics-card">
-            <div class="card-header">
-              <h3>System Statistics</h3>
-            </div>
-            <div class="quick-stats-grid">
-              <div class="quick-stat">
-                <div class="stat-icon">📅</div>
-                <div class="stat-info">
-                  <p class="stat-label">Avg. Processing Time</p>
-                  <p class="stat-value" id="avgProcessTime">-- days</p>
-                </div>
-              </div>
-              <div class="quick-stat">
-                <div class="stat-icon">📈</div>
-                <div class="stat-info">
-                  <p class="stat-label">Submission Rate</p>
-                  <p class="stat-value" id="submissionRate">--%</p>
-                </div>
-              </div>
-              <div class="quick-stat">
-                <div class="stat-icon">⚠️</div>
-                <div class="stat-info">
-                  <p class="stat-label">Overdue Reports</p>
-                  <p class="stat-value warning" id="overdueCount">--</p>
-                </div>
-              </div>
-              <div class="quick-stat">
-                <div class="stat-icon">🎯</div>
-                <div class="stat-info">
-                  <p class="stat-label">Compliance Rate</p>
-                  <p class="stat-value" id="complianceRate">--%</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <!-- TOAST -->
       <div id="toast" class="toast"></div>
     </main>

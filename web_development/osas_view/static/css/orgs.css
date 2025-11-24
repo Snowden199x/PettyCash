@@ -62,9 +62,15 @@ body {
   transition: margin-left 0.3s ease;
 }
 
-.dashboard.with-menu {
-  margin-left: 280px;
+.dashboard.with-sidebar {
+  margin-left: 60px;
+  transition: margin-left 0.25s;
 }
+/* When the sidebar is hovered (i.e., open), shift the main content */
+.sidebar.hover-sidebar:hover ~ .dashboard.with-sidebar {
+  margin-left: 260px;
+}
+
 
 
 /* =========================================
@@ -133,14 +139,12 @@ body {
 }
 
 .filter-select:hover {
-  border-color: #E59E2C;
-  box-shadow: 0px 2px 5px rgba(243, 213, 141, 0.3);
+  border-color: #8B3B08;
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: #E59E2C;
-  box-shadow: 0px 4px 7.9px 4px rgba(243, 213, 141, 0.4);
+  border-color: #8B3B08;
 }
 
 /* --- Add Organization Button --- */
@@ -176,8 +180,7 @@ body {
 .search-input:focus,
 .search-input:hover {
   outline: none;
-  border-color: #E59E2C;
-  box-shadow: 0px 4px 7.9px 4px rgba(243, 213, 141, 0.4);
+  border-color: #8B3B08;
 }
 
 /* --- Empty State Box --- */

@@ -16,8 +16,11 @@ body {
   justify-content: space-between;
   align-items: center;
   background: linear-gradient(to bottom, #FFFFFF, #ECDDC6);
-  padding: 10px 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 15px 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .logo {
@@ -38,10 +41,10 @@ body {
   color: #000000;
 }
 
-.menu-icon img {
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
 /* =========================================
@@ -50,8 +53,18 @@ body {
 .dashboard {
   padding: 30px 40px;
   max-width: 1400px;
-  margin: 0 auto;
+  margin-left: 50px;
 }
+
+.dashboard.with-sidebar {
+  margin-left: 60px;
+  transition: margin-left 0.25s;
+}
+/* When the sidebar is hovered (i.e., open), shift the main content */
+.sidebar.hover-sidebar:hover ~ .dashboard.with-sidebar {
+  margin-left: 260px;
+}
+
 
 /* =========================================
    PAGE HEADER

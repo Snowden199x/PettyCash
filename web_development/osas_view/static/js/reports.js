@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const emptyState = document.getElementById("emptyState");
   const searchInput = document.getElementById("searchReports");
   const statusFilter = document.getElementById("statusFilter");
+  const departmentFilter = document.getElementById("departmentFilter");
 
   const reportModal = document.getElementById("reportModal");
   const closeModalBtn = document.getElementById("closeModal");
@@ -23,6 +24,36 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentPage = 1;
   const pageSize = 6;
 
+    // ============================
+  // LOGO CLICK
+  // ============================
+  if (logoLink) {
+    logoLink.addEventListener("click", () => {
+      window.location.href = "/osas/dashboard";
+    });
+  }
+
+  async function loadDepartmentFilter() {
+  try {
+    const res = await fetch("/osas/api/departments");
+    const data = await res.json();
+    departments = data.departments || [];
+    departmentFilter.innerHTML = `<option value="">All Departments</option>`;
+    departments.forEach(dep => {
+      departmentFilter.innerHTML += `<option value="${dep.name}">${dep.name}</option>`;
+    });
+  } catch {
+    departmentFilter.innerHTML = `<option value="">All Departments</option>`;
+  }
+}
+loadDepartmentFilter();
+
+departmentFilter.addEventListener("change", () => {
+  currentPage = 1;
+  renderReports();
+});
+
+
   async function loadReports() {
     try {
       const orgRes = await fetch("/osas/api/organizations");
@@ -37,6 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
       reports = orgData.organizations.map((org) => ({
         id: org.id,
         orgName: org.name,
+        department: org.department,
         submissionDate:
           org.date || new Date().toISOString().split("T")[0],
         status: "pending",
@@ -72,8 +104,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function getFilteredReports() {
     const searchTerm = searchInput.value.toLowerCase().trim();
     const selectedStatus = statusFilter.value;
+    const selectedDept = departmentFilter.value;
 
     let filtered = reports;
+
+    if (selectedDept)
+    filtered = filtered.filter(report => report.department === selectedDept);
 
     if (searchTerm) {
       filtered = filtered.filter((report) =>

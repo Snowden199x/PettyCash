@@ -66,19 +66,26 @@
           <p>Track and manage organization report submissions</p>
         </div>
         <div class="filter-controls">
-          <select id="statusFilter" class="filter-select">
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="in-review">In Review</option>
-            <option value="completed">Completed</option>
-          </select>
-          <input
-            type="text"
-            id="searchReports"
-            placeholder="Search organizations..."
-            class="search-input"
-          />
-        </div>
+  <select id="statusFilter" class="filter-select">
+    <option value="all">All Status</option>
+    <option value="pending">Pending</option>
+    <option value="in-review">In Review</option>
+    <option value="completed">Completed</option>
+  </select>
+  <div class="filter-dropdown">
+    <select id="departmentFilter" class="filter-select">
+      <option value="">All Departments</option>
+      <!-- options get filled by JS -->
+    </select>
+  </div>
+  <input
+    type="text"
+    id="searchReports"
+    placeholder="Search organizations..."
+    class="search-input"
+  />
+</div>
+
       </section>
 
       <!-- REPORTS SECTION -->
@@ -127,43 +134,43 @@
             <div class="checklist" id="documentChecklist">
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="august" />
-                <span>August Monthly Financial Report</span>
+                <span>August Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="september" />
-                <span>September Monthly Financial Report</span>
+                <span>September Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="october" />
-                <span>October Monthly Financial Report</span>
+                <span>October Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="november" />
-                <span>November Monthly Financial Report</span>
+                <span>November Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="december" />
-                <span>December Monthly Financial Report</span>
+                <span>December Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="january" />
-                <span>January Monthly Financial Report</span>
+                <span>January Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="february" />
-                <span>February Monthly Financial Report</span>
+                <span>February Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="march" />
-                <span>March Monthly Financial Report</span>
+                <span>March Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="april" />
-                <span>April Monthly Financial Report</span>
+                <span>April Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="may" />
-                <span>May Monthly Financial Report</span>
+                <span>May Financial Report</span>
               </label>
             </div>
           </div>
