@@ -130,7 +130,6 @@ document.addEventListener("DOMContentLoaded", () => {
     emptyState.style.display = "none";
   }
 
-
   // ============================
   // FILTERS AND SEARCH
   // ============================
@@ -232,15 +231,13 @@ document.addEventListener("DOMContentLoaded", () => {
     saveBtn.textContent = "Save";
     document.getElementById("orgName").value = org.name;
     usernameField.value = org.username;
-    passwordField.value = "";
+    passwordField.value = ""; // Blank for security!
     document.getElementById("accreditationDate").value = org.date;
-    document.getElementById("orgStatus").value = org.status;
-    // Set correct department
+
     let deptId = "";
-    if (org.department) {
-      const dep = departments.find((d) => d.name === org.department);
-      if (dep) deptId = dep.id;
-    }
+
+    const dep = departments.find((d) => d.name === org.department);
+    if (dep) deptId = dep.id;
     await loadDepartmentsSelect(deptId);
   }
 
@@ -249,15 +246,26 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     const department_id = parseInt(departmentSelect.value, 10) || null;
+    const orgName = document.getElementById("orgName").value;
+    const username = usernameField.value;
+    const password = passwordField.value;
+    const accreditationDate =
+      document.getElementById("accreditationDate").value;
+
+    if (!orgName || !username || !accreditationDate || !department_id) {
+      alert("All fields except password are required!");
+      return;
+    }
+
     const orgData = {
       department_id,
-      orgName: document.getElementById("orgName").value,
-      username: usernameField.value,
-      password: passwordField.value,
-      accreditationDate: document.getElementById("accreditationDate").value,
-      orgStatus: document.getElementById("orgStatus").value,
+      orgName,
+      username,
+      accreditationDate,
     };
+    if (password) orgData.password = password;
 
     try {
       if (editingOrgId) {
@@ -269,6 +277,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!res.ok) throw new Error("Failed to update organization");
         showToast("Organization updated successfully!");
       } else {
+        orgData.password = password;
+        if (!password) {
+          alert("Password is required when creating an organization!");
+          return;
+        }
         const res = await fetch("/osas/add_organization", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -277,6 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!res.ok) throw new Error("Failed to add organization");
         showToast("Organization added successfully!");
       }
+
       form.reset();
       addOrgModal.style.display = "none";
       await loadOrganizations();
