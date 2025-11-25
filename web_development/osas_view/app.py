@@ -367,31 +367,40 @@ def get_profile():
 def update_profile():
     if 'osas_admin' not in session:
         return jsonify({'error': 'Not logged in'}), 401
+
     username = session['osas_admin']
     data = request.get_json()
     update_data = {}
     old_admin = get_admin_data(username)
-    if data.get("full_name") and data["full_name"] != old_admin.get("full_name", None):
+
+    if data.get("full_name") and data["full_name"] != old_admin.get("full_name"):
         update_data["full_name"] = data["full_name"]
         log_admin_audit(old_admin['id'], "full_name", old_admin.get("full_name"), data["full_name"])
-    if data.get("email") and data["email"] != old_admin.get("email", None):
+
+    if data.get("email") and data["email"] != old_admin.get("email"):
         update_data["email"] = data["email"]
         log_admin_audit(old_admin['id'], "email", old_admin.get("email"), data["email"])
+
+    # Handle username change and uniqueness check
     if data.get("username") and data["username"] != username:
         existing = supabase.table('osas_admin').select('id').eq("username", data["username"]).execute()
         if existing.data:
             return jsonify({"error": "Username already exists."}), 400
         update_data["username"] = data["username"]
         log_admin_audit(old_admin['id'], "username", old_admin.get("username"), data["username"])
+        session["osas_admin"] = data["username"]
+
+    if update_data:
         supabase.table('osas_admin').update(update_data).eq('username', username).execute()
-    if "username" in update_data:
-        session["osas_admin"] = update_data["username"]
-        admin = get_admin_data(update_data.get("username", username))
+        new_user = update_data.get("username", username)
     else:
-        admin = old_admin
+        new_user = username
+
+    admin = get_admin_data(new_user)
     if admin:
         log_activity(admin['id'], 'settings', "Profile updated")
     return jsonify({"message": "Profile updated!", "updated": update_data})
+
 
 @osas.route('/api/admin/password', methods=['POST'])
 def change_password():

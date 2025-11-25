@@ -25,6 +25,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const pageSize = 6;
   let departments = [];
 
+   // ===== LOGO CLICK =====
+  const logoLink = document.getElementById("logoLink");
+  if (logoLink) {
+    logoLink.addEventListener("click", () => {
+      window.location.href = "/osas/dashboard";
+    });
+  }
+  
   // --- Department Filter ---
   async function loadDepartmentFilter() {
     try {
