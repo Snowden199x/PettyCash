@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PockiTrack | Transaction History</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('pres.static', filename='css/history.css') }}"
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <a href="{{ url_for('pres.homepage') }}" class="logo">
+          <img
+            src="{{ url_for('pres.static', filename='images/pocki_logo.png') }}"
+            alt="PockiTrack Logo"
+          />
+          <span class="logo_name">PockiTrack</span>
+        </a>
+
+        <div class="sidebar-content">
+          <button class="new-btn">+ New</button>
+
+          <nav class="nav-menu">
+            <a href="{{ url_for('pres.homepage') }}" class="nav-item">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_home.png') }}"
+                alt="Home Icon"
+              />
+              Home
+            </a>
+
+            <a href="{{ url_for('pres.history') }}" class="nav-item active">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_history.png') }}"
+                alt="History Icon"
+              />
+              History
+            </a>
+
+            <a href="{{ url_for('pres.wallets') }}" class="nav-item">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_wallet.png') }}"
+                alt="Wallet Icon"
+              />
+              Wallets
+            </a>
+
+            <a href="{{ url_for('pres.profile') }}" class="nav-item">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_profile.png') }}"
+                alt="Profile Icon"
+              />
+              Profile
+            </a>
+          </nav>
+        </div>
+
+        <a href="{{ url_for('pres.pres_logout') }}" class="logout-btn">
+          <img
+            src="{{ url_for('pres.static', filename='images/logout_icon.png') }}"
+            alt="Logout Icon"
+          />
+          Logout
+        </a>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="content-box">
+          <section class="header">
+            <h3>Transaction History</h3>
+            
+            <!-- Month Selector -->
+            <div class="month-selector">
+              <button id="prev-month" class="month-nav">&#8249;</button>
+              <div class="month-display" id="current-month">February 2025</div>
+              <button id="next-month" class="month-nav">&#8250;</button>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="income">Income</button>
+              <button class="filter-btn" data-filter="expense">Expense</button>
+            </div>
+          </section>
+
+          <!-- Transactions List -->
+          <section class="transactions-section" id="transactions-list">
+            <!-- Will be populated by JS -->
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="{{ url_for('pres.static', filename='js/history.js') }}"></script>
+  </body>
+</html>

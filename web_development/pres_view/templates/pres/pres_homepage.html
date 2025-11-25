@@ -45,7 +45,7 @@
               Home
             </a>
 
-            <a href="#" class="nav-item">
+            <a href="{{ url_for('pres.history') }}" class="nav-item">
               <img
                 src="{{ url_for('pres.static', filename='images/nav_history.png') }}"
                 alt="History Icon"
@@ -53,7 +53,7 @@
               History
             </a>
 
-            <a href="#" class="nav-item">
+            <a href="{{ url_for('pres.wallets') }}" class="nav-item">
               <img
                 src="{{ url_for('pres.static', filename='images/nav_wallet.png') }}"
                 alt="Wallet Icon"
@@ -61,7 +61,7 @@
               Wallets
             </a>
 
-            <a href="#" class="nav-item">
+            <a href="{{ url_for('pres.profile') }}" class="nav-item">
               <img
                 src="{{ url_for('pres.static', filename='images/nav_profile.png') }}"
                 alt="Profile Icon"
@@ -85,29 +85,29 @@
       <main class="main-content">
         <div class="content-box">
           <section class="header">
-            <h3>Hello, <span>{{ session['org_name'] }}</span></h3>
+            <h3>Hello, <span id="username">{{ session['org_name'] }}</span></h3>
             <p class="date-text"></p>
 
             <div class="summary-wrapper">
               <div class="summary">
                 <div class="card">
                   <p>Total balance</p>
-                  <h2>Php 0.00</h2>
+                  <h2 id="total-balance">Php 0.00</h2>
                 </div>
 
                 <div class="card">
                   <p>Total no. of events</p>
-                  <h2>0</h2>
+                  <h2 id="total-events">0</h2>
                 </div>
 
                 <div class="card">
                   <p>Income this month</p>
-                  <h2>Php 0.00</h2>
+                  <h2 id="income-month">Php 0.00</h2>
                 </div>
 
                 <div class="card">
                   <p>Expenses this month</p>
-                  <h2>Php 0.00</h2>
+                  <h2 id="expenses-month">Php 0.00</h2>
                 </div>
               </div>
             </div>
@@ -116,31 +116,15 @@
           <section class="overview">
             <div class="wallets">
               <h4>Wallets Overview</h4>
-              <div class="empty-card">
-                <img
-                  src="{{ url_for('pres.static', filename='images/nav_wallet.png') }}"
-                  alt="Wallet Icon"
-                />
-                <p>No wallets yet</p>
-                <small
-                  >Create your first wallet to start tracking your
-                  finances</small
-                >
+              <div id="wallets-container">
+                <!-- Will be populated by JS -->
               </div>
             </div>
 
             <div class="transactions">
               <h4>Transaction History</h4>
-              <div class="empty-card">
-                <img
-                  src="{{ url_for('pres.static', filename='images/nav_history.png') }}"
-                  alt="History Icon"
-                />
-                <p>No transactions yet</p>
-                <small
-                  >Your transaction history will appear here once you add
-                  entries</small
-                >
+              <div id="transactions-container">
+                <!-- Will be populated by JS -->
               </div>
             </div>
           </section>
@@ -148,7 +132,6 @@
       </main>
     </div>
 
-    <!-- FIXED: blueprint static -->
     <script src="{{ url_for('pres.static', filename='js/homepage.js') }}"></script>
   </body>
 </html>
