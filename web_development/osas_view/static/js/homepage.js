@@ -256,16 +256,16 @@ function hideStatusLoading() {
     }
 
     const colors = [
-      "#8B3B08",
-      "#E59E2C",
-      "#3498DB",
-      "#2ECC71",
-      "#A569BD",
-      "#2f3640",
-      "#FF7675",
-      "#00b894",
-      "#fdcb6e",
-      "#636e72",
+      "#3f2166ff",
+      "#66b8eeff",
+      "#f083d5ff",
+      "#ddd258ff",
+      "#5e5e5eff",
+      "#12376aff",
+      "#226c15ff",
+      "#d98d14ff",
+      "#a22d1fff",
+      "#534a6eff",
       "#0097e6",
       "#b2bec3",
     ];

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PockiTrack | Wallets</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('pres.static', filename='css/wallets.css') }}"
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <a href="{{ url_for('pres.homepage') }}" class="logo">
+          <img
+            src="{{ url_for('pres.static', filename='images/pocki_logo.png') }}"
+            alt="PockiTrack Logo"
+          />
+          <span class="logo_name">PockiTrack</span>
+        </a>
+
+        <div class="sidebar-content">
+          <button class="new-btn">+ New</button>
+
+          <nav class="nav-menu">
+            <a href="{{ url_for('pres.homepage') }}" class="nav-item">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_home.png') }}"
+                alt="Home Icon"
+              />
+              Home
+            </a>
+
+            <a href="{{ url_for('pres.history') }}" class="nav-item">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_history.png') }}"
+                alt="History Icon"
+              />
+              History
+            </a>
+
+            <a href="{{ url_for('pres.wallets') }}" class="nav-item active">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_wallet.png') }}"
+                alt="Wallet Icon"
+              />
+              Wallets
+            </a>
+
+            <a href="{{ url_for('pres.profile') }}" class="nav-item">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_profile.png') }}"
+                alt="Profile Icon"
+              />
+              Profile
+            </a>
+          </nav>
+        </div>
+
+        <a href="{{ url_for('pres.pres_logout') }}" class="logout-btn">
+          <img
+            src="{{ url_for('pres.static', filename='images/logout_icon.png') }}"
+            alt="Logout Icon"
+          />
+          Logout
+        </a>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="content-box">
+          <!-- Wallets List View -->
+          <section id="wallets-view" class="view-section active">
+            <div class="header">
+              <h3>Wallet</h3>
+              <p class="subtitle">Overview</p>
+            </div>
+
+            <!-- Overview Table -->
+            <div class="overview-table" id="overview-table">
+              <!-- Will be populated by JS -->
+            </div>
+
+            <!-- Wallets Grid -->
+            <div class="wallets-grid" id="wallets-grid">
+              <!-- Will be populated by JS -->
+            </div>
+          </section>
+
+          <!-- Wallet Detail View -->
+          <section id="wallet-detail-view" class="view-section">
+            <div class="header">
+              <button class="back-btn" id="back-to-wallets">&#8249;</button>
+              <h3 id="wallet-name">Feb Fair</h3>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="tab-nav">
+              <button class="tab-btn active" data-tab="transactions">Transactions</button>
+              <button class="tab-btn" data-tab="reports">Reports</button>
+              <button class="tab-btn" data-tab="receipts">Receipts</button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="tab-content active" id="transactions-tab">
+              <!-- Filter buttons -->
+              <div class="filter-tabs">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="income">Income</button>
+                <button class="filter-btn" data-filter="expense">Expense</button>
+              </div>
+              <div id="transactions-container"></div>
+            </div>
+
+            <div class="tab-content" id="reports-tab">
+              <div class="report-section">
+                <div class="report-header">
+                  <img src="{{ url_for('pres.static', filename='images/folder_icon.png') }}" alt="Folder" style="width: 50px;" />
+                  <div>
+                    <h4>Generate Financial Report</h4>
+                    <p>Create an Activity Financial Statement for FEB FAIR</p>
+                  </div>
+                  <div class="report-actions">
+                    <button class="action-btn preview-btn">
+                      <img src="{{ url_for('pres.static', filename='images/preview_icon.png') }}" alt="Preview" />
+                      Preview
+                    </button>
+                    <button class="action-btn print-btn">
+                      <img src="{{ url_for('pres.static', filename='images/print_icon.png') }}" alt="Print" />
+                      Print
+                    </button>
+                  </div>
+                </div>
+
+                <div class="report-stats">
+                  <div class="stat-card">
+                    <p>Budget</p>
+                    <h4>Php 700.00</h4>
+                  </div>
+                  <div class="stat-card">
+                    <p>Total amount of expenses</p>
+                    <h4>Php 959.90</h4>
+                  </div>
+                  <div class="stat-card">
+                    <p>Total amount of income</p>
+                    <h4>Php 1,367.00</h4>
+                  </div>
+                  <div class="stat-card">
+                    <p>Reimbursement of expense</p>
+                    <h4>Php 0.00</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-content" id="receipts-tab">
+              <div class="receipts-grid" id="receipts-container">
+                <!-- Will be populated by JS -->
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="{{ url_for('pres.static', filename='js/wallets.js') }}"></script>
+  </body>
+</html>
