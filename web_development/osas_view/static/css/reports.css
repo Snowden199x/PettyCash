@@ -261,7 +261,7 @@ body {
   color: #E65100;
 }
 
-.status-in-review {
+.status-inreview {
   background-color: #E3F2FD;
   color: #1565C0;
 }
@@ -310,7 +310,6 @@ body {
   font-style: italic;
   margin: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
