@@ -1,3 +1,5 @@
+// archive.js
+
 document.addEventListener("DOMContentLoaded", () => {
   // --- ELEMENTS ---
   const archiveGrid = document.getElementById("archiveGrid");
@@ -46,18 +48,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================
   async function loadArchivedOrgs() {
     try {
-      const res = await fetch("/osas/api/archive");
+      const res = await fetch("/osas/api/archived_organizations");
       const data = await res.json();
-      
-      if (data.archived) {
-        archivedOrgs = data.archived;
-      } else {
-        // Fallback: check if organizations endpoint has deleted flag
-        const orgRes = await fetch("/osas/api/organizations");
-        const orgData = await orgRes.json();
-        archivedOrgs = (orgData.organizations || []).filter(org => org.deleted === true);
-      }
-      
+      archivedOrgs = data.organizations || [];
       updateStats();
       renderArchive();
     } catch (err) {
@@ -67,8 +60,6 @@ document.addEventListener("DOMContentLoaded", () => {
       renderArchive();
     }
   }
-
-
 
   // ============================
   // RENDER ARCHIVE
@@ -97,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
     card.className = "archive-card";
     card.dataset.orgId = org.id;
 
-    const deletedDate = org.deletedDate || org.date || new Date().toISOString();
+    const deletedDate = org.date || new Date().toISOString();
     const daysAgo = Math.floor((new Date() - new Date(deletedDate)) / (1000 * 60 * 60 * 24));
     const timeAgo = daysAgo === 0 ? "Today" : daysAgo === 1 ? "Yesterday" : `${daysAgo} days ago`;
 
@@ -106,7 +97,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <h3>${org.name}</h3>
         <span class="archive-badge">Deleted</span>
       </div>
-      
       <div class="archive-info">
         <div class="info-row">
           <span class="info-icon">👤</span>
@@ -121,7 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
           <span>Department: ${org.department || "General"}</span>
         </div>
       </div>
-
       <div class="archive-actions">
         <button class="restore-btn" data-id="${org.id}">
           <span>↻</span>
@@ -149,7 +138,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================
   searchInput.addEventListener("input", (e) => {
     const searchTerm = e.target.value.toLowerCase().trim();
-    
     if (searchTerm === "") {
       renderArchive();
     } else {
@@ -182,17 +170,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   confirmRestoreBtn.addEventListener("click", async () => {
     if (!currentOrgId) return;
-
     try {
-      const res = await fetch(`/osas/api/archive/${currentOrgId}/restore`, {
-        method: "POST"
+      // PATCH request, as per your Flask API for restoring
+      const res = await fetch(`/osas/api/organizations/${currentOrgId}/restore`, {
+        method: "PATCH"
       });
-
       if (!res.ok) throw new Error("Failed to restore organization");
-
-      // Remove from archived list
       archivedOrgs = archivedOrgs.filter(org => org.id !== currentOrgId);
-      
       showToast("Organization restored successfully!");
       updateStats();
       renderArchive();
@@ -225,17 +209,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   confirmPermanentDeleteBtn.addEventListener("click", async () => {
     if (!currentOrgId) return;
-
     try {
-      const res = await fetch(`/osas/api/archive/${currentOrgId}`, {
+      // DELETE request for permanent deletion (make sure backend exists)
+      const res = await fetch(`/osas/api/organizations/${currentOrgId}`, {
         method: "DELETE"
       });
-
       if (!res.ok) throw new Error("Failed to delete organization permanently");
-
-      // Remove from archived list
       archivedOrgs = archivedOrgs.filter(org => org.id !== currentOrgId);
-      
       showToast("Organization deleted permanently", "warning");
       updateStats();
       renderArchive();
@@ -255,7 +235,6 @@ document.addEventListener("DOMContentLoaded", () => {
       showToast("Archive is already empty", "warning");
       return;
     }
-    
     totalArchiveCount.textContent = archivedOrgs.length;
     emptyArchiveModal.style.display = "flex";
   });
@@ -270,14 +249,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   confirmEmptyArchiveBtn.addEventListener("click", async () => {
     try {
+      // Bulk delete: you should have a backend route to handle this
       const res = await fetch("/osas/api/archive/empty", {
         method: "DELETE"
       });
-
       if (!res.ok) throw new Error("Failed to empty archive");
-
       archivedOrgs = [];
-      
       showToast("Archive emptied successfully", "warning");
       updateStats();
       renderArchive();
@@ -309,18 +286,22 @@ document.addEventListener("DOMContentLoaded", () => {
   function showToast(message, type = "success") {
     toast.textContent = message;
     toast.className = "toast";
-    
     if (type === "error") {
       toast.classList.add("error");
     } else if (type === "warning") {
       toast.classList.add("warning");
     }
-    
     toast.style.display = "block";
-    
     setTimeout(() => {
       toast.style.display = "none";
     }, 3000);
+  }
+
+  // ============================
+  // STATS UPDATE
+  // ============================
+  function updateStats() {
+    if (totalArchiveCount) totalArchiveCount.textContent = archivedOrgs.length;
   }
 
   // ============================
