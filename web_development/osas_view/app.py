@@ -52,9 +52,7 @@ def log_admin_audit(admin_id, field, old_value, new_value):
         'changed_at': datetime.utcnow().isoformat()
     }).execute()
 
-# =========================
-# AUTH AND NAV
-# =========================
+# ========== AUTH & NAV ===========
 @osas.route('/login', methods=['GET', 'POST'])
 def osas_login():
     if request.method == 'POST':
@@ -127,10 +125,7 @@ def osas_archive():
         return render_template('osas/archive.html', active_page='archive')
     return redirect(url_for('osas.osas_login'))
 
-# =========================
-# ORGANIZATION API
-# =========================
-
+# ========== ORGANIZATION API ===========
 @osas.route('/api/organizations', methods=['GET'])
 def get_organizations():
     department = request.args.get('department')
@@ -203,8 +198,9 @@ def add_organization():
     ).execute()
     if existing.data and len(existing.data) > 0:
         return jsonify({'error': 'Organization name or username already exists'}), 400
+
     hashed_password = generate_password_hash(password)
-    supabase.table('organizations').insert({
+    org_result = supabase.table('organizations').insert({
         'org_name': org_name,
         'username': username,
         'password': hashed_password,
@@ -214,11 +210,31 @@ def add_organization():
         'must_change_password': True,
         'created_by': admin['id'] if admin else None
     }).execute()
+
+    new_org_id = None
+    if org_result.data and isinstance(org_result.data, list) and len(org_result.data) > 0:
+        new_org_id = org_result.data[0]['id']
+    if new_org_id:
+        default_checklist = {
+            "august": False, "september": False, "october": False, "november": False,
+            "december": False, "january": False, "february": False, "march": False, "april": False, "may": False,
+        }
+        supabase.table('financial_reports').insert({
+            "organization_id": new_org_id,
+            "status": "Pending Review",
+            "notes": "",
+            "checklist": default_checklist,
+            "submission_date": datetime.utcnow().date().isoformat(),
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat()
+        }).execute()
+
     dept_name = "-"
     if department_id:
         d = supabase.table('departments').select('dept_name').eq('id', department_id).execute()
         if d.data and isinstance(d.data, list):
             dept_name = d.data[0]['dept_name']
+
     if admin:
         log_activity(admin['id'], 'organization', f'Added new organization: "{org_name}" in {dept_name}')
     return jsonify({'message': 'Organization added', 'username': username, 'password': password}), 201
@@ -250,7 +266,6 @@ def update_organization(org_id):
         log_activity(admin['id'], 'organization', f'Updated organization [{org_id}]')
     return jsonify({'message': 'Organization updated'})
 
-# ARCHIVE instead of delete
 @osas.route('/api/organizations/<int:org_id>', methods=['DELETE'])
 def archive_organization(org_id):
     if 'osas_admin' not in session:
@@ -261,7 +276,6 @@ def archive_organization(org_id):
         log_activity(admin['id'], 'organization', f"Archived organization [{org_id}]")
     return jsonify({'message': 'Organization archived'})
 
-# RESTORE an archived org
 @osas.route('/api/organizations/<int:org_id>/restore', methods=['PATCH'])
 def restore_organization(org_id):
     if 'osas_admin' not in session:
@@ -272,14 +286,73 @@ def restore_organization(org_id):
         log_activity(admin['id'], 'organization', f"Restored organization [{org_id}]")
     return jsonify({'message': 'Organization restored'})
 
-# --- Departments API ---
+# ========== DEPARTMENTS API ===========
 @osas.route('/api/departments', methods=['GET'])
 def get_departments():
-    result = supabase.table('departments').select('id,dept_name').execute()
-    departments = [{"id": d["id"], "name": d["dept_name"]} for d in result.data if isinstance(result.data, list)]
-    return jsonify({"departments": departments})
+    try:
+        result = supabase.table('departments').select('id,dept_name').execute()
+        print(result)  # See output in console
+        departments = [{"id": d["id"], "name": d["dept_name"]} for d in result.data if isinstance(result.data, list)]
+        return jsonify({"departments": departments})
+    except Exception as e:
+        print("ERROR:", e)
+        return jsonify({"error": str(e)}), 500
 
-# --- Settings/Account APIs (Unchanged logic) ---
+# ========== FINANCIAL REPORTS API ===========
+@osas.route('/api/organizations/<int:org_id>/financial_reports', methods=['GET'])
+def get_financial_reports_by_org(org_id):
+    results = supabase.table('financial_reports').select('*').eq('organization_id', org_id).execute()
+    reports = results.data if results.data else []
+    return jsonify({"reports": reports})
+
+@osas.route('/api/organizations/<int:org_id>/financial_reports', methods=['POST'])
+def create_financial_report_by_org(org_id):
+    if 'osas_admin' not in session:
+        return jsonify({'error': 'Login required'}), 401
+    data = request.get_json()
+    report = {
+        "organization_id": org_id,
+        "status": data.get("status") or "Pending Review",
+        "notes": data.get("notes") or "",
+        "checklist": data.get("checklist") or {},
+        "submission_date": data.get("submission_date") or datetime.utcnow().date().isoformat(),
+        "created_at": datetime.utcnow().isoformat(),
+        "updated_at": datetime.utcnow().isoformat(),
+    }
+    inserted = supabase.table('financial_reports').insert(report).execute()
+    return jsonify({"message": "Financial report created", "report": inserted.data[0]})
+
+@osas.route('/api/financial_reports/<int:report_id>', methods=['PUT'])
+def update_financial_report(report_id):
+    if 'osas_admin' not in session:
+        return jsonify({'error': 'Login required'}), 401
+    data = request.get_json()
+    update_data = {}
+    if "status" in data: update_data["status"] = data["status"]
+    if "notes" in data: update_data["notes"] = data["notes"]
+    if "checklist" in data: update_data["checklist"] = data["checklist"]
+    update_data["updated_at"] = datetime.utcnow().isoformat()
+    try:
+        print(f"Updating Financial Report {report_id} with:", update_data)
+        result = supabase.table('financial_reports').update(update_data).eq('id', report_id).execute()
+        print(f"Supabase Update Result: {result}")
+        
+        if hasattr(result, 'error') and result.error:
+            print("Supabase returned error:", result.error)
+            return jsonify({"error": result.error}), 500
+        return jsonify({"message": "Financial report updated", "updated": update_data})
+    except Exception as e:
+        print("ERROR during financial report update:", e)
+        return jsonify({'error': str(e)}), 500
+
+@osas.route('/api/financial_reports/<int:report_id>', methods=['GET'])
+def get_single_financial_report(report_id):
+    result = supabase.table('financial_reports').select('*').eq('id', report_id).execute()
+    if not result.data:
+        return jsonify({"error": "Not found"}), 404
+    return jsonify(result.data[0])
+
+# ========== ADMIN/SETTINGS ===========
 @osas.route('/api/admin/profile', methods=['GET'])
 def get_profile():
     if 'osas_admin' not in session:

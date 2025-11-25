@@ -13,20 +13,20 @@
       rel="stylesheet"
       href="{{ url_for('osas.static', filename='css/settings.css') }}"
     />
-
     <script src="{{ url_for('osas.static', filename='js/settings.js') }}"></script>
-
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
   </head>
-
   <body>
     <!-- HEADER -->
     <header class="admin-header">
       <div class="logo" id="logoLink">
-        <img src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}" alt="PockiTrack Logo" />
+        <img
+          src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}"
+          alt="PockiTrack Logo"
+        />
         <span class="logo_name">PockiTrack</span>
       </div>
     </header>
@@ -34,24 +34,59 @@
     <!-- SIDEBAR -->
     <aside class="sidebar hover-sidebar">
       <nav class="nav-menu">
-        <a href="{{ url_for('osas.osas_dashboard') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
-          <img src="{{ url_for('osas.static', filename='images/dashboard_menu.png') }}" class="nav-icon-img" alt="Dashboard" />
+        <a
+          href="{{ url_for('osas.osas_dashboard') }}"
+          class="nav-item {% if active_page == 'dashboard' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/dashboard_menu.png') }}"
+            class="nav-icon-img"
+            alt="Dashboard"
+          />
           <span class="nav-label">Dashboard</span>
         </a>
-        <a href="{{ url_for('osas.osas_orgs') }}" class="nav-item {% if active_page == 'orgs' %}active{% endif %}">
-          <img src="{{ url_for('osas.static', filename='images/organization_menu.png') }}" class="nav-icon-img" alt="Organizations" />
+        <a
+          href="{{ url_for('osas.osas_orgs') }}"
+          class="nav-item {% if active_page == 'orgs' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/organization_menu.png') }}"
+            class="nav-icon-img"
+            alt="Organizations"
+          />
           <span class="nav-label">Accredited Organizations</span>
         </a>
-        <a href="{{ url_for('osas.osas_reports') }}" class="nav-item {% if active_page == 'reports' %}active{% endif %}">
-          <img src="{{ url_for('osas.static', filename='images/reports_menu.png') }}" class="nav-icon-img" alt="Reports" />
+        <a
+          href="{{ url_for('osas.osas_reports') }}"
+          class="nav-item {% if active_page == 'reports' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/reports_menu.png') }}"
+            class="nav-icon-img"
+            alt="Reports"
+          />
           <span class="nav-label">Reports</span>
         </a>
-        <a href="{{ url_for('osas.osas_archive') }}" class="nav-item {% if active_page == 'archive' %}active{% endif %}">
-          <img src="{{ url_for('osas.static', filename='images/archive_menu.png') }}" class="nav-icon-img" alt="Archive" />
+        <a
+          href="{{ url_for('osas.osas_archive') }}"
+          class="nav-item {% if active_page == 'archive' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/archive_menu.png') }}"
+            class="nav-icon-img"
+            alt="Archive"
+          />
           <span class="nav-label">Archive</span>
         </a>
-        <a href="{{ url_for('osas.osas_settings') }}" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
-          <img src="{{ url_for('osas.static', filename='images/settings_menu.png') }}" class="nav-icon-img" alt="Settings" />
+        <a
+          href="{{ url_for('osas.osas_settings') }}"
+          class="nav-item {% if active_page == 'settings' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/settings_menu.png') }}"
+            class="nav-icon-img"
+            alt="Settings"
+          />
           <span class="nav-label">Settings</span>
         </a>
       </nav>
@@ -99,26 +134,42 @@
               <h2>Profile Settings</h2>
               <p>Update your account information</p>
             </div>
-
             <div class="settings-card">
               <form id="profileForm">
                 <div class="form-group">
                   <label for="adminName">Full Name</label>
-                  <input type="text" id="adminName" name="adminName" placeholder="Admin Name" required />
+                  <input
+                    type="text"
+                    id="adminName"
+                    name="adminName"
+                    placeholder="Admin Name"
+                    required
+                  />
                 </div>
-
                 <div class="form-group">
                   <label for="adminEmail">Email Address</label>
-                  <input type="email" id="adminEmail" name="adminEmail" placeholder="admin@school.edu" required />
+                  <input
+                    type="email"
+                    id="adminEmail"
+                    name="adminEmail"
+                    placeholder="admin@school.edu"
+                    required
+                  />
                 </div>
-
                 <div class="form-group">
                   <label for="adminUsername">Username</label>
-                  <input type="text" id="adminUsername" name="adminUsername" placeholder="admin_user" required />
+                  <input
+                    type="text"
+                    id="adminUsername"
+                    name="adminUsername"
+                    placeholder="admin_user"
+                    required
+                  />
                 </div>
-
                 <div class="form-actions">
-                  <button type="submit" class="primary-btn">Save Changes</button>
+                  <button type="submit" class="primary-btn">
+                    Save Changes
+                  </button>
                 </div>
               </form>
             </div>
@@ -130,182 +181,167 @@
               <h2>Account Security</h2>
               <p>Manage your password and active sessions</p>
             </div>
-
             <div class="settings-card">
               <h3>Change Password</h3>
               <form id="passwordForm">
                 <div class="form-group">
                   <label for="currentPassword">Current Password</label>
-                  <input type="password" id="currentPassword" name="currentPassword" required />
+                  <input
+                    type="password"
+                    id="currentPassword"
+                    name="currentPassword"
+                    required
+                  />
                 </div>
-
                 <div class="form-group">
                   <label for="newPassword">New Password</label>
-                  <input type="password" id="newPassword" name="newPassword" required />
+                  <input
+                    type="password"
+                    id="newPassword"
+                    name="newPassword"
+                    required
+                  />
                 </div>
-
                 <div class="form-group">
                   <label for="confirmPassword">Confirm New Password</label>
-                  <input type="password" id="confirmPassword" name="confirmPassword" required />
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    required
+                  />
                 </div>
-
                 <div class="form-actions">
-                  <button type="submit" class="primary-btn">Update Password</button>
+                  <button type="submit" class="primary-btn">
+                    Update Password
+                  </button>
                 </div>
               </form>
             </div>
+
+            <div class="settings-card">
+              <h3>Active Sessions</h3>
+              <p class="card-description">
+                Manage devices that are currently logged into your account
+              </p>
+              <div class="session-list" id="sessionList">
+                <div class="session-item current">
+                  <div class="session-info">
+                    <p class="session-device">💻 Current Device</p>
+                    <p class="session-details">
+                      Chrome on Windows • Last active: Just now
+                    </p>
+                  </div>
+                  <span class="session-badge">Active</span>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="button" id="logoutAllBtn" class="danger-btn">
+                  Log Out All Other Devices
+                </button>
+              </div>
+            </div>
           </section>
 
-          <!-- Session Management Card -->
-          <div class="settings-card">
-            <h3>Active Sessions</h3>
-            <p class="card-description">Manage devices that are currently logged into your account</p>
-
-            <div class="session-list" id="sessionList">
-              <div class="session-item current">
-                <div class="session-info">
-                  <p class="session-device">💻 Current Device</p>
-                  <p class="session-details">Chrome on Windows • Last active: Just now</p>
-                </div>
-                <span class="session-badge">Active</span>
-              </div>
+          <!-- ACTIVITY LOGS SECTION -->
+          <section class="settings-section" id="activity">
+            <div class="section-header">
+              <h2>Activity Logs</h2>
+              <p>Track all administrative actions and changes</p>
             </div>
-
-            <div class="form-actions">
-              <button type="button" id="logoutAllBtn" class="danger-btn">Log Out All Other Devices</button>
+            <div class="settings-card">
+              <div class="activity-filters">
+                <input
+                  type="date"
+                  id="activityDateFilter"
+                  class="filter-input"
+                />
+                <select id="activityTypeFilter" class="filter-select">
+                  <option value="all">All Actions</option>
+                  <option value="login">Login</option>
+                  <option value="organization">Organization</option>
+                  <option value="report">Report</option>
+                  <option value="settings">Settings</option>
+                </select>
+              </div>
+              <div class="activity-list" id="activityList">
+                <!-- JS will inject activity log items here -->
+              </div>
+              <button class="secondary-btn load-more-btn" id="loadMoreLogs">
+                Load More
+              </button>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- ACTIVITY LOGS SECTION -->
-        <section class="settings-section" id="activity">
-          <div class="section-header">
-            <h2>Activity Logs</h2>
-            <p>Track all administrative actions and changes</p>
-          </div>
-
-          <div class="settings-card">
-            <!-- Filter Controls -->
-            <div class="activity-filters">
-              <input type="date" id="activityDateFilter" class="filter-input" />
-              <select id="activityTypeFilter" class="filter-select">
-                <option value="all">All Actions</option>
-                <option value="login">Login</option>
-                <option value="organization">Organization</option>
-                <option value="report">Report</option>
-                <option value="settings">Settings</option>
-              </select>
+          <!-- ABOUT SYSTEM SECTION -->
+          <section class="settings-section" id="about">
+            <div class="section-header">
+              <h2>About System</h2>
+              <p>System information and contact details</p>
             </div>
-
-            <!-- Activity List -->
-            <div class="activity-list" id="activityList">
-              <div class="activity-item">
-                <div class="activity-icon">🔑</div>
-                <div class="activity-details">
-                  <p class="activity-action">Logged in</p>
-                  <p class="activity-date">Today at 2:45 PM</p>
+            <div class="settings-card">
+              <h3>PockiTrack System</h3>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">Version</span>
+                  <span class="info-value">v1.0.0</span>
                 </div>
-              </div>
-
-              <div class="activity-item">
-                <div class="activity-icon">➕</div>
-                <div class="activity-details">
-                  <p class="activity-action">Added new organization: "Student Council"</p>
-                  <p class="activity-date">Nov 18, 2025 at 1:30 PM</p>
+                <div class="info-item">
+                  <span class="info-label">Last Updated</span>
+                  <span class="info-value">November 2025</span>
                 </div>
-              </div>
-
-              <div class="activity-item">
-                <div class="activity-icon">✏️</div>
-                <div class="activity-details">
-                  <p class="activity-action">Updated report status for "Dance Club"</p>
-                  <p class="activity-date">Nov 17, 2025 at 4:15 PM</p>
-                </div>
-              </div>
-
-              <div class="activity-item">
-                <div class="activity-icon">🗑️</div>
-                <div class="activity-details">
-                  <p class="activity-action">Deleted organization: "Inactive Org"</p>
-                  <p class="activity-date">Nov 16, 2025 at 10:20 AM</p>
+                <div class="info-item">
+                  <span class="info-label">Platform</span>
+                  <span class="info-value">Web Application</span>
                 </div>
               </div>
             </div>
-
-            <button class="secondary-btn load-more-btn" id="loadMoreLogs">Load More</button>
-          </div>
-        </section>
-
-        <!-- ABOUT SYSTEM SECTION -->
-        <section class="settings-section" id="about">
-          <div class="section-header">
-            <h2>About System</h2>
-            <p>System information and contact details</p>
-          </div>
-
-          <!-- App Info Card -->
-          <div class="settings-card">
-            <h3>PockiTrack System</h3>
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="info-label">Version</span>
-                <span class="info-value">v1.0.0</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Last Updated</span>
-                <span class="info-value">November 2025</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Platform</span>
-                <span class="info-value">Web Application</span>
+            <div class="settings-card">
+              <h3>Institution Details</h3>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">School Name</span>
+                  <span class="info-value"
+                    >Laguna State Polytechnic University Campus</span
+                  >
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Department</span>
+                  <span class="info-value"
+                    >Office of Student Affairs and Services</span
+                  >
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Contact</span>
+                  <span class="info-value">osas@university.edu</span>
+                </div>
               </div>
             </div>
-          </div>
-
-          <!-- Institution Info Card -->
-          <div class="settings-card">
-            <h3>Institution Details</h3>
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="info-label">School Name</span>
-                <span class="info-value">Laguna State Polytechnic University Campus</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Department</span>
-                <span class="info-value">Office of Student Affairs and Services</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Contact</span>
-                <span class="info-value">osas@university.edu</span>
+            <div class="settings-card">
+              <h3>Developer Contact</h3>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">Support Email</span>
+                  <span class="info-value">support@pockitrack.com</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Documentation</span>
+                  <span class="info-value"
+                    ><a href="#" class="info-link">View User Guide</a></span
+                  >
+                </div>
               </div>
             </div>
-          </div>
-
-          <!-- Developer Contact Card -->
-          <div class="settings-card">
-            <h3>Developer Contact</h3>
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="info-label">Support Email</span>
-                <span class="info-value">support@pockitrack.com</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Documentation</span>
-                <span class="info-value"><a href="#" class="info-link">View User Guide</a></span>
+            <div class="settings-card">
+              <h3>Legal & Privacy</h3>
+              <div class="legal-links">
+                <a href="#" class="legal-link">Terms of Service</a>
+                <a href="#" class="legal-link">Privacy Policy</a>
+                <a href="#" class="legal-link">Data Protection</a>
               </div>
             </div>
-          </div>
-
-          <!-- Legal Card -->
-          <div class="settings-card">
-            <h3>Legal & Privacy</h3>
-            <div class="legal-links">
-              <a href="#" class="legal-link">Terms of Service</a>
-              <a href="#" class="legal-link">Privacy Policy</a>
-              <a href="#" class="legal-link">Data Protection</a>
-            </div>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
     </main>
 
