@@ -17,6 +17,40 @@ document.addEventListener("DOMContentLoaded", () => {
   let departments = [];
   let reports = [];
 
+  function showDeptLoading() {
+  const loader = document.getElementById("deptLoading");
+  const chart = document.getElementById("departmentChart");
+  const legend = document.getElementById("deptLegend");
+  if (loader) loader.style.display = "flex";
+  if (chart) chart.style.display = "none";
+  if (legend) legend.style.display = "none";
+}
+function hideDeptLoading() {
+  const loader = document.getElementById("deptLoading");
+  const chart = document.getElementById("departmentChart");
+  const legend = document.getElementById("deptLegend");
+  if (loader) loader.style.display = "none";
+  if (chart) chart.style.display = "";
+  if (legend) legend.style.display = "";
+}
+function showStatusLoading() {
+  const loader = document.getElementById("statusLoading");
+  const chart = document.getElementById("statusChart");
+  const breakdown = document.getElementById("statusBreakdown");
+  if (loader) loader.style.display = "flex";
+  if (chart) chart.style.display = "none";
+  if (breakdown) breakdown.style.display = "none";
+}
+function hideStatusLoading() {
+  const loader = document.getElementById("statusLoading");
+  const chart = document.getElementById("statusChart");
+  const breakdown = document.getElementById("statusBreakdown");
+  if (loader) loader.style.display = "none";
+  if (chart) chart.style.display = "";
+  if (breakdown) breakdown.style.display = "";
+}
+
+
   // --- Profile menu logic ---
   if (profileBtn && profileMenu) {
     profileBtn.addEventListener("click", (e) => {
@@ -59,6 +93,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const orgData = await orgRes.json();
       organizations = orgData.organizations || [];
 
+      showStatusLoading();
+
       // Fetch all real reports (replace random generation)
       reports = [];
       for (let org of organizations) {
@@ -77,11 +113,13 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       }
+      hideStatusLoading();
       updateSummaryCards();
       updateCharts();
       updateActivityFeed();
     } catch (err) {
       console.error("Error loading dashboard data:", err);
+      hideStatusLoading();
       showToast("Failed to load some dashboard data", "error");
     }
   }
@@ -116,13 +154,16 @@ document.addEventListener("DOMContentLoaded", () => {
   departmentFilter.addEventListener("change", drawDepartmentChart);
 
   async function loadDashboardOrganizations() {
+    showDeptLoading();
     try {
       const res = await fetch("/osas/api/organizations");
       const data = await res.json();
       organizations = data.organizations || [];
+      hideDeptLoading();
       drawDepartmentChart();
     } catch {
       organizations = [];
+      hideDeptLoading();
       drawDepartmentChart();
     }
   }
@@ -352,26 +393,25 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateStatusBreakdown(labels, colors, data) {
-    const breakdown = document.getElementById("statusBreakdown");
-    if (!breakdown) return;
-    const total = data.reduce((sum, val) => sum + val, 0) || 1;
-    breakdown.innerHTML = labels
-      .map((label, index) => {
-        const percentage = Math.round((data[index] / total) * 100);
-        return `
-          <div class="status-bar">
-            <span class="status-label">${label}</span>
-            <div class="status-progress">
-              <div class="status-fill" style="width: ${percentage}%; background-color: ${
-          colors[index % colors.length]
-        }"></div>
-            </div>
-            <span class="status-count">${data[index]}</span>
+  const breakdown = document.getElementById("statusBreakdown");
+  if (!breakdown) return;
+  const total = data.reduce((sum, val) => sum + val, 0) || 1;
+  breakdown.innerHTML = labels
+    .map((label, index) => {
+      const percentage = Math.round((data[index] / total) * 100);
+      return `
+        <div class="status-row">
+          <span class="status-label">${label}</span>
+          <div class="status-bar-horizontal">
+            <div class="status-fill" style="width: ${percentage}%; background: ${colors[index % colors.length]}"></div>
           </div>
-        `;
-      })
-      .join("");
-  }
+          <span class="status-count">${data[index]}</span>
+        </div>
+      `;
+    })
+    .join("");
+}
+
 
   // --- Activity Feed ---
   async function updateActivityFeed() {
