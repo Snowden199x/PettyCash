@@ -263,7 +263,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                 decoration: BoxDecoration(
                                   color: Colors.transparent,
                                   border: Border.all(color: Colors.black, width: 1),
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: BorderRadius.circular(5),
                                 ),
                                 child: Text(
                                   name,
