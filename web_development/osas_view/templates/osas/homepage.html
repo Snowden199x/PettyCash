@@ -1,237 +1,217 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PockiTrack | Admin Homepage</title>
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>PockiTrack | Dashboard</title>
 
-    <!-- ===== CSS LINK ===== -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('osas.static', filename='css/homepage.css') }}"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('osas.static', filename='css/add_org.css') }}"
-    />
+      <!-- ===== CSS LINK ===== -->
+      <link
+        rel="stylesheet"
+        href="{{ url_for('osas.static', filename='css/layout.css') }}"
+      />
+      <link
+        rel="stylesheet"
+        href="{{ url_for('osas.static', filename='css/homepage.css') }}"
+      />
 
-    <!-- ===== JS ===== -->
-    <script src="{{ url_for('osas.static', filename='js/homepage.js') }}"></script>
-    <!-- ===== GOOGLE FONT ===== -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
-      rel="stylesheet"
-    />
-  </head>
+      <!-- ===== JS ===== -->
+      <script src="{{ url_for('osas.static', filename='js/homepage.js') }}"></script>
 
-  <body>
-    <!-- HEADER -->
-<header class="admin-header">
-  <div class="logo" id="logoLink">
-    <img src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}" alt="PockiTrack Logo" />
-    <span class="logo_name">PockiTrack</span>
-  </div>
-</header>
+      <!-- ===== GOOGLE FONT ===== -->
+      <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+    </head>
 
-<!-- SIDEBAR: This starts *after* the header, fixed on the left -->
-<aside class="sidebar">
-  <nav class="nav-menu">
-    <a href="{{ url_for('osas.osas_dashboard') }}" class="nav-item active">Dashboard</a>
-    <a href="{{ url_for('osas.osas_reports') }}" class="nav-item">Reports</a>
-    <a href="{{ url_for('osas.osas_settings') }}" class="nav-item">Settings</a>
-  </nav>
-  <a href="{{ url_for('osas.osas_logout') }}" class="logout-btn">Logout</a>
-</aside>
-
-
-    <!-- MAIN CONTENT -->
-    <main class="dashboard">
-      <!-- STAT CARDS -->
-      <section class="stats">
-        <div class="stat-card">
-          <p class="label">Total Organizations</p>
-          <h2 class="count" id="totalOrganizations">0</h2>
-        </div>
-        <div class="stat-card">
-          <p class="label">Pending Financial Report</p>
-          <h2 class="count" id="pendingReports">0</h2>
-        </div>
-        <div class="stat-card">
-          <p class="label">Approved Financial Report</p>
-          <h2 class="count" id="approvedReports">0</h2>
-        </div>
-      </section>
-
-      <!-- ORGANIZATIONS -->
-      <section class="organizations">
-        <div class="header-row">
-          <div>
-            <h3>Accredited Organizations</h3>
-            <p>Manage organizations and their login credentials</p>
-          </div>
-          <div class="header-actions">
-            <!-- Department Filter Dropdown -->
-            <div class="filter-dropdown">
-              <select id="departmentFilter" class="filter-select">
-                <option value="">All Departments</option>
-                <option value="College of Computer Studies (CCS)">College of Computer Studies (CCS)</option>
-                <option value="College of Teacher Education (CTE)">College of Teacher Education (CTE)</option>
-                <option value="College of Arts and Sciences (CAS)">College of Arts and Sciences (CAS)</option>
-                <option value="College of Business Administration and Accountancy (CBAA)">College of Business Administration and Accountancy (CBAA)</option>
-                <option value="College of Criminal Justice Education (CCJE)">College of Criminal Justice Education (CCJE)</option>
-                <option value="College of Industrial Technology (CIT)">College of Industrial Technology (CIT)</option>
-                <option value="College of Nursing and Allied Health (CONAH)">College of Nursing and Allied Health (CONAH)</option>
-                <option value="College of Engineering (COE)">College of Engineering (COE)</option>
-                <option value="College of International Hospitality and Tourism Management (CIHTM)">College of International Hospitality and Tourism Management (CIHTM)</option>
-                <option value="Non-Academic Organization">Non-Academic Organization</option>
-              </select>
-            </div>
-            <button id="addOrganization" class="add-btn">
-              + Add Organization
-            </button>
-          </div>
+    <body>
+      <!-- HEADER -->
+      <header class="admin-header">
+        <div class="logo">
+          <img src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}" alt="PockiTrack Logo" />
+          <span class="logo_name">PockiTrack</span>
         </div>
 
-        <!--  SEARCH INPUT -->
-        <input 
-          type="text" 
-          id="searchOrgs" 
-          placeholder="Search organizations..."
-          class="search-input"
-        />
-
-        <!-- WRAPPER BOX -->
-        <div class="org-box">
-          <!-- Empty State -->
-          <div class="empty-state" id="emptyState">
-            <img
-              src="{{ url_for('osas.static', filename='images/empty_org.png') }}"
-              alt="No Organizations"
+        <div class="header-right">
+          <div class="search-bar">
+            <input
+              type="text"
+              id="globalSearch"
+              placeholder="Search organizations, reports..."
             />
-            <h4>No Accredited Organizations</h4>
-            <p>
-              Start by adding your first organization to manage their details and
-              reports here.
-            </p>
+            <span class="search-icon"></span>
           </div>
 
-          <!-- TABLE STATE -->
-          <div class="table-container" id="tableContainer" style="display: none;">
-            <table>
-              <thead>
-                <tr>
-                  <th>Organization Name</th>
-                  <th>Department</th>
-                  <th>Username</th>
-                  <th>Password</th>
-                  <th>Accreditation Date</th>
-                  <th>Status</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="orgTableBody"></tbody>
-            </table>
+          <div class="profile-dropdown">
+            <button class="profile-btn" id="profileBtn">
+              <div class="profile-avatar">A</div>
+              <span class="profile-name">Admin User</span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+
+            <div class="dropdown-menu" id="profileMenu">
+              <a href="{{ url_for('osas.osas_settings') }}" class="dropdown-item">
+                <span class="item-icon"></span>
+                <span>Settings</span>
+              </a>
+              <a href="{{ url_for('osas.osas_logout') }}" class="dropdown-item logout">
+                <span class="item-icon"></span>
+                <span>Log Out</span>
+              </a>
+            </div>
           </div>
         </div>
-      </section>
+      </header>
 
-      <!-- ADD/EDIT MODAL -->
-      <div id="addOrgModal" class="modal">
-        <div class="modal-box">
-          <div class="modal-header">
-            <h2 id="modalTitle">Add New Organization</h2>
-            <button class="close-btn" id="closeModal">&times;</button>
+      <!-- SIDEBAR -->
+      <aside class="sidebar hover-sidebar">
+    <nav class="nav-menu">
+      <a href="{{ url_for('osas.osas_dashboard') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+        <img src="{{ url_for('osas.static', filename='images/dashboard_menu.png') }}" class="nav-icon-img" alt="Dashboard" />
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="{{ url_for('osas.osas_orgs') }}" class="nav-item {% if active_page == 'orgs' %}active{% endif %}">
+        <img src="{{ url_for('osas.static', filename='images/organization_menu.png') }}" class="nav-icon-img" alt="Organizations" />
+        <span class="nav-label">Accredited Organizations</span>
+      </a>
+      <a href="{{ url_for('osas.osas_reports') }}" class="nav-item {% if active_page == 'reports' %}active{% endif %}">
+        <img src="{{ url_for('osas.static', filename='images/reports_menu.png') }}" class="nav-icon-img" alt="Reports" />
+        <span class="nav-label">Reports</span>
+      </a>
+      <a href="{{ url_for('osas.osas_archive') }}" class="nav-item {% if active_page == 'archive' %}active{% endif %}">
+        <img src="{{ url_for('osas.static', filename='images/archive_menu.png') }}" class="nav-icon-img" alt="Archive" />
+        <span class="nav-label">Archive</span>
+      </a>
+      <a href="{{ url_for('osas.osas_settings') }}" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
+        <img src="{{ url_for('osas.static', filename='images/settings_menu.png') }}" class="nav-icon-img" alt="Settings" />
+        <span class="nav-label">Settings</span>
+      </a>
+    </nav>
+  </aside>
+
+
+      <!-- MAIN CONTENT -->
+      <main class="dashboard with-sidebar">
+        <!-- WELCOME SECTION -->
+        <section class="welcome-section">
+          <div class="welcome-content">
+            <h1>Welcome back, <span id="adminName">Admin</span>!</h1>
+            <p>Here's what's happening with your organizations today</p>
           </div>
-          <p id="modalSubtitle">Accredited organization account</p>
+          <div class="quick-actions">
+            <a href="{{ url_for('osas.osas_orgs') }}" class="action-btn">
+              <span class="btn-icon"></span>
+              Add Organization
+            </a>
+            <a href="{{ url_for('osas.osas_reports') }}" class="action-btn secondary">
+              <span class="btn-icon"></span>
+              View Reports
+            </a>
+          </div>
+        </section>
 
-          <form id="addOrgForm">
-            <div class="input-group">
-              <label>Department</label>
-              <select id="orgDepartment" name="orgDepartment" required>
-                <option value="">Select Department</option>
-                <option value="College of Computer Studies (CCS)">College of Computer Studies (CCS)</option>
-                <option value="College of Teacher Education (CTE)">College of Teacher Education (CTE)</option>
-                <option value="College of Arts and Sciences (CAS)">College of Arts and Sciences (CAS)</option>
-                <option value="College of Business Administration and Accountancy (CBAA)">College of Business Administration and Accountancy (CBAA)</option>
-                <option value="College of Criminal Justice Education (CCJE)">College of Criminal Justice Education (CCJE)</option>
-                <option value="College of Industrial Technology (CIT)">College of Industrial Technology (CIT)</option>
-                <option value="College of Nursing and Allied Health (CONAH)">College of Nursing and Allied Health (CONAH)</option>
-                <option value="College of Engineering (COE)">College of Engineering (COE)</option>
-                <option value="College of International Hospitality and Tourism Management (CIHTM)">College of International Hospitality and Tourism Management (CIHTM)</option>
-                <option value="Non-Academic Organization">Non-Academic Organization</option>
-              </select>
+        <!-- SUMMARY CARDS -->
+        <section class="summary-cards">
+          <div class="stat-card primary">
+            <div class="card-icon">
+              <img src="{{ url_for('osas.static', filename='images/org_icon.png') }}" alt="Total Organizations" />
             </div>
-
-            <div class="input-group">
-              <label>Organization Name</label>
-              <input type="text" id="orgName" name="orgName" required />
+            <div class="card-content">
+              <p class="card-label">Total Organizations</p>
+              <h2 class="card-value" id="totalOrgs">0</h2>
             </div>
+          </div>
 
-            <div class="input-group">
-              <label>Username</label>
-              <div class="input-with-btn">
-                <input type="text" id="orgCode" name="orgCode" required />
-                <button type="button" id="genCode" class="generate-btn">
-                  Generate
-                </button>
+          <div class="stat-card warning">
+            <div class="card-icon">
+              <img src="{{ url_for('osas.static', filename='images/reports_icon.png') }}" alt="Pending Reports" />
+            </div>
+            <div class="card-content">
+              <p class="card-label">Pending Reports</p>
+              <h2 class="card-value" id="pendingReports">0</h2>
+            </div>
+          </div>
+
+          <div class="stat-card success">
+            <div class="card-icon">
+              <img src="{{ url_for('osas.static', filename='images/approve_icon.png') }}" alt="Approved Reports" />
+            </div>
+            <div class="card-content">
+              <p class="card-label">Approved Reports</p>
+              <h2 class="card-value" id="approvedReports">0</h2>
+            </div>
+          </div>
+
+          <div class="stat-card info">
+            <div class="card-icon">
+              <img src="{{ url_for('osas.static', filename='images/pending.icon.png') }}" alt="In Review" />
+            </div>
+            <div class="card-content">
+              <p class="card-label">In Review</p>
+              <h2 class="card-value" id="inReviewReports">0</h2>
+            </div>
+          </div>
+        </section>
+
+        <!-- ANALYTICS SECTION -->
+        <section class="analytics-section">
+          <div class="analytics-grid">
+           <!-- For Organizations by Department -->
+<div class="analytics-card">
+  <div class="card-header">
+    <h3>Organizations by Department</h3>
+    <select id="dashboardDeptFilter" class="filter-select">
+      <option value="">All Departments</option>
+    </select>
+  </div>
+  <div class="dashboard-loading" id="deptLoading" style="display:none;">
+    <span class="loading-spinner"></span> Loading...
+  </div>
+  <div class="chart-container">
+    <canvas id="departmentChart" width="300" heightght="300"></canvas>
+  </div>
+  <div class="chart-legend" id="deptLegend"></div>
+</div>
+
+<!-- For Report Status Overview -->
+<div class="analytics-card">
+  <div class="card-header">
+    <h3>Report Status Overview</h3>
+    <span class="card-badge">Real-time</span>
+  </div>
+  <div class="dashboard-loading" id="statusLoading" style="display:none;">
+    <span class="loading-spinner"></span> Loading...
+  </div>
+  <div class="chart-container">
+    <canvas id="statusChart" width="300" heightght="300"></canvas>
+  </div>
+  <div class="status-breakdown" id="statusBreakdown"></div>
+</div>
+
+
+            <!-- RECENT ACTIVITIES -->
+            <div class="analytics-card tall">
+              <div class="card-header">
+                <h3>Recent Activities</h3>
+                <a
+                  href="{{ url_for('osas.osas_settings') }}#activity"
+                  class="view-all-link"
+                  >View All</a
+                >
+              </div>
+              <div class="activity-feed" id="activityFeed">
+                <div class="activity-item">
+                  <div class="activity-icon">🔄</div>
+                  <div class="activity-details">
+                    <p class="activity-text">Loading activities...</p>
+                    <p class="activity-time">Just now</p>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div class="input-group">
-              <label>Password</label>
-              <div class="input-with-btn">
-                <input type="text" id="orgPassword" name="orgPassword" />
-                <button type="button" id="genPass" class="generate-btn">
-                  Generate
-                </button>
-              </div>
-            </div>
-
-            <div class="input-group">
-              <label>Accreditation Date</label>
-              <input
-                type="date"
-                id="accreditationDate"
-                name="accreditationDate"
-                required
-              />
-            </div>
-
-            <div class="input-group">
-              <label>Status</label>
-              <select id="orgStatus" name="orgStatus" required>
-                <option value="Approved">Approved</option>
-                <option value="Pending">Pending</option>
-              </select>
-            </div>
-
-            <div class="modal-buttons">
-              <button type="button" id="cancelModal">Cancel</button>
-              <button type="submit" id="saveOrgBtn" class="primary-btn">
-                Create
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- DELETE CONFIRM MODAL -->
-      <div id="deleteModal" class="modal">
-        <div class="modal-box">
-          <div class="modal-header">
-            <h2>Confirm Deletion</h2>
-            <button class="close-btn" id="closeDeleteModal">&times;</button>
-          </div>
-          <p>Are you sure you want to delete this organization?</p>
-          <div class="modal-buttons">
-            <button id="cancelDeleteBtn">Cancel</button>
-            <button id="confirmDeleteBtn" class="primary-btn">Delete</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- SUCCESS/ERROR POPUP -->
-      <div id="toast" class="toast"></div>
-    </main>
-  </body>
-</html>
+        <!-- TOAST -->
+        <div id="toast" class="toast"></div>
+      </main>
+    </body>
+  </html>

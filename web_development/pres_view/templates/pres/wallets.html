@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PockiTrack | Wallets</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('pres.static', filename='css/wallets.css') }}"
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body data-wallet-img="{{ url_for('pres.static', filename='images/wallet.png') }}">
+    <div class="container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <a href="{{ url_for('pres.homepage') }}" class="logo">
+          <img
+            src="{{ url_for('pres.static', filename='images/pocki_logo.png') }}"
+            alt="PockiTrack Logo"
+          />
+          <span class="logo_name">PockiTrack</span>
+        </a>
+
+        <div class="sidebar-content">
+          <nav class="nav-menu">
+            <a href="{{ url_for('pres.homepage') }}" class="nav-item">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_home.png') }}"
+                alt="Home Icon"
+              />
+              Home
+            </a>
+
+            <a href="{{ url_for('pres.history') }}" class="nav-item">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_history.png') }}"
+                alt="History Icon"
+              />
+              History
+            </a>
+
+            <a href="{{ url_for('pres.wallets') }}" class="nav-item active">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_wallet.png') }}"
+                alt="Wallet Icon"
+              />
+              Wallets
+            </a>
+
+            <a href="{{ url_for('pres.profile') }}" class="nav-item">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_profile.png') }}"
+                alt="Profile Icon"
+              />
+              Profile
+            </a>
+          </nav>
+        </div>
+
+        <a href="{{ url_for('pres.pres_logout') }}" class="logout-btn">
+          <img
+            src="{{ url_for('pres.static', filename='images/logout_icon.png') }}"
+            alt="Logout Icon"
+          />
+          Logout
+        </a>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="content-box">
+          <!-- Wallets List View -->
+          <section id="wallets-view" class="view-section active">
+            <div class="header wallets-header">
+              <h3>Wallets</h3>
+              <div class="wallets-actions">
+                <input
+                  type="text"
+                  id="wallet-search"
+                  placeholder="Search wallet..."
+                />
+                <button id="add-wallet-btn" class="primary-btn">
+                  + Add Wallet
+                </button>
+              </div>
+            </div>
+
+            <!-- Wallets Grid -->
+            <div class="wallets-grid" id="wallets-grid">
+              <!-- populated by JS -->
+            </div>
+          </section>
+
+          <!-- Wallet Detail View -->
+          <section id="wallet-detail-view" class="view-section">
+            <div class="header wallet-detail-header">
+              <button class="back-btn" id="back-to-wallets">&#8249;</button>
+              <h3 id="wallet-name">Wallet</h3>
+              <button id="wallet-actions-btn" class="primary-btn header-add-btn">
+                + Add
+              </button>
+            </div>
+
+            <!-- Add actions dropdown -->
+            <div id="wallet-actions-menu">
+              <button data-action="income">Add income transaction</button>
+              <button data-action="expense">Add expense transaction</button>
+              <button data-action="receipt">Add receipt</button>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="tab-nav">
+              <button class="tab-btn active" data-tab="transactions">
+                Transactions
+              </button>
+              <button class="tab-btn" data-tab="reports">Reports</button>
+              <button class="tab-btn" data-tab="receipts">Receipts</button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="tab-content active" id="transactions-tab">
+              <div class="filter-tabs">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="income">Income</button>
+                <button class="filter-btn" data-filter="expense">Expense</button>
+              </div>
+              <div id="transactions-container"></div>
+            </div>
+
+            <div class="tab-content" id="reports-tab">
+              <div class="report-section">
+                <div class="report-header">
+                  <img
+                    src="{{ url_for('pres.static', filename='images/folder_icon.png') }}"
+                    alt="Folder"
+                    style="width: 50px;"
+                  />
+                  <div>
+                    <h4>Generate Financial Report</h4>
+                    <p>Create an Activity Financial Statement for this wallet</p>
+                  </div>
+                  <div class="report-actions">
+                    <button class="action-btn preview-btn">
+                      <img
+                        src="{{ url_for('pres.static', filename='images/preview_icon.png') }}"
+                        alt="Preview"
+                      />
+                      Preview
+                    </button>
+                    <button class="action-btn print-btn">
+                      <img
+                        src="{{ url_for('pres.static', filename='images/print_icon.png') }}"
+                        alt="Print"
+                      />
+                      Print
+                    </button>
+                  </div>
+                </div>
+
+                <div class="report-stats">
+                  <div class="stat-card">
+                    <p>Budget</p>
+                    <h4 id="stat-budget">Php 0.00</h4>
+                  </div>
+                  <div class="stat-card">
+                    <p>Total amount of expenses</p>
+                    <h4 id="stat-expense">Php 0.00</h4>
+                  </div>
+                  <div class="stat-card">
+                    <p>Total amount of income</p>
+                    <h4 id="stat-income">Php 0.00</h4>
+                  </div>
+                  <div class="stat-card">
+                    <p>Ending Cash</p>
+                    <h4 id="stat-ending">Php 0.00</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-content" id="receipts-tab">
+              <div class="receipts-grid" id="receipts-container">
+                <!-- populated by JS -->
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- Add Wallet Modal -->
+    <div class="modal-overlay" id="wallet-modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Add Wallet</h3>
+          <button class="close-modal" id="close-wallet-modal">&times;</button>
+        </div>
+        <p class="modal-subtitle">
+          Create a new wallet for a month.
+        </p>
+
+        <form id="add-wallet-form" novalidate>
+  <div class="form-group">
+    <label for="wallet-month">Month</label>
+    <select id="wallet-month" required>
+      <option value="">Select month</option>
+      <option>January 2025</option>
+      <option>February 2025</option>
+      <option>March 2025</option>
+      <option>April 2025</option>
+      <option>May 2025</option>
+      <option>June 2025</option>
+      <option>July 2025</option>
+      <option>August 2025</option>
+      <option>September 2025</option>
+      <option>October 2025</option>
+      <option>November 2025</option>
+      <option>December 2025</option>
+    </select>
+    <span class="error-msg"></span>
+  </div>
+
+  <div class="form-group">
+    <label for="wallet-budget">Budget (PHP)</label>
+    <input
+      type="number"
+      id="wallet-budget"
+      min="0"
+      step="0.01"
+      required
+    />
+    <span class="error-msg"></span>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="secondary-btn" id="cancel-wallet-btn">
+      Cancel
+    </button>
+    <button type="submit" class="primary-btn">Create</button>
+  </div>
+</form>
+
+      </div>
+    </div>
+
+    <!-- Add Transaction Modal (income/expense) -->
+    <div class="modal-overlay" id="tx-modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="tx-modal-title">Add Transaction</h3>
+          <button class="close-modal" id="close-tx-modal">&times;</button>
+        </div>
+        <p class="modal-subtitle" id="tx-modal-subtitle">
+          Add a new transaction for this wallet.
+        </p>
+
+        <form id="tx-form" novalidate>
+          <div class="form-group">
+            <label for="tx-date">Date Issued</label>
+            <input type="date" id="tx-date" required />
+            <span class="error-msg"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="tx-qty">Quantity</label>
+            <input type="number" id="tx-qty" min="1" required />
+            <span class="error-msg"></span>
+          </div>
+
+          <!-- Income only -->
+          <div class="form-group" id="tx-type-wrapper">
+            <label for="tx-income-type">Type of Income</label>
+            <select id="tx-income-type" required>
+              <option value="">Select type</option>
+              <option value="IGP">IGP</option>
+              <option value="Registration Fee">Registration Fee</option>
+              <option value="Membership Fee">Membership Fee</option>
+            </select>
+            <span class="error-msg"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="tx-desc">Description</label>
+            <input type="text" id="tx-desc" required />
+            <span class="error-msg"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="tx-price">Price</label>
+            <input type="number" id="tx-price" min="0" step="0.01" required />
+            <span class="error-msg"></span>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="secondary-btn" id="cancel-tx-btn">
+              Cancel
+            </button>
+            <button type="submit" class="primary-btn">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add Receipt Modal -->
+    <div class="modal-overlay" id="receipt-modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Add Receipt</h3>
+          <button class="close-modal" id="close-receipt-modal">&times;</button>
+        </div>
+        <p class="modal-subtitle">
+          Upload a receipt image for this wallet.
+        </p>
+
+        <form id="receipt-form" novalidate>
+          <div class="form-group">
+            <label for="receipt-file">Receipt image</label>
+            <input type="file" id="receipt-file" accept="image/*" required />
+            <span class="error-msg"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="receipt-desc">Description</label>
+            <input type="text" id="receipt-desc" required />
+            <span class="error-msg"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="receipt-date">Date</label>
+            <input type="date" id="receipt-date" required />
+            <span class="error-msg"></span>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="secondary-btn" id="cancel-receipt-btn">
+              Cancel
+            </button>
+            <button type="submit" class="primary-btn">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toast-container"></div>
+
+    <script src="{{ url_for('pres.static', filename='js/wallets.js') }}"></script>
+  </body>
+</html>

@@ -2,11 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>PockiTrack | Home</title>
+    <title>PockiTrack | Transaction History</title>
 
     <link
       rel="stylesheet"
-      href="{{ url_for('pres.static', filename='css/homepage.css') }}"
+      href="{{ url_for('pres.static', filename='css/history.css') }}"
     />
 
     <link
@@ -30,12 +30,9 @@
           <span class="logo_name">PockiTrack</span>
         </a>
 
-        <!-- Sidebar content below logo -->
         <div class="sidebar-content">
-
-          <!-- Navigation Menu -->
           <nav class="nav-menu">
-            <a href="{{ url_for('pres.homepage') }}" class="nav-item active">
+            <a href="{{ url_for('pres.homepage') }}" class="nav-item">
               <img
                 src="{{ url_for('pres.static', filename='images/nav_home.png') }}"
                 alt="Home Icon"
@@ -43,7 +40,7 @@
               Home
             </a>
 
-            <a href="{{ url_for('pres.history') }}" class="nav-item">
+            <a href="{{ url_for('pres.history') }}" class="nav-item active">
               <img
                 src="{{ url_for('pres.static', filename='images/nav_history.png') }}"
                 alt="History Icon"
@@ -69,7 +66,6 @@
           </nav>
         </div>
 
-        <!-- Logout Button -->
         <a href="{{ url_for('pres.pres_logout') }}" class="logout-btn">
           <img
             src="{{ url_for('pres.static', filename='images/logout_icon.png') }}"
@@ -83,53 +79,31 @@
       <main class="main-content">
         <div class="content-box">
           <section class="header">
-            <h3>Hello, <span id="username">{{ session['org_name'] }}</span></h3>
-            <p class="date-text"></p>
+            <h3>Transaction History</h3>
+            
+            <!-- Month Selector -->
+            <div class="month-selector">
+              <button id="prev-month" class="month-nav">&#8249;</button>
+              <div class="month-display" id="current-month">February 2025</div>
+              <button id="next-month" class="month-nav">&#8250;</button>
+            </div>
 
-            <div class="summary-wrapper">
-              <div class="summary">
-                <div class="card">
-                  <p>Total balance</p>
-                  <h2 id="total-balance">Php 0.00</h2>
-                </div>
-
-                <div class="card">
-                  <p>Total no. of events</p>
-                  <h2 id="total-events">0</h2>
-                </div>
-
-                <div class="card">
-                  <p>Income this month</p>
-                  <h2 id="income-month">Php 0.00</h2>
-                </div>
-
-                <div class="card">
-                  <p>Expenses this month</p>
-                  <h2 id="expenses-month">Php 0.00</h2>
-                </div>
-              </div>
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="income">Income</button>
+              <button class="filter-btn" data-filter="expense">Expense</button>
             </div>
           </section>
 
-          <section class="overview">
-            <div class="wallets">
-              <h4>Wallets Overview</h4>
-              <div id="wallets-container">
-                <!-- Will be populated by JS -->
-              </div>
-            </div>
-
-            <div class="transactions">
-              <h4>Transaction History</h4>
-              <div id="transactions-container">
-                <!-- Will be populated by JS -->
-              </div>
-            </div>
+          <!-- Transactions List -->
+          <section class="transactions-section" id="transactions-list">
+            <!-- Will be populated by JS -->
           </section>
         </div>
       </main>
     </div>
 
-    <script src="{{ url_for('pres.static', filename='js/homepage.js') }}"></script>
+    <script src="{{ url_for('pres.static', filename='js/history.js') }}"></script>
   </body>
 </html>

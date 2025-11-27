@@ -14,7 +14,7 @@ html {
   height: 100vh;
 }
 
-/* Sidebar */
+/* Sidebar - Same as homepage */
 .sidebar {
   width: clamp(230px, 17vw, 250px);
   padding: 50px 40px 40px 40px;
@@ -25,7 +25,6 @@ html {
   position: relative;
 }
 
-/* Logo Section */
 .logo {
   display: flex;
   align-items: center;
@@ -49,7 +48,6 @@ html {
   color: #000;
 }
 
-/* Sidebar inner content wrapper */
 .sidebar-content {
   display: flex;
   flex-direction: column;
@@ -58,8 +56,25 @@ html {
   width: 100%;
 }
 
+.new-btn {
+  width: 180px;
+  height: 93px;
+  background-color: #ffffff;
+  color: #616161;
+  font-size: 20px;
+  font-weight: 500;
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0px 4px 20.1px -4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
 
-/* Navigation menu */
+.new-btn:hover {
+  background-color: #ECDDC6;
+  color: #000000;
+}
+
 .nav-menu {
   display: flex;
   flex-direction: column;
@@ -67,7 +82,6 @@ html {
   width: 100%;
 }
 
-/* Each navigation item */
 .nav-item {
   display: flex;
   align-items: center;
@@ -83,13 +97,11 @@ html {
   transition: all 0.3s ease;
 }
 
-/* Icon size */
 .nav-item img {
   width: 24px;
   height: 24px;
 }
 
-/* Hover + Active */
 .nav-item:hover:not(.active) {
   background-color: #ECDDC6;
   color: #000;
@@ -105,7 +117,6 @@ html {
   filter: brightness(0) invert(1);
 }
 
-/* Logout Button - fixed at bottom of sidebar */
 .logout-btn {
   position: absolute;
   bottom: 30px;
@@ -125,6 +136,7 @@ html {
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: Poppins;
+  text-decoration: none;
 }
 
 .logout-btn img {
@@ -138,7 +150,7 @@ html {
   color: #fff;
 }
 
-/* Main white content box */
+/* Main Content */
 .content-box {
   background-color: #fff;
   width: clamp(850px, 72vw, 1085px);
@@ -155,219 +167,130 @@ html {
 
 /* Header */
 .header h3 {
-  margin: 0;
+  margin: 0 0 20px;
   font-weight: 400;
   font-style: italic;
   font-size: clamp(26px, 2.5vw, 36px);
   font-family: 'Playfair Display';
 }
 
-.header .date-text {
-  margin-top: 5px;
-  color: #616161;
-  font-size: clamp(14px, 1.3vw, 16px);
-  font-weight: 500;
-}
-
-/* Summary Wrapper */
-.summary-wrapper {
-  background: linear-gradient(90deg, #F3D58D 0%, #ECB95D 54%, #E59E2C 100%);
-  border-radius: 25px;
-  padding: clamp(20px, 2vw, 25px);
-  margin-top: 20px;
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-}
-
-.summary {
+/* Month Selector */
+.month-selector {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
   gap: 20px;
-  justify-content: space-between;
+  margin: 20px 0;
 }
 
-.summary .card {
-  background: rgba(255,255,255,0.4);
-  border-radius: 15px;
-  flex: 1;
-  padding: 15px 20px;
-  box-shadow: inset 1px 1px 3px rgba(255,255,255,0.4), inset -1px -1px 3px rgba(0,0,0,0.05);
+.month-nav {
+  width: 40px;
+  height: 40px;
+  background: #ECDDC6;
+  border: none;
+  border-radius: 10px;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.summary .card p {
-  margin: 0;
-  font-weight: 500;
-  color: #000;
-  font-size: clamp(12px, 1.2vw, 13px);
+.month-nav:hover {
+  background: #E59E2C;
+  color: #fff;
 }
 
-.summary .card h2 {
-  margin: 6px 0 0;
-  font-weight: 500;
-  font-size: clamp(13px, 1.3vw, 15px);
-}
-
-/* Overview section */
-.overview {
-  display: flex;
-  gap: clamp(20px, 3vw, 40px);
-  margin-top: 40px;
-}
-
-.wallets, .transactions {
-  flex: 1;
-}
-
-.wallets h4, .transactions h4 {
-  margin: 0 0 15px;
-  font-weight: 500;
-  font-size: clamp(16px, 1.8vw, 20px);
-}
-
-.empty-card {
-  background-color: #fff;
-  border-radius: 15px;
-  padding: clamp(25px, 3vw, 40px);
+.month-display {
+  min-width: 200px;
   text-align: center;
-  border: 1px solid #ECDDC6;
-  box-shadow: 2px 2px 6px #E0D4B7;
-  transition: transform 0.3s ease;
-}
-
-.empty-card:hover {
-  transform: translateY(-5px);
-}
-
-.empty-card img {
-  width: clamp(35px, 4vw, 50px);
-  opacity: 0.6;
-}
-
-.empty-card p {
-  margin: 15px 0 5px;
   font-weight: 600;
+  font-size: 18px;
+  background: #F3D58D;
+  padding: 10px 30px;
+  border-radius: 15px;
 }
 
-/* Add these styles to your existing homepage.css */
+/* Filter Tabs */
+.filter-tabs {
+  display: flex;
+  gap: 15px;
+  margin: 25px 0;
+  justify-content: center;
+}
 
-/* Wallet Cards with Data */
-.wallet-card {
-  background: linear-gradient(180deg, #F3D58D 0%, #ECB95D 54%, #E59E2C 100%);
+.filter-btn {
+  padding: 10px 30px;
+  background: #fff;
+  border: 2px solid #ECDDC6;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Poppins';
+}
+
+.filter-btn:hover {
+  background: #ECDDC6;
+}
+
+.filter-btn.active {
+  background: #E59E2C;
+  color: #fff;
+  border-color: #E59E2C;
+}
+
+/* Transactions Section */
+.transactions-section {
+  margin-top: 30px;
+}
+
+.transaction-card {
+  background: #fff;
+  border: 1px solid #ECDDC6;
   border-radius: 15px;
   padding: 20px;
   margin-bottom: 15px;
   display: flex;
-  gap: 15px;
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease;
-}
-
-.wallet-card:hover {
-  transform: translateY(-3px);
-}
-
-.wallet-icon img {
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-}
-
-.wallet-details {
-  flex: 1;
-}
-
-.wallet-details h5 {
-  margin: 0 0 8px;
-  font-weight: 600;
-  font-size: 16px;
-  color: #000;
-}
-
-.budget-text {
-  margin: 0;
-  font-size: 12px;
-  color: #000;
-  font-weight: 500;
-}
-
-.budget-amount {
-  margin: 4px 0 8px;
-  font-weight: 600;
-  font-size: 14px;
-  color: #000;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background: rgba(255,255,255,0.4);
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-
-.progress-fill {
-  height: 100%;
-  background: #8B4513;
-  border-radius: 10px;
-  transition: width 0.3s ease;
-}
-
-.wallet-stats {
-  display: flex;
-  gap: 15px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.income-stat {
-  color: #2E7D32;
-}
-
-.expense-stat {
-  color: #C62828;
-}
-
-/* Transaction Items with Data */
-.transaction-item {
-  background: #fff;
-  border: 1px solid #ECDDC6;
-  border-radius: 12px;
-  padding: 15px;
-  margin-bottom: 12px;
-  display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 1px 1px 4px rgba(0,0,0,0.05);
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.05);
   transition: all 0.3s ease;
 }
 
-.transaction-item:hover {
+.transaction-card:hover {
   transform: translateX(5px);
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 3px 3px 10px rgba(0,0,0,0.1);
 }
 
-.transaction-info h5 {
-  margin: 0 0 5px;
+.transaction-left {
+  flex: 1;
+}
+
+.transaction-event {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 16px;
+  margin: 0 0 5px;
   color: #000;
 }
 
-.transaction-info p {
-  margin: 0 0 5px;
-  font-size: 12px;
+.transaction-description {
+  font-size: 13px;
   color: #616161;
+  margin: 0 0 5px;
 }
 
 .transaction-date {
-  font-size: 11px;
+  font-size: 12px;
   color: #999;
+}
+
+.transaction-right {
+  text-align: right;
 }
 
 .transaction-amount {
   font-weight: 600;
-  font-size: 16px;
-  white-space: nowrap;
+  font-size: 18px;
 }
 
 .transaction-amount.income {
@@ -378,24 +301,30 @@ html {
   color: #C62828;
 }
 
-/* Responsive adjustments */
-@media (max-width: 992px) {
-  .wallet-card {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .transaction-item {
-    flex-direction: column;
-    gap: 10px;
-    text-align: center;
-  }
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
 }
 
-/* ============================= */
-/* RESPONSIVE BREAKPOINTS */
-/* ============================= */
+.empty-state img {
+  width: 80px;
+  opacity: 0.5;
+  margin-bottom: 20px;
+}
+
+.empty-state h4 {
+  font-weight: 600;
+  font-size: 18px;
+  margin: 0 0 10px;
+}
+
+.empty-state p {
+  color: #616161;
+  font-size: 14px;
+}
+
+/* Responsive */
 @media (max-width: 992px) {
   .container {
     flex-direction: column;
@@ -455,33 +384,29 @@ html {
     height: auto;
   }
 
-  .summary .card {
-    flex: 1 1 45%;
+  .transaction-card {
+    flex-direction: column;
+    gap: 15px;
   }
 
-  .overview {
-    flex-direction: column;
+  .transaction-right {
+    text-align: center;
   }
 }
 
 @media (max-width: 600px) {
-  .sidebar {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 15px;
-  }
-
   .content-box {
     width: 95%;
     padding: 25px;
     top: 160px;
   }
 
-  .summary .card {
-    width: 100%;
+  .filter-tabs {
+    flex-wrap: wrap;
   }
 
-  .overview {
-    flex-direction: column;
+  .month-display {
+    min-width: 150px;
+    font-size: 16px;
   }
 }

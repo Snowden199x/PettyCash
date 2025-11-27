@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PockiTrack | Profile</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('pres.static', filename='css/profile.css') }}"
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <a href="{{ url_for('pres.homepage') }}" class="logo">
+          <img
+            src="{{ url_for('pres.static', filename='images/pocki_logo.png') }}"
+            alt="PockiTrack Logo"
+          />
+          <span class="logo_name">PockiTrack</span>
+        </a>
+
+        <div class="sidebar-content">
+          <nav class="nav-menu">
+            <a href="{{ url_for('pres.homepage') }}" class="nav-item">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_home.png') }}"
+                alt="Home Icon"
+              />
+              Home
+            </a>
+
+            <a href="{{ url_for('pres.history') }}" class="nav-item">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_history.png') }}"
+                alt="History Icon"
+              />
+              History
+            </a>
+
+            <a href="{{ url_for('pres.wallets') }}" class="nav-item">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_wallet.png') }}"
+                alt="Wallet Icon"
+              />
+              Wallets
+            </a>
+
+            <a href="{{ url_for('pres.profile') }}" class="nav-item active">
+              <img
+                src="{{ url_for('pres.static', filename='images/nav_profile.png') }}"
+                alt="Profile Icon"
+              />
+              Profile
+            </a>
+          </nav>
+        </div>
+
+        <a href="{{ url_for('pres.pres_logout') }}" class="logout-btn">
+          <img
+            src="{{ url_for('pres.static', filename='images/logout_icon.png') }}"
+            alt="Logout Icon"
+          />
+          Logout
+        </a>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="content-box">
+          <section class="header">
+            <h3>Profile</h3>
+          </section>
+
+          <div class="profile-container">
+            <!-- Profile Picture Section -->
+            <div class="profile-picture-section">
+              <div class="profile-picture">
+                <img id="profile-img" src="{{ url_for('pres.static', filename='images/default_avatar.png') }}" alt="Profile Picture" />
+              </div>
+              <button class="change-photo-btn">
+                <img src="{{ url_for('pres.static', filename='images/camera_icon.png') }}" alt="Camera" />
+                Change Photo
+              </button>
+              <input type="file" id="photo-upload" accept="image/*" style="display: none;" />
+            </div>
+
+            <!-- Organization Information -->
+            <div class="info-section">
+              <h4>Organization Information</h4>
+              
+              <div class="info-card">
+                <div class="form-row">
+                  <div class="form-group full-width">
+                    <label>Organization Name</label>
+                    <input type="text" id="org-name" value="Information Technology Unity Hub" readonly />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Organization Shortened Name</label>
+                    <input type="text" id="org-short-name" value="ITUH" readonly />
+                  </div>
+                  <div class="form-group">
+                    <label>Department</label>
+                    <input type="text" id="department" value="College of Computer Studies" readonly />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group full-width">
+                    <label>School/University</label>
+                    <input type="text" id="school" value="Laguna State Polytechnic University - Sta. Cruz Campus" readonly />
+                  </div>
+                </div>
+
+                <div class="action-buttons">
+                  <button class="edit-btn" id="edit-btn">Edit</button>
+                  <button class="save-btn" id="save-btn" style="display: none;">Save Changes</button>
+                  <button class="cancel-btn" id="cancel-btn" style="display: none;">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="{{ url_for('pres.static', filename='js/profile.js') }}"></script>
+  </body>
+</html>

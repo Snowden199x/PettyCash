@@ -1,0 +1,889 @@
+body {
+  margin: 0;
+  font-family: "Poppins", "Playfair Display";
+  background-color: #f5f1e8;
+  color: #000000;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: clamp(230px, 17vw, 250px);
+  padding: 50px 40px 40px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background-color: #f5f1e8;
+  position: relative;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.logo img {
+  width: 71.22px;
+  height: 70px;
+}
+
+.logo_name {
+  font-weight: 500;
+  font-size: 28px;
+  color: #000;
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  margin-top: 90px;
+  gap: 30px;
+  width: 100%;
+}
+
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  width: 226px;
+  height: 46px;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #616161;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.nav-item img {
+  width: 24px;
+  height: 24px;
+}
+
+.nav-item:hover:not(.active) {
+  background-color: #ecddc6;
+  color: #000;
+}
+
+.nav-item.active {
+  background-color: #a24a00;
+  color: #fff;
+  border-radius: 30px;
+}
+
+.nav-item.active img {
+  filter: brightness(0) invert(1);
+}
+
+.logout-btn {
+  position: absolute;
+  bottom: 30px;
+  left: 40px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 150px;
+  height: 45px;
+  background-color: #ffffff;
+  color: #616161;
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0px 4px 15px -4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: Poppins;
+  text-decoration: none;
+}
+
+.logout-btn img {
+  width: 22px;
+  height: 22px;
+  opacity: 0.5;
+}
+
+.logout-btn:hover {
+  background-color: #a24a00;
+  color: #fff;
+}
+
+/* Main Content */
+.content-box {
+  background-color: #fff;
+  width: clamp(850px, 72vw, 1085px);
+  height: clamp(500px, 70vh, 640px);
+  border-radius: 30px;
+  position: absolute;
+  top: clamp(80px, 7vh, 100px);
+  left: clamp(270px, 21vw, 315px);
+  padding: clamp(25px, 3vw, 50px);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
+  overflow-y: auto;
+  transition: all 0.3s ease;
+}
+
+/* View Sections */
+.view-section {
+  display: none;
+}
+
+.view-section.active {
+  display: block;
+}
+
+/* Header */
+.header {
+  margin-bottom: 25px;
+}
+
+.header h3 {
+  margin: 0;
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(26px, 2.5vw, 36px);
+  font-family: "Playfair Display";
+  display: inline-block;
+}
+
+.wallets-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wallets-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+#wallet-search {
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid #ecdcc6;
+  font-family: "Poppins";
+  outline: none;
+  min-width: 220px;
+  font-size: 14px;
+}
+
+/* Buttons */
+.primary-btn {
+  padding: 10px 18px;
+  border-radius: 20px;
+  border: none;
+  background-color: #a24a00;
+  color: #fff;
+  font-family: "Poppins";
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.primary-btn:hover {
+  background-color: #8b3a00;
+}
+
+.secondary-btn {
+  padding: 10px 18px;
+  border-radius: 20px;
+  border: 1px solid #ecdcc6;
+  background-color: #fff;
+  color: #616161;
+  font-family: "Poppins";
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.secondary-btn:hover {
+  background-color: #f5f1e8;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 32px;
+  cursor: pointer;
+  color: #a24a00;
+  margin-right: 10px;
+  transition: transform 0.3s ease;
+}
+
+.back-btn:hover {
+  transform: translateX(-5px);
+}
+
+/* Wallets Grid */
+.wallets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.wallet-card-item {
+  border-radius: 10px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  min-height: 150px;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.wallet-card-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.wallet-card-item h5 {
+  position: left;
+  margin: -15px;
+  font-weight: 600;
+  font-size: 16px;
+  color: #000;
+  justify-content: left;  
+  background: rgba(255, 255, 255, 0.85);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+/* Tab Navigation */
+.tab-nav {
+  display: flex;
+  gap: 15px;
+  margin: 25px 0;
+  border-bottom: 2px solid #ecddc6;
+}
+
+.tab-btn {
+  padding: 12px 30px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: "Poppins";
+  color: #616161;
+}
+
+.tab-btn:hover {
+  color: #000;
+}
+
+.tab-btn.active {
+  color: #000;
+  border-bottom-color: #e59e2c;
+}
+
+/* Tab Content */
+.tab-content {
+  display: none;
+  margin-top: 20px;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Filter Tabs */
+.filter-tabs {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.filter-btn {
+  padding: 10px 30px;
+  background: #fff;
+  border: 2px solid #ecddc6;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: "Poppins";
+}
+
+.filter-btn:hover {
+  background: #ecddc6;
+}
+
+.filter-btn.active {
+  background: #e59e2c;
+  color: #fff;
+  border-color: #e59e2c;
+}
+
+/* Transactions */
+.transaction-item {
+  background: #fff;
+  border: 1px solid #ecddc6;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.transaction-item:hover {
+  transform: translateX(5px);
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.transaction-left {
+  flex: 1;
+}
+
+.transaction-left h5 {
+  margin: 0 0 5px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.transaction-left p {
+  margin: 0 0 5px;
+  font-size: 12px;
+  color: #616161;
+}
+
+.transaction-date {
+  font-size: 11px;
+  color: #999;
+}
+
+.transaction-amount {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.transaction-amount.income {
+  color: #2e7d32;
+}
+
+.transaction-amount.expense {
+  color: #c62828;
+}
+
+/* Reports */
+.report-section {
+  margin-top: 20px;
+}
+
+.report-header {
+  background: linear-gradient(90deg, #f3d58d 0%, #ecb95d 54%, #e59e2c 100%);
+  border-radius: 20px;
+  padding: 25px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.report-header h4 {
+  margin: 0 0 5px;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.report-header p {
+  margin: 0;
+  font-size: 13px;
+  color: #616161;
+}
+
+.report-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: "Poppins";
+}
+
+.action-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+.preview-btn {
+  background: #fff;
+  color: #000;
+}
+
+.preview-btn:hover {
+  background: #ecddc6;
+}
+
+.print-btn {
+  background: #a24a00;
+  color: #fff;
+}
+
+.print-btn:hover {
+  background: #8b3a00;
+}
+
+/* Report stats */
+.report-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.stat-card {
+  background: #fff;
+  border: 2px solid #ecddc6;
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+}
+
+.stat-card p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #616161;
+  font-weight: 500;
+}
+
+.stat-card h4 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 18px;
+  color: #000;
+}
+
+/* Receipts */
+.receipts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.receipt-card {
+  background: #fff;
+  border: 2px solid #ecddc6;
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.receipt-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.receipt-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 15px;
+  background: #f5f5f5;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.receipt-icon img {
+  width: 40px;
+  opacity: 0.6;
+}
+
+.receipt-card h5 {
+  margin: 0 0 5px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.receipt-card p {
+  margin: 0 0 15px;
+  font-size: 12px;
+  color: #616161;
+}
+
+.receipt-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.receipt-action-btn {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-family: "Poppins";
+}
+
+.receipt-action-btn.view {
+  background: #ecddc6;
+  color: #000;
+}
+
+.receipt-action-btn.download {
+  background: #a24a00;
+  color: #fff;
+}
+
+.receipt-action-btn:hover {
+  opacity: 0.8;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-state img {
+  width: 80px;
+  opacity: 0.5;
+  margin-bottom: 20px;
+}
+
+.empty-state h4 {
+  font-weight: 600;
+  font-size: 18px;
+  margin: 0 0 10px;
+}
+
+.empty-state p {
+  color: #616161;
+  font-size: 14px;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px 28px 20px;
+  max-width: 450px;
+  width: 100%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 22px;
+  font-family: "Playfair Display";
+}
+
+.modal-subtitle {
+  margin: 4px 0 16px;
+  font-size: 13px;
+  color: #616161;
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.form-group input,
+.form-group select {
+  width: 95%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid #ecddc6;
+  font-family: "Poppins";
+  font-size: 14px;
+  outline: none;
+}
+
+.modal-footer {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+
+.wallet-detail-header {
+  display: flex;
+  align-items: center;
+}
+
+.header-add-btn {
+  margin-left: auto;  /* pushes it to the right side */
+}
+
+
+/* actions dropdown */
+.wallet-actions-menu {
+  position: relative;
+  margin-left: auto;
+  width: fit-content;
+}
+
+#wallet-actions-menu {
+  position: absolute;
+  right: 40px;
+  top: 80px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: none;
+  flex-direction: column;
+  min-width: 220px;
+  z-index: 50;
+}
+
+#wallet-actions-menu.open {
+  display: flex;
+}
+
+#wallet-actions-menu button {
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-family: 'Poppins';
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#wallet-actions-menu button:hover {
+  background: #f5f1e8;
+}
+
+/* error + shake */
+.form-group .error-msg {
+  display: none;
+  font-size: 11px;
+  color: #c62828;
+  margin-top: 4px;
+}
+
+.input-error {
+  border-color: #c62828 !important;
+}
+
+.input-error + .error-msg {
+  display: block;
+}
+
+.shake {
+  animation: shake 0.3s ease-in-out 0s 2;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+
+/* toast */
+#toast-container {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 3000;
+}
+
+.toast {
+  min-width: 220px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  font-size: 13px;
+  color: #333;
+  border-left: 4px solid #2e7d32; /* success default */
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.error {
+  border-left-color: #c62828;
+}
+
+
+/* Responsive */
+@media (max-width: 992px) {
+  .container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 25px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .logo {
+    position: static;
+  }
+
+  .sidebar-content {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 0;
+    gap: 15px;
+  }
+
+  .nav-menu {
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  .nav-item {
+    width: auto;
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .content-box {
+    position: relative;
+    top: 120px;
+    left: 0;
+    width: 90%;
+    margin: 0 auto;
+    height: auto;
+  }
+
+  .report-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .report-actions {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .content-box {
+    width: 95%;
+    padding: 25px;
+    top: 160px;
+  }
+
+  .wallets-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .receipts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wallets-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  #wallet-search {
+    width: 100%;
+  }
+}

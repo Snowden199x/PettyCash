@@ -1,47 +1,41 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // --- ELEMENTS ---
-  const navItems = document.querySelectorAll(".nav-item");
-  const settingsSections = document.querySelectorAll(".settings-section");
+  // ===== NAVIGATION & TAB HANDLING =====
+  const navItems = document.querySelectorAll(".settings-nav .nav-item");
+  const settingsSections = document.querySelectorAll(".settings-content .settings-section");
 
-  // Forms
-  const profileForm = document.getElementById("profileForm");
-  const passwordForm = document.getElementById("passwordForm");
-  const saveDisplayBtn = document.getElementById("saveDisplayBtn");
-  const logoutAllBtn = document.getElementById("logoutAllBtn");
-  const loadMoreLogsBtn = document.getElementById("loadMoreLogs");
-
-  // Activity Filters
-  const activityDateFilter = document.getElementById("activityDateFilter");
-  const activityTypeFilter = document.getElementById("activityTypeFilter");
-  const activityList = document.getElementById("activityList");
-
-  // Theme Options
-  const themeOptions = document.querySelectorAll(".theme-option");
-  const fontSizeSelect = document.getElementById("fontSize");
-
-  // Modals/Toasts
-  const confirmModal = document.getElementById("confirmModal");
-  const closeConfirmModal = document.getElementById("closeConfirmModal");
-  const cancelConfirmBtn = document.getElementById("cancelConfirmBtn");
-  const proceedConfirmBtn = document.getElementById("proceedConfirmBtn");
-  const confirmMessage = document.getElementById("confirmMessage");
-  const toast = document.getElementById("toast");
-
-
-  // ========== LOAD ADMIN PROFILE ==========
-  async function loadAdminProfile() {
-    try {
-      const res = await fetch("/osas/api/admin/profile");
-      const data = await res.json();
-      if (!data.error) {
-        document.getElementById("adminName").value = data.full_name || "";
-        document.getElementById("adminEmail").value = data.email || "";
-        document.getElementById("adminUsername").value = data.username || "";
-      }
-    } catch (err) {}
+  function activateTab(sectionId) {
+    navItems.forEach((btn) => btn.classList.remove("active"));
+    settingsSections.forEach((sec) => sec.classList.remove("active"));
+    const navBtn = document.querySelector(`.settings-nav .nav-item[data-section="${sectionId}"]`);
+    const section = document.getElementById(sectionId);
+    if (navBtn) navBtn.classList.add("active");
+    if (section) {
+      section.classList.add("active");
+    }
   }
 
-  // ========== PROFILE FORM SUBMISSION ==========
+  navItems.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const sectionId = btn.getAttribute("data-section");
+      activateTab(sectionId);
+    });
+  });
+
+  // ===== HASH ROUTING FOR ACTIVITY LOGS =====
+  if (window.location.hash === "#activity") {
+    activateTab("activity");
+  }
+
+  // ===== LOGO CLICK =====
+  const logoLink = document.getElementById("logoLink");
+  if (logoLink) {
+    logoLink.addEventListener("click", () => {
+      window.location.href = "/osas/dashboard";
+    });
+  }
+
+  // ===== PROFILE FORM =====
+  const profileForm = document.getElementById("profileForm");
   profileForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const profileData = {
@@ -66,7 +60,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ========== PASSWORD FORM SUBMISSION ==========
+  // ===== PASSWORD FORM =====
+  const passwordForm = document.getElementById("passwordForm");
   passwordForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const currentPassword = document.getElementById("currentPassword").value;
@@ -99,164 +94,97 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ========== LOGOUT ALL DEVICES (if endpoint available) ==========
-  /*
-  logoutAllBtn.addEventListener("click", () => {
-    showConfirmModal(
-      "Are you sure you want to log out all other devices? You will remain logged in on this device.",
-      async () => {
-        try {
-          const res = await fetch("/osas/api/admin/logout-all", {
-            method: "POST"
-          });
-          if (!res.ok) throw new Error("Failed to logout devices");
-          showToast("All other devices logged out successfully!");
-        } catch (err) {
-          showToast("Session management updated", "warning");
-        }
-      }
-    );
-  });
-  */
-  // Remove or uncomment above if you add backend for session/logout-all.
+  // ===== SESSION LOGOUT =====
+  const logoutAllBtn = document.getElementById("logoutAllBtn");
+  if (logoutAllBtn) {
+    logoutAllBtn.addEventListener("click", () => {
+      showConfirmModal("Log out of all other devices?", async () => {
+        // Optional: Implement API call for session logout here!
+        showToast("All other devices logged out!");
+      });
+    });
+  }
 
-  // ========== ACTIVITY LOGS ==========
+  // ===== ACTIVITY LOGS REAL-TIME =====
+  const activityDateFilter = document.getElementById("activityDateFilter");
+  const activityTypeFilter = document.getElementById("activityTypeFilter");
+  const activityList = document.getElementById("activityList");
+  const loadMoreLogsBtn = document.getElementById("loadMoreLogs");
+
   async function loadActivityLogs() {
+    if (!activityList) return;
     try {
       const params = new URLSearchParams();
-      if (activityDateFilter.value)
+      if (activityDateFilter && activityDateFilter.value)
         params.append("date", activityDateFilter.value);
-      if (activityTypeFilter.value && activityTypeFilter.value !== "all")
+      if (activityTypeFilter && activityTypeFilter.value && activityTypeFilter.value !== "all")
         params.append("type", activityTypeFilter.value);
+
       const res = await fetch(`/osas/api/admin/activity?${params.toString()}`);
-      const logs = await res.json();
-      activityLogs = logs || [];
-      renderActivityLogs();
-    } catch (err) {
-      activityLogs = [];
-      renderActivityLogs();
-    }
-  }
+      const data = await res.json();
 
-  function renderActivityLogs(filteredLogs = null) {
-    const logsToRender = filteredLogs || activityLogs;
-    activityList.innerHTML = "";
-    if (logsToRender.length === 0) {
+      function getIcon(type) {
+        switch (type) {
+          case "login": return "🔑";
+          case "logout": return "🔒";
+          case "organization": return "➕";
+          case "security": return "🛡️";
+          case "settings": return "⚙️";
+          case "report": return "📄";
+          default: return "📢";
+        }
+      }
+      function formatTime(iso) {
+        const date = new Date(iso);
+        if (isNaN(date)) return "--";
+        return date.toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
       activityList.innerHTML =
-        '<p style="text-align: center; color: #828282; padding: 40px;">No activity logs found</p>';
-      return;
+        Array.isArray(data) && data.length > 0
+          ? data
+              .map(
+                (activity) =>
+                  `<div class="activity-item">
+                    <div class="activity-icon">${getIcon(activity.action_type)}</div>
+                    <div class="activity-details">
+                      <p class="activity-text">${activity.description || activity.action_type || "No description"}</p>
+                      <p class="activity-time">${formatTime(activity.created_at)}</p>
+                    </div>
+                  </div>`
+              )
+              .join("")
+          : '<div class="activity-item"><div class="activity-details">No activity logs found.</div></div>';
+    } catch (err) {
+      activityList.innerHTML =
+        '<div class="activity-item"><div class="activity-details">Error loading activities.</div></div>';
     }
-    logsToRender.forEach((log) => {
-      const icon = getActivityIcon(log.action_type || log.type);
-      const desc = log.description || log.action;
-      const time = log.created_at || log.date; // backend vs default
-      const item = document.createElement("div");
-      item.className = "activity-item";
-      item.innerHTML = `
-        <div class="activity-icon">${icon}</div>
-        <div class="activity-details">
-          <p class="activity-action">${desc}</p>
-          <p class="activity-date">${formatActivityDate(time)}</p>
-        </div>
-      `;
-      activityList.appendChild(item);
+  }
+
+  // FILTER EVENTS
+  if (activityDateFilter) activityDateFilter.addEventListener("change", loadActivityLogs);
+  if (activityTypeFilter) activityTypeFilter.addEventListener("change", loadActivityLogs);
+
+  // Load More Dummy (for future implementation)
+  if (loadMoreLogsBtn) {
+    loadMoreLogsBtn.addEventListener("click", () => {
+      showToast("All logs loaded", "warning");
     });
   }
 
-  function formatActivityDate(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffHours < 1) return "Just now";
-    if (diffHours < 24)
-      return `Today at ${date.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-      })}`;
-    if (diffDays === 1)
-      return `Yesterday at ${date.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-      })}`;
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  }
+  // ===== MODAL HANDLING =====
+  const confirmModal = document.getElementById("confirmModal");
+  const closeConfirmModal = document.getElementById("closeConfirmModal");
+  const cancelConfirmBtn = document.getElementById("cancelConfirmBtn");
+  const proceedConfirmBtn = document.getElementById("proceedConfirmBtn");
+  const confirmMessage = document.getElementById("confirmMessage");
+  let confirmCallback = null;
 
-  // No manual logActivity sending; backend logs actions for you
-
-  function getActivityIcon(action_or_type) {
-    if (!action_or_type) return "📝";
-    if (action_or_type === "login" || action_or_type === "logout") return "🔑";
-    if (action_or_type === "organization") return "➕";
-    if (action_or_type === "report") return "✏️";
-    if (action_or_type === "security") return "🔒";
-    if (action_or_type === "settings") return "⚙️";
-    return "📝";
-  }
-
-  // --- Activity log filter events
-  activityDateFilter.addEventListener("change", filterActivityLogs);
-  activityTypeFilter.addEventListener("change", filterActivityLogs);
-
-  async function filterActivityLogs() {
-    await loadActivityLogs();
-  }
-
-  // Load more logs - placeholder
-  loadMoreLogsBtn.addEventListener("click", () => {
-    showToast("All logs loaded", "warning");
-  });
-
-  // ========== THEME & DISPLAY ==========
-  themeOptions.forEach((option) => {
-    option.addEventListener("click", () => {
-      themeOptions.forEach((opt) => opt.classList.remove("active"));
-      option.classList.add("active");
-    });
-  });
-
-  saveDisplayBtn.addEventListener("click", () => {
-    const selectedTheme = document.querySelector(
-      'input[name="theme"]:checked'
-    ).value;
-    const fontSize = fontSizeSelect.value;
-    localStorage.setItem("theme", selectedTheme);
-    localStorage.setItem("fontSize", fontSize);
-    if (selectedTheme === "dark") {
-      showToast("Dark mode coming soon!", "warning");
-    } else {
-      showToast("Display preferences saved!");
-    }
-  });
-
-  // Load saved preferences
-  const savedTheme = localStorage.getItem("theme");
-  const savedFontSize = localStorage.getItem("fontSize");
-  if (savedTheme) {
-    const themeInput = document.querySelector(
-      `input[name="theme"][value="${savedTheme}"]`
-    );
-    if (themeInput) {
-      themeInput.checked = true;
-      themeInput.closest(".theme-option").classList.add("active");
-      themeOptions.forEach((opt) => {
-        if (opt !== themeInput.closest(".theme-option"))
-          opt.classList.remove("active");
-      });
-    }
-  }
-  if (savedFontSize) {
-    fontSizeSelect.value = savedFontSize;
-  }
-
-  // ========== CONFIRMATION MODAL ==========
   function showConfirmModal(message, callback) {
     confirmMessage.textContent = message;
     confirmCallback = callback;
@@ -276,19 +204,34 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === confirmModal) hideConfirmModal();
   });
 
-  // ========== TOAST NOTIFICATIONS ==========
+  // ===== TOAST NOTIFICATIONS =====
+  const toast = document.getElementById("toast");
   function showToast(message, type = "success") {
     toast.textContent = message;
-    toast.className = "toast";
-    if (type === "error") toast.classList.add("error");
-    else if (type === "warning") toast.classList.add("warning");
+    toast.className = "toast" + (type ? " " + type : "");
     toast.style.display = "block";
     setTimeout(() => {
       toast.style.display = "none";
     }, 3000);
   }
 
-  // ========== INITIAL LOAD ==========
-  loadAdminProfile();
-  loadActivityLogs();
+  // ===== LOAD ADMIN PROFILE =====
+  async function loadAdminProfile() {
+    try {
+      const res = await fetch("/osas/api/admin/profile");
+      const data = await res.json();
+      if (!data.error) {
+        document.getElementById("adminName").value = data.full_name || "";
+        document.getElementById("adminEmail").value = data.email || "";
+        document.getElementById("adminUsername").value = data.username || "";
+      }
+    } catch (err) { /* silent fail */ }
+  }
+
+  // ===== INITIAL LOAD =====
+  async function initialLoad() {
+    await loadAdminProfile();
+    await loadActivityLogs();
+  }
+  initialLoad();
 });

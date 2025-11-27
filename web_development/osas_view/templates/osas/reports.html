@@ -5,16 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PockiTrack | Financial Reports</title>
 
-    <!-- ===== CSS LINK ===== -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('osas.static', filename='css/layout.css') }}"
+    />
     <link
       rel="stylesheet"
       href="{{ url_for('osas.static', filename='css/reports.css') }}"
     />
 
-    <!-- ===== JS ===== -->
     <script src="{{ url_for('osas.static', filename='js/reports.js') }}"></script>
-    
-    <!-- ===== GOOGLE FONT ===== -->
+
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
       rel="stylesheet"
@@ -23,15 +24,41 @@
 
   <body>
     <!-- HEADER -->
-<header class="admin-header">
-  <div class="logo" id="logoLink">
-    <img src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}" alt="PockiTrack Logo" />
-    <span class="logo_name">PockiTrack</span>
-  </div>
-</header>
+    <header class="admin-header">
+      <div class="logo" id="logoLink">
+        <img src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}" alt="PockiTrack Logo" />
+        <span class="logo_name">PockiTrack</span>
+      </div>
+    </header>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar hover-sidebar">
+  <nav class="nav-menu">
+    <a href="{{ url_for('osas.osas_dashboard') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+      <img src="{{ url_for('osas.static', filename='images/dashboard_menu.png') }}" class="nav-icon-img" alt="Dashboard" />
+      <span class="nav-label">Dashboard</span>
+    </a>
+    <a href="{{ url_for('osas.osas_orgs') }}" class="nav-item {% if active_page == 'orgs' %}active{% endif %}">
+      <img src="{{ url_for('osas.static', filename='images/organization_menu.png') }}" class="nav-icon-img" alt="Organizations" />
+      <span class="nav-label">Accredited Organizations</span>
+    </a>
+    <a href="{{ url_for('osas.osas_reports') }}" class="nav-item {% if active_page == 'reports' %}active{% endif %}">
+      <img src="{{ url_for('osas.static', filename='images/reports_menu.png') }}" class="nav-icon-img" alt="Reports" />
+      <span class="nav-label">Reports</span>
+    </a>
+    <a href="{{ url_for('osas.osas_archive') }}" class="nav-item {% if active_page == 'archive' %}active{% endif %}">
+      <img src="{{ url_for('osas.static', filename='images/archive_menu.png') }}" class="nav-icon-img" alt="Archive" />
+      <span class="nav-label">Archive</span>
+    </a>
+    <a href="{{ url_for('osas.osas_settings') }}" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
+      <img src="{{ url_for('osas.static', filename='images/settings_menu.png') }}" class="nav-icon-img" alt="Settings" />
+      <span class="nav-label">Settings</span>
+    </a>
+  </nav>
+</aside>
 
     <!-- MAIN CONTENT -->
-    <main class="dashboard">
+    <main class="dashboard with-sidebar">
       <!-- PAGE HEADER -->
       <section class="page-header">
         <div>
@@ -39,22 +66,29 @@
           <p>Track and manage organization report submissions</p>
         </div>
         <div class="filter-controls">
-          <select id="statusFilter" class="filter-select">
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="in-review">In Review</option>
-            <option value="completed">Completed</option>
-          </select>
-          <input 
-            type="text" 
-            id="searchReports" 
-            placeholder="Search organizations..."
-            class="search-input"
-          />
-        </div>
+  <select id="statusFilter" class="filter-select">
+    <option value="all">All Status</option>
+    <option value="Pending Review">Pending</option>
+    <option value="In Review">In Review</option>
+    <option value="Completed">Completed</option>
+  </select>
+  <div class="filter-dropdown">
+    <select id="departmentFilter" class="filter-select">
+      <option value="">All Departments</option>
+      <!-- options get filled by JS -->
+    </select>
+  </div>
+  <input
+    type="text"
+    id="searchReports"
+    placeholder="Search organizations..."
+    class="search-input"
+  />
+</div>
+
       </section>
 
-      <!-- REPORTS GRID -->
+      <!-- REPORTS SECTION -->
       <section class="reports-section">
         <!-- Empty State -->
         <div class="empty-state" id="emptyState">
@@ -68,6 +102,9 @@
 
         <!-- Reports Grid -->
         <div class="reports-grid" id="reportsGrid" style="display: none;"></div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="pagination"></div>
       </section>
 
       <!-- REPORT DETAILS MODAL -->
@@ -81,77 +118,73 @@
             <button class="close-btn" id="closeModal">&times;</button>
           </div>
 
-          <!-- STATUS BADGE -->
           <div class="status-section">
             <label>Report Status</label>
             <select id="reportStatus" class="status-select">
-              <option value="pending">Pending Review</option>
-              <option value="in-review">In Review</option>
-              <option value="completed">Completed</option>
+              <option value="Pending Review">Pending Review</option>
+              <option value="In Review">In Review</option>
+              <option value="Completed">Completed</option>
             </select>
           </div>
 
-          <!-- REQUIRED DOCUMENTS CHECKLIST -->
           <div class="checklist-section">
             <h3>Required Documents</h3>
             <p class="section-subtitle">Check off documents as they are submitted and verified</p>
-            
+
             <div class="checklist" id="documentChecklist">
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="august" />
-                <span>August Monthly Financial Report</span>
+                <span>August Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="september" />
-                <span>September Monthly Financial Report</span>
+                <span>September Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="october" />
-                <span>October Monthly Financial Report</span>
+                <span>October Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="november" />
-                <span>November Monthly Financial Report</span>
+                <span>November Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="december" />
-                <span>December Monthly Financial Report</span>
+                <span>December Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="january" />
-                <span>January Monthly Financial Report</span>
+                <span>January Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="february" />
-                <span>February Monthly Financial Report</span>
+                <span>February Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="march" />
-                <span>March Monthly Financial Report</span>
+                <span>March Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="april" />
-                <span>April Monthly Financial Report</span>
+                <span>April Financial Report</span>
               </label>
               <label class="checkbox-item">
                 <input type="checkbox" data-doc="may" />
-                <span>May Monthly Financial Report</span>
+                <span>May Financial Report</span>
               </label>
             </div>
           </div>
 
-          <!-- ADMIN NOTES -->
           <div class="notes-section">
             <h3>Admin Notes</h3>
             <p class="section-subtitle">Add feedback or requirements for the organization</p>
-            <textarea 
-              id="adminNotes" 
+            <textarea
+              id="adminNotes"
               placeholder="e.g., Missing receipts..."
               rows="6"
             ></textarea>
           </div>
 
-          <!-- MODAL ACTIONS -->
           <div class="modal-buttons">
             <button type="button" id="cancelModal" class="secondary-btn">Cancel</button>
             <button type="button" id="saveReport" class="primary-btn">Save Changes</button>
@@ -159,18 +192,7 @@
         </div>
       </div>
 
-      <!-- SUCCESS/ERROR TOAST -->
       <div id="toast" class="toast"></div>
-
-      <!-- SIDEBAR: This starts *after* the header, fixed on the left -->
-<aside class="sidebar">
-  <nav class="nav-menu">
-    <a href="{{ url_for('osas.osas_dashboard') }}" class="nav-item">Dashboard</a>
-    <a href="{{ url_for('osas.osas_reports') }}" class="nav-item active">Reports</a>
-    <a href="{{ url_for('osas.osas_settings') }}" class="nav-item">Settings</a>
-  </nav>
-  <a href="{{ url_for('osas.osas_logout') }}" class="logout-btn">Logout</a>
-</aside>
     </main>
   </body>
 </html>
