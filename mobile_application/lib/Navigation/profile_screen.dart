@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_application/Navigation/home_screen.dart';
 import 'package:mobile_application/Navigation/transaction_history_screen.dart';
 import 'package:mobile_application/Navigation/wallet_screen.dart';
@@ -39,6 +41,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     },
   };
 
+  File? _profileImage;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage() async {
+    final XFile? picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+    if (picked == null) return;
+    setState(() {
+      _profileImage = File(picked.path);
+    });
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -49,7 +65,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
-
     Widget nextScreen;
     switch (index) {
       case 0:
@@ -67,7 +82,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       default:
         return;
     }
-
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
@@ -82,7 +96,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text(
@@ -98,45 +111,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
       ),
-
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
               const SizedBox(height: 20),
-
-              // Profile Image + Edit Icon
-              Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  const CircleAvatar(
-                    radius: 50,
-                    backgroundImage:
-                        AssetImage('assets/profile_pictures/ituh_logo.jpg'),
-                  ),
-                  Positioned(
-                    right: 4,
-                    bottom: 4,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFF7A4F22),
-                      ),
-                      padding: const EdgeInsets.all(6),
-                      child: const Icon(
-                        Icons.edit,
-                        size: 20,
-                        color: Colors.white,
+              GestureDetector(
+                onTap: _pickImage,
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundImage: _profileImage != null
+                          ? FileImage(_profileImage!)
+                          : const AssetImage('assets/profile_pictures/bank.jpg')
+                              as ImageProvider,
+                    ),
+                    Positioned(
+                      right: 4,
+                      bottom: 4,
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0xFF7A4F22),
+                        ),
+                        padding: const EdgeInsets.all(6),
+                        child: const Icon(
+                          Icons.edit,
+                          size: 20,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-
               const SizedBox(height: 30),
-
-              // Name Field
               TextField(
                 controller: _nameController,
                 decoration: const InputDecoration(
@@ -145,10 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // Department Field
               TextField(
                 controller: _emailController,
                 decoration: const InputDecoration(
@@ -157,10 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // Email Field
               TextField(
                 controller: _phoneController,
                 decoration: const InputDecoration(
@@ -169,10 +175,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
-
               const SizedBox(height: 30),
-
-              // Save button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -201,12 +204,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
-  // EXACT SAME bottom nav bar as transaction_history.dart
   Widget _buildBottomNavigationBar() {
     return Container(
       decoration: const BoxDecoration(
@@ -236,14 +237,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // EXACT same nav item style
   BottomNavigationBarItem _buildNavItem(
     int index,
     String label,
     Map<String, String> icons,
   ) {
     final isSelected = _selectedIndex == index;
-
     return BottomNavigationBarItem(
       icon: Container(
         padding: const EdgeInsets.all(8),

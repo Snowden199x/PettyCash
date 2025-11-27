@@ -70,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen>
           backgroundColor: Colors.white,
           child: SizedBox(
             width: 254,
-            height: 173,
+            height: 190,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -92,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen>
                     width: 210, // less than dialog width for centering
                     decoration: BoxDecoration(
                       color: const Color(0xFFF2F2F2),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(0),
                     ),
                     child: TextField(
                       decoration: InputDecoration(
@@ -104,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen>
                           fontFamily: "Poppins",
                         ),
                         contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         border: InputBorder.none,
                         enabledBorder: const UnderlineInputBorder(
                           borderSide: BorderSide(
@@ -112,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen>
                             width: 2,
                           ),
                           borderRadius:
-                              BorderRadius.vertical(bottom: Radius.circular(8)),
+                              BorderRadius.vertical(bottom: Radius.circular(0)),
                         ),
                         focusedBorder: const UnderlineInputBorder(
                           borderSide: BorderSide(
@@ -120,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen>
                             width: 2,
                           ),
                           borderRadius:
-                              BorderRadius.vertical(bottom: Radius.circular(8)),
+                              BorderRadius.vertical(bottom: Radius.circular(0)),
                         ),
                       ),
                       style: const TextStyle(

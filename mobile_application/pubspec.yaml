@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   intl: ^0.19.0   # ✅ Updated for latest null-safety and DateFormat support
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:
@@ -29,6 +30,7 @@ flutter:
   assets:
     - assets/Icons/wallet-icon2.png
     - assets/Icons/notification.png
+    - assets/Icons/wallet_folder.png
     - assets/Icons/navigation_icons/nav_history.png
     - assets/Icons/navigation_icons/nav_home.png
     - assets/Icons/navigation_icons/nav_profile.png
