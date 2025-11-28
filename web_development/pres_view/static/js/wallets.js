@@ -1,60 +1,75 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const walletImageUrl = document.body.dataset.walletImg;
+const walletImageUrl = document.body.dataset.walletImg;
+const historyIconUrl = document.body.dataset.historyIcon;
+const receiptsIconUrl = document.body.dataset.receiptsIcon;
 
   let currentWallet = null;
   let currentFilter = "all";
   let walletsFiltered = [];
   let currentTxType = "income";
+  let reportGeneratedForWalletId = null;
 
-  // Sample wallets data
+  // Fixed wallets August–May (use ISO month for filtering)
   const wallets = [
-    { id: 1, name: "FEBRUARY", month: "February 2025", activity: "Feb Fair", beginningCash: 700, totalIncome: 1830, totalExpenses: 1500, endingCash: 5000 },
-    { id: 2, name: "MARCH", month: "March 2025", activity: "IT Days", beginningCash: 500, totalIncome: 2000, totalExpenses: 1200, endingCash: 3500 },
-    { id: 3, name: "APRIL", month: "April 2025", activity: "CCS Week", beginningCash: 800, totalIncome: 2500, totalExpenses: 1800, endingCash: 4200 },
-    { id: 4, name: "MAY", month: "March 2025", activity: "March", beginningCash: 600, totalIncome: 1500, totalExpenses: 1000, endingCash: 2800 },
-    { id: 5, name: "JUNE", month: "October 2024", activity: "Teacher's Day", beginningCash: 400, totalIncome: 1200, totalExpenses: 800, endingCash: 2100 },
-    { id: 6, name: "JULY", month: "November 2024", activity: "Seminar", beginningCash: 900, totalIncome: 3000, totalExpenses: 2200, endingCash: 5500 },
-    { id: 7, name: "AUGUST", month: "October 2025", activity: "Teacher's Day", beginningCash: 450, totalIncome: 1100, totalExpenses: 700, endingCash: 1900 },
-    { id: 8, name: "SEPTEMBER", month: "December 2024", activity: "Seminar", beginningCash: 1000, totalIncome: 3500, totalExpenses: 2500, endingCash: 6000 },
-    { id: 9, name: "NOVEMBER", month: "February 2025", activity: "February", beginningCash: 750, totalIncome: 2200, totalExpenses: 1600, endingCash: 4500 }
+    { id: 1,  name: "AUGUST",    month: "2024-08", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
+    { id: 2,  name: "SEPTEMBER", month: "2024-09", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
+    { id: 3,  name: "OCTOBER",   month: "2024-10", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
+    { id: 4,  name: "NOVEMBER",  month: "2024-11", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
+    { id: 5,  name: "DECEMBER",  month: "2024-12", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
+    { id: 6,  name: "JANUARY",   month: "2025-01", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
+    { id: 7,  name: "FEBRUARY",  month: "2025-02", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
+    { id: 8,  name: "MARCH",     month: "2025-03", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
+    { id: 9,  name: "APRIL",     month: "2025-04", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
+    { id: 10, name: "MAY",       month: "2025-05", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 }
   ];
 
-  // Transactions per wallet (sample)
+  // Sample transactions (per wallet)
   const walletTransactions = {
-    1: [
-      { event: "FERBUARY", description: "(24) Number of Customers", amount: 852, date: "February 14, 2025", type: "income" },
-      { event: "FEBRUARY", description: "(24) Number of Customers", amount: 515, date: "February 13, 2025", type: "income" },
-      { event: "FEBRUARY", description: "(1 set) Bracelet Locks", amount: -73, date: "February 9, 2025", type: "expense" }
+    7: [
+      {
+        event: "FEBRUARY",
+        description: "(24) Number of Customers",
+        amount: 852,
+        date: "2025-02-14",
+        type: "income"
+      },
+      {
+        event: "FEBRUARY",
+        description: "(24) Number of Customers",
+        amount: 515,
+        date: "2025-02-13",
+        type: "income"
+      },
+      {
+        event: "FEBRUARY",
+        description: "(1 set) Bracelet Locks",
+        amount: -73,
+        date: "2025-02-09",
+        type: "expense"
+      }
     ]
   };
 
   // Sample receipts
   const walletReceipts = [
-    { name: "Materials", date: "Feb 11, 2025" },
-    { name: "Materials", date: "Feb 11, 2025" },
-    { name: "Materials", date: "Feb 11, 2025" },
-    { name: "Materials", date: "Feb 11, 2025" }
+    { name: "Materials", date: "2025-02-11" },
+    { name: "Materials", date: "2025-02-11" }
   ];
 
   walletsFiltered = [...wallets];
 
   // DOM elements
+
   const backBtn = document.getElementById("back-to-wallets");
   const tabButtons = document.querySelectorAll(".tab-btn");
   const filterButtons = document.querySelectorAll(".filter-btn");
 
-  const addWalletBtn = document.getElementById("add-wallet-btn");
-  const walletModalOverlay = document.getElementById("wallet-modal-overlay");
-  const closeWalletModal = document.getElementById("close-wallet-modal");
-  const cancelWalletBtn = document.getElementById("cancel-wallet-btn");
-  const addWalletForm = document.getElementById("add-wallet-form");
-  const walletMonthSelect = document.getElementById("wallet-month");
   const walletSearchInput = document.getElementById("wallet-search");
+  const walletMonthFilter = document.getElementById("wallet-month-filter");
 
   const walletActionsBtn = document.getElementById("wallet-actions-btn");
+  const walletBudgetBtn = document.getElementById("wallet-budget-btn");
   const walletActionsMenu = document.getElementById("wallet-actions-menu");
-  const walletBudgetInput = document.getElementById("wallet-budget");
-
 
   const txModalOverlay = document.getElementById("tx-modal-overlay");
   const closeTxModal = document.getElementById("close-tx-modal");
@@ -66,6 +81,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const txQty = document.getElementById("tx-qty");
   const txIncomeType = document.getElementById("tx-income-type");
   const txTypeWrapper = document.getElementById("tx-type-wrapper");
+  const txParticularsWrapper = document.getElementById("tx-particulars-wrapper");
+  const txParticulars = document.getElementById("tx-particulars");
   const txDesc = document.getElementById("tx-desc");
   const txPrice = document.getElementById("tx-price");
 
@@ -77,9 +94,30 @@ document.addEventListener("DOMContentLoaded", () => {
   const receiptDesc = document.getElementById("receipt-desc");
   const receiptDate = document.getElementById("receipt-date");
 
+  const budgetModalOverlay = document.getElementById("budget-modal-overlay");
+  const closeBudgetModal = document.getElementById("close-budget-modal");
+  const cancelBudgetBtn = document.getElementById("cancel-budget-btn");
+  const budgetForm = document.getElementById("budget-form");
+  const budgetAmountInput = document.getElementById("budget-amount");
+
+  const confirmGenerateOverlay = document.getElementById("confirm-generate-overlay");
+  const closeGenerateModal = document.getElementById("close-generate-modal");
+  const cancelGenerateBtn = document.getElementById("cancel-generate-btn");
+  const confirmGenerateBtn = document.getElementById("confirm-generate-btn");
+
+  const confirmSubmitOverlay = document.getElementById("confirm-submit-overlay");
+  const closeSubmitModal = document.getElementById("close-submit-modal");
+  const cancelSubmitBtn = document.getElementById("cancel-submit-btn");
+  const confirmSubmitBtn = document.getElementById("confirm-submit-btn");
+
+  const generateReportBtn = document.getElementById("generate-report-btn");
+  const previewReportBtn = document.getElementById("preview-report-btn");
+  const printReportBtn = document.getElementById("print-report-btn");
+  const submitReportBtn = document.getElementById("submit-report-btn");
+
   const toastContainer = document.getElementById("toast-container");
 
-  // Toast helper
+  // Toast helper (top-right, slide in)
   function showToast(message, isError = false) {
     const toast = document.createElement("div");
     toast.className = "toast" + (isError ? " error" : "");
@@ -113,12 +151,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Render wallets list
   function renderWalletsList() {
     const walletsGrid = document.getElementById("wallets-grid");
+
     if (walletsFiltered.length === 0) {
       walletsGrid.innerHTML = `
         <div class="empty-state" style="grid-column: 1 / -1;">
           <img src="/static/images/nav_wallet.png" alt="No wallets" />
           <h4>No wallets found</h4>
-          <p>Create a wallet or change your search.</p>
+          <p>Adjust your search or date filter.</p>
         </div>
       `;
     } else {
@@ -138,91 +177,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderWalletsList();
 
-  // Add Wallet modal
- addWalletBtn.addEventListener("click", () => {
-  walletMonthSelect.value = "";
-  walletBudgetInput.value = "";
-  clearFieldError(walletMonthSelect);
-  clearFieldError(walletBudgetInput);
-  walletModalOverlay.classList.add("active");
-});
-
-
-  const hideWalletModal = () => {
-    walletModalOverlay.classList.remove("active");
-  };
-
-  closeWalletModal.addEventListener("click", hideWalletModal);
-  cancelWalletBtn.addEventListener("click", hideWalletModal);
-
-  walletModalOverlay.addEventListener("click", (e) => {
-    if (e.target === walletModalOverlay) hideWalletModal();
-  });
-
-  addWalletForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  const month = walletMonthSelect.value.trim();
-  const budget = walletBudgetInput.value.trim();
-  let valid = true;
-
-  if (!month) {
-    showFieldError(walletMonthSelect, "Month is required.");
-    valid = false;
-  } else {
-    clearFieldError(walletMonthSelect);
-  }
-
-  if (!budget) {
-    showFieldError(walletBudgetInput, "Budget is required.");
-    valid = false;
-  } else if (Number(budget) < 0) {
-    showFieldError(walletBudgetInput, "Budget must be zero or more.");
-    valid = false;
-  } else {
-    clearFieldError(walletBudgetInput);
-  }
-
-  if (!valid) {
-    showToast("Please fix the errors before creating the wallet.", true);
-    return;
-  }
-
-  const newId = wallets.length ? wallets[wallets.length - 1].id + 1 : 1;
-  const monthName = month.split(" ")[0].toUpperCase();
-
-  const budgetNum = Number(budget);
-
-  const newWallet = {
-    id: newId,
-    name: monthName,
-    month: month,
-    activity: monthName,
-    beginningCash: budgetNum,
-    totalIncome: 0,
-    totalExpenses: 0,
-    endingCash: budgetNum
-  };
-
-  wallets.push(newWallet);
-  walletsFiltered = [...wallets];
-  renderWalletsList();
-  hideWalletModal();
-  showToast("Wallet added successfully.");
-});
-
-
-  // Search
-  walletSearchInput.addEventListener("input", () => {
+  // Search + month filter
+  function applyWalletFilters() {
     const q = walletSearchInput.value.toLowerCase();
-    walletsFiltered = wallets.filter(
-      (w) =>
+    const monthVal = walletMonthFilter.value; // yyyy-mm or ""
+
+    walletsFiltered = wallets.filter((w) => {
+      const matchesText =
         w.name.toLowerCase().includes(q) ||
-        w.month.toLowerCase().includes(q) ||
-        w.activity.toLowerCase().includes(q)
-    );
+        w.month.toLowerCase().includes(q);
+      const matchesMonth = monthVal ? w.month === monthVal : true;
+      return matchesText && matchesMonth;
+    });
+
     renderWalletsList();
-  });
+  }
+
+  walletSearchInput.addEventListener("input", applyWalletFilters);
+  walletMonthFilter.addEventListener("input", applyWalletFilters);
 
   // Detail navigation
   backBtn.addEventListener("click", showWalletsList);
@@ -268,22 +240,84 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Budget modal
+  walletBudgetBtn.addEventListener("click", () => {
+    if (!currentWallet) {
+      showToast("Select a wallet first.", true);
+      return;
+    }
+    budgetForm.reset();
+    clearFieldError(budgetAmountInput);
+    budgetAmountInput.value = currentWallet.beginningCash || "";
+    budgetModalOverlay.classList.add("active");
+  });
+
+  function hideBudgetModal() {
+    budgetModalOverlay.classList.remove("active");
+  }
+
+  closeBudgetModal.addEventListener("click", hideBudgetModal);
+  cancelBudgetBtn.addEventListener("click", hideBudgetModal);
+  budgetModalOverlay.addEventListener("click", (e) => {
+    if (e.target === budgetModalOverlay) hideBudgetModal();
+  });
+
+  budgetForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!currentWallet) {
+      showToast("No wallet selected.", true);
+      return;
+    }
+
+    const amount = budgetAmountInput.value.trim();
+    let valid = true;
+
+    if (!amount) {
+      showFieldError(budgetAmountInput, "Budget is required.");
+      valid = false;
+    } else if (Number(amount) < 0) {
+      showFieldError(budgetAmountInput, "Budget must be zero or more.");
+      valid = false;
+    } else {
+      clearFieldError(budgetAmountInput);
+    }
+
+    if (!valid) {
+      showToast("Please fix the errors before saving the budget.", true);
+      return;
+    }
+
+    const num = Number(amount);
+    currentWallet.beginningCash = num;
+    currentWallet.endingCash = num + (currentWallet.totalIncome || 0) - (currentWallet.totalExpenses || 0);
+
+    document.getElementById("stat-budget").textContent = `Php ${currentWallet.beginningCash.toFixed(2)}`;
+    document.getElementById("stat-ending").textContent = `Php ${currentWallet.endingCash.toFixed(2)}`;
+
+    hideBudgetModal();
+    showToast("Budget saved successfully.");
+  });
+
   // Transaction modal
   function openTxModal(type) {
     currentTxType = type;
     txForm.reset();
-    [txDate, txQty, txIncomeType, txDesc, txPrice].forEach(clearFieldError);
+    [txDate, txQty, txIncomeType, txParticulars, txDesc, txPrice].forEach(clearFieldError);
 
     if (type === "income") {
       txModalTitle.textContent = "Add Income Transaction";
       txModalSubtitle.textContent = "Record an income transaction for this wallet.";
       txTypeWrapper.style.display = "block";
       txIncomeType.required = true;
+      txParticularsWrapper.style.display = "none";
+      txParticulars.required = false;
     } else {
       txModalTitle.textContent = "Add Expense Transaction";
       txModalSubtitle.textContent = "Record an expense transaction for this wallet.";
       txTypeWrapper.style.display = "none";
       txIncomeType.required = false;
+      txParticularsWrapper.style.display = "block";
+      txParticulars.required = true;
     }
 
     txModalOverlay.classList.add("active");
@@ -313,6 +347,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (currentTxType === "income") {
       fields.splice(2, 0, [txIncomeType, "Type of income is required."]);
+    } else {
+      fields.splice(2, 0, [txParticulars, "Particulars are required."]);
     }
 
     fields.forEach(([field, msg]) => {
@@ -341,11 +377,12 @@ document.addEventListener("DOMContentLoaded", () => {
       descriptionText =
         `${txQty.value} x ${txIncomeType.value} - ${txDesc.value}`;
     } else {
-      descriptionText = `${txQty.value} x ${txDesc.value}`;
+      descriptionText =
+        `${txQty.value} x ${txParticulars.value} - ${txDesc.value}`;
     }
 
     const tx = {
-      event: currentWallet.activity,
+      event: currentWallet.name,
       description: descriptionText,
       amount: currentTxType === "expense" ? -amount : amount,
       date: txDate.value,
@@ -356,6 +393,24 @@ document.addEventListener("DOMContentLoaded", () => {
       walletTransactions[currentWallet.id] = [];
     }
     walletTransactions[currentWallet.id].push(tx);
+
+    // Update wallet totals
+    if (currentTxType === "income") {
+      currentWallet.totalIncome = (currentWallet.totalIncome || 0) + amount;
+    } else {
+      currentWallet.totalExpenses = (currentWallet.totalExpenses || 0) + amount;
+    }
+    currentWallet.endingCash =
+      (currentWallet.beginningCash || 0) +
+      (currentWallet.totalIncome || 0) -
+      (currentWallet.totalExpenses || 0);
+
+    document.getElementById("stat-income").textContent =
+      `Php ${ (currentWallet.totalIncome || 0).toFixed(2) }`;
+    document.getElementById("stat-expense").textContent =
+      `Php ${ (currentWallet.totalExpenses || 0).toFixed(2) }`;
+    document.getElementById("stat-ending").textContent =
+      `Php ${ (currentWallet.endingCash || 0).toFixed(2) }`;
 
     renderWalletTransactions();
     hideTxModal();
@@ -424,6 +479,99 @@ document.addEventListener("DOMContentLoaded", () => {
     showToast("Receipt added successfully.");
   });
 
+  // Generate / Preview / Print / Submit logic
+  function showReportButtons() {
+    previewReportBtn.style.display = "inline-flex";
+    printReportBtn.style.display = "inline-flex";
+    submitReportBtn.style.display = "inline-flex";
+  }
+
+  function hideReportButtons() {
+    previewReportBtn.style.display = "none";
+    printReportBtn.style.display = "none";
+    submitReportBtn.style.display = "none";
+  }
+
+  generateReportBtn.addEventListener("click", () => {
+    if (!currentWallet) {
+      showToast("Select a wallet first.", true);
+      return;
+    }
+    confirmGenerateOverlay.classList.add("active");
+  });
+
+  function hideGenerateModal() {
+    confirmGenerateOverlay.classList.remove("active");
+  }
+
+  closeGenerateModal.addEventListener("click", hideGenerateModal);
+  cancelGenerateBtn.addEventListener("click", hideGenerateModal);
+  confirmGenerateOverlay.addEventListener("click", (e) => {
+    if (e.target === confirmGenerateOverlay) hideGenerateModal();
+  });
+
+  confirmGenerateBtn.addEventListener("click", () => {
+    hideGenerateModal();
+    showToast("Generating report...", false);
+
+    // Simulate backend generation delay
+    setTimeout(() => {
+      if (!currentWallet) {
+        showToast("Failed to generate report. No wallet selected.", true);
+        return;
+      }
+      reportGeneratedForWalletId = currentWallet.id;
+      showReportButtons();
+      showToast("Report generated successfully.");
+    }, 1000);
+  });
+
+  previewReportBtn.addEventListener("click", () => {
+    if (!currentWallet || reportGeneratedForWalletId !== currentWallet.id) {
+      showToast("Generate the report first.", true);
+      return;
+    }
+    showToast("Previewing report (placeholder).");
+    // Here you would open a preview modal or window with the generated PDF/DOC.
+  });
+
+  printReportBtn.addEventListener("click", () => {
+    if (!currentWallet || reportGeneratedForWalletId !== currentWallet.id) {
+      showToast("Generate the report first.", true);
+      return;
+    }
+    showToast("Print is handled by backend.", false);
+  });
+
+  submitReportBtn.addEventListener("click", () => {
+    if (!currentWallet || reportGeneratedForWalletId !== currentWallet.id) {
+      showToast("Generate the report first.", true);
+      return;
+    }
+    confirmSubmitOverlay.classList.add("active");
+  });
+
+  function hideSubmitModal() {
+    confirmSubmitOverlay.classList.remove("active");
+  }
+
+  closeSubmitModal.addEventListener("click", hideSubmitModal);
+  cancelSubmitBtn.addEventListener("click", hideSubmitModal);
+  confirmSubmitOverlay.addEventListener("click", (e) => {
+    if (e.target === confirmSubmitOverlay) hideSubmitModal();
+  });
+
+  confirmSubmitBtn.addEventListener("click", () => {
+    hideSubmitModal();
+    showToast("Submitting report to OSAS...", false);
+
+    setTimeout(() => {
+      showToast("Report submitted successfully.");
+      // Optionally disable buttons after submission
+      hideReportButtons();
+    }, 1000);
+  });
+
   // Detail view functions
   function showWalletDetail(walletId) {
     currentWallet = wallets.find((w) => w.id === walletId);
@@ -434,13 +582,20 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("wallet-detail-view").classList.add("active");
 
     document.getElementById("stat-budget").textContent =
-      `Php ${currentWallet.beginningCash.toFixed(2)}`;
+      `Php ${(currentWallet.beginningCash || 0).toFixed(2)}`;
     document.getElementById("stat-expense").textContent =
-      `Php ${currentWallet.totalExpenses.toFixed(2)}`;
+      `Php ${(currentWallet.totalExpenses || 0).toFixed(2)}`;
     document.getElementById("stat-income").textContent =
-      `Php ${currentWallet.totalIncome.toFixed(2)}`;
+      `Php ${(currentWallet.totalIncome || 0).toFixed(2)}`;
     document.getElementById("stat-ending").textContent =
-      `Php ${currentWallet.endingCash.toFixed(2)}`;
+      `Php ${(currentWallet.endingCash || 0).toFixed(2)}`;
+
+    // When switching wallets, only show report buttons if already generated for this wallet
+    if (reportGeneratedForWalletId === currentWallet.id) {
+      showReportButtons();
+    } else {
+      hideReportButtons();
+    }
 
     switchTab("transactions");
     renderWalletTransactions();
@@ -480,12 +635,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (filteredTransactions.length === 0) {
       container.innerHTML = `
-        <div class="empty-state">
-          <img src="/static/images/nav_history.png" alt="No transactions" />
-          <h4>No transactions found</h4>
-          <p>There are no transactions for the selected filter.</p>
-        </div>
-      `;
+  <div class="empty-state">
+    <img src="${historyIconUrl}" alt="No transactions" />
+    <h4>No transactions found</h4>
+    <p>There are no transactions for the selected filter.</p>
+  </div>
+`;
       return;
     }
 
@@ -524,7 +679,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (walletReceipts.length === 0) {
       container.innerHTML = `
         <div class="empty-state" style="grid-column: 1 / -1;">
-          <img src="/static/images/folder_icon.png" alt="No receipts" />
+<img src="${receiptsIconUrl}" alt="No receipts" />
           <h4>No receipts yet</h4>
           <p>Upload receipts to keep track of your expenses.</p>
         </div>
@@ -537,7 +692,7 @@ document.addEventListener("DOMContentLoaded", () => {
         (receipt) => `
       <div class="receipt-card">
         <div class="receipt-icon">
-          <img src="/static/images/file_icon.png" alt="Receipt" />
+          <img src="${receiptsIconUrl}" alt="Receipt" />
         </div>
         <h5>${receipt.name}</h5>
         <p>${receipt.date}</p>
