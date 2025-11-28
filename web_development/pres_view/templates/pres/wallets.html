@@ -355,6 +355,73 @@
       </div>
     </div>
 
+    <!-- Report Details Modal -->
+<div class="modal-overlay" id="report-details-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Report Details</h3>
+      <button class="close-modal" id="close-report-details">&times;</button>
+    </div>
+    <p class="modal-subtitle">
+      Fill in the details for this financial report.
+    </p>
+
+    <form id="report-details-form" novalidate>
+      <div class="form-group">
+        <label for="rep-event-name">Name of the event</label>
+        <input type="text" id="rep-event-name" required />
+        <span class="error-msg"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="rep-date-prepared">Date prepared</label>
+        <input type="date" id="rep-date-prepared" required />
+        <span class="error-msg"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="rep-number">Financial report no.</label>
+        <input type="text" id="rep-number" readonly />
+        <span class="error-msg"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="rep-budget">Budget for the month</label>
+        <input type="number" id="rep-budget" min="0" step="0.01" required />
+        <span class="error-msg"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="rep-total-expense">Total amount of expenses</label>
+        <input type="number" id="rep-total-expense" min="0" step="0.01" required />
+        <span class="error-msg"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="rep-reimb">Reimbursement of expenses</label>
+        <input type="number" id="rep-reimb" min="0" step="0.01" required />
+        <span class="error-msg"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="rep-prev-fund">Previous remaining fund</label>
+        <input type="number" id="rep-prev-fund" min="0" step="0.01" required />
+        <span class="error-msg"></span>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="secondary-btn" id="cancel-report-details">
+          Cancel
+        </button>
+        <button type="submit" class="primary-btn">
+          Continue
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
     <!-- Confirm Generate Modal -->
     <div class="modal-overlay" id="confirm-generate-overlay">
       <div class="modal">

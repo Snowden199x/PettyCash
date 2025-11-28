@@ -430,66 +430,6 @@ body {
   border-color: #8B3B08;
 }
 
-/* =========================================
-   CHECKLIST SECTION
-========================================= */
-.checklist-section {
-  margin-bottom: 25px;
-}
-
-.checklist-section h3 {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 5px 0;
-  color: #000000;
-}
-
-.section-subtitle {
-  font-size: 14px;
-  color: #828282;
-  margin: 0 0 15px 0;
-}
-
-.checklist {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.checkbox-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 15px;
-  background-color: #F9F9F9;
-  border: 1px solid #E0E0E0;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.checkbox-item:hover {
-  background-color: #FFF7EC;
-  border-color: #E59E2C;
-}
-
-.checkbox-item input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  accent-color: #8B3B08;
-}
-
-.checkbox-item span {
-  font-size: 15px;
-  color: #333;
-  user-select: none;
-}
-
-.checkbox-item input[type="checkbox"]:checked + span {
-  text-decoration: line-through;
-  color: #828282;
-}
 
 /* =========================================
    NOTES SECTION
@@ -594,6 +534,62 @@ body {
 
 .toast.error {
   background-color: #e74c3c;
+}
+
+/* loading spinner */
+.loading-spinner {
+display: inline-block;
+width: 24px;
+height: 24px;
+border: 3px solid #e8decf;
+border-top: 3px solid #db9600;
+border-radius: 50%;
+animation: repSpin 0.8s linear infinite;
+}
+@keyframes repSpin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
+
+/* month buttons in modal */
+.months-list {
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+.month-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 8px 0;
+border-bottom: 1px solid #f1f1f1;
+}
+.month-label {
+font-size: 14px;
+font-weight: 500;
+}
+.month-btn {
+padding: 6px 14px;
+border-radius: 999px;
+border: none;
+cursor: pointer;
+font-size: 13px;
+font-family: Poppins, sans-serif;
+transition: background-color 0.2s ease, transform 0.1s ease;
+}
+.month-btn.primary {
+background-color: #8B3B08;
+color: #fff;
+}
+.month-btn.primary:hover {
+background-color: #6e2f06;
+}
+.month-btn.secondary {
+background-color: #f3f3f3;
+color: #444;
+}
+.month-btn.secondary:hover {
+background-color: #e0e0e0;
 }
 
 /* =========================================
