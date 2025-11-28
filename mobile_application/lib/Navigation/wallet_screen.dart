@@ -13,7 +13,9 @@ class WalletScreen extends StatefulWidget {
 class _WalletScreenState extends State<WalletScreen> {
   final int _selectedIndex = 2; // Highlight Wallet tab
 
-  // Icon paths (same as other screens)
+  final List<String> _folders = [];
+  final TextEditingController _folderNameController = TextEditingController();
+
   final iconPaths = {
     'home': {
       'active': 'assets/Icons/navigation_icons/nav_home.png',
@@ -64,11 +66,52 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
+  void _showNewWalletDialog() {
+    _folderNameController.clear();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'New Wallet',
+            textAlign: TextAlign.center,
+          ),
+          content: TextField(
+            controller: _folderNameController,
+            decoration: const InputDecoration(
+              hintText: 'Folder name',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final name = _folderNameController.text.trim();
+                if (name.isNotEmpty) {
+                  setState(() {
+                    _folders.add(name);
+                  });
+                }
+                Navigator.of(context).pop();
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
@@ -84,14 +127,12 @@ class _WalletScreenState extends State<WalletScreen> {
           ),
         ),
       ),
-
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // Wallet Info Card
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
@@ -106,7 +147,6 @@ class _WalletScreenState extends State<WalletScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Top Row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: const [
@@ -146,10 +186,7 @@ class _WalletScreenState extends State<WalletScreen> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 20),
-
-                      // Bottom Row
                       const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -170,10 +207,7 @@ class _WalletScreenState extends State<WalletScreen> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                // Bottom Buttons Row
                 Row(
                   children: [
                     Expanded(child: _buildNavButton("Wallets", isActive: true)),
@@ -183,18 +217,86 @@ class _WalletScreenState extends State<WalletScreen> {
                     Expanded(child: _buildNavButton("Receipts")),
                   ],
                 ),
+                const SizedBox(height: 20),
+                if (_folders.isNotEmpty)
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _folders.length,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 150.74 / 128.13,
+                    ),
+                    itemBuilder: (context, index) {
+                      final name = _folders[index];
+                      return Container(
+                        width: 150.74,
+                        height: 128.13,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 3,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(0),
+                              child: Image.asset(
+                                'assets/Icons/wallet_folder.png',
+                                width: 150.74,
+                                height: 128.13,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            Positioned(
+                              left: 5,
+                              bottom: 3,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  border: Border.all(color: Colors.black, width: 1),
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: Colors.black,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
               ],
             ),
           ),
         ),
       ),
-
-      // Navigation bar (same as transaction_history.dart)
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showNewWalletDialog,
+        backgroundColor: const Color(0xFF8B3B08),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
-  // EXACT same navigation bar design used in TransactionHistoryScreen
   Widget _buildBottomNavigationBar() {
     return Container(
       decoration: const BoxDecoration(
@@ -224,14 +326,12 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
-  // EXACT same nav item style as TransactionHistoryScreen
   BottomNavigationBarItem _buildNavItem(
     int index,
     String label,
     Map<String, String> icons,
   ) {
     final isSelected = _selectedIndex == index;
-
     return BottomNavigationBarItem(
       icon: Container(
         padding: const EdgeInsets.all(8),
@@ -249,7 +349,6 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
-  // Wallet buttons
   Widget _buildNavButton(String label, {bool isActive = false}) {
     return ElevatedButton(
       onPressed: () {},
