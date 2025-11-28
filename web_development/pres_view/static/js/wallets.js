@@ -1,13 +1,28 @@
 document.addEventListener("DOMContentLoaded", () => {
-const walletImageUrl = document.body.dataset.walletImg;
-const historyIconUrl = document.body.dataset.historyIcon;
-const receiptsIconUrl = document.body.dataset.receiptsIcon;
+  const walletImageUrl  = document.body.dataset.walletImg;
+  const historyIconUrl  = document.body.dataset.historyIcon;
+  const receiptsIconUrl = document.body.dataset.receiptsIcon;
+
+  // report details modal
+  const reportDetailsOverlay = document.getElementById("report-details-overlay");
+  const closeReportDetails   = document.getElementById("close-report-details");
+  const cancelReportDetails  = document.getElementById("cancel-report-details");
+  const reportDetailsForm    = document.getElementById("report-details-form");
+  const repEventName         = document.getElementById("rep-event-name");
+  const repDatePrepared      = document.getElementById("rep-date-prepared");
+  const repNumber            = document.getElementById("rep-number");
+  const repBudget            = document.getElementById("rep-budget");
+  const repTotalExpense      = document.getElementById("rep-total-expense");
+  const repReimb             = document.getElementById("rep-reimb");
+  const repPrevFund          = document.getElementById("rep-prev-fund");
 
   let currentWallet = null;
   let currentFilter = "all";
   let walletsFiltered = [];
   let currentTxType = "income";
   let reportGeneratedForWalletId = null;
+  let nextReportNumber = 1;
+  let currentReportDetails = null;
 
   // Fixed wallets August–May (use ISO month for filtering)
   const wallets = [
@@ -59,61 +74,60 @@ const receiptsIconUrl = document.body.dataset.receiptsIcon;
   walletsFiltered = [...wallets];
 
   // DOM elements
-
-  const backBtn = document.getElementById("back-to-wallets");
-  const tabButtons = document.querySelectorAll(".tab-btn");
-  const filterButtons = document.querySelectorAll(".filter-btn");
+  const backBtn        = document.getElementById("back-to-wallets");
+  const tabButtons     = document.querySelectorAll(".tab-btn");
+  const filterButtons  = document.querySelectorAll(".filter-btn");
 
   const walletSearchInput = document.getElementById("wallet-search");
   const walletMonthFilter = document.getElementById("wallet-month-filter");
 
-  const walletActionsBtn = document.getElementById("wallet-actions-btn");
-  const walletBudgetBtn = document.getElementById("wallet-budget-btn");
+  const walletActionsBtn  = document.getElementById("wallet-actions-btn");
+  const walletBudgetBtn   = document.getElementById("wallet-budget-btn");
   const walletActionsMenu = document.getElementById("wallet-actions-menu");
 
   const txModalOverlay = document.getElementById("tx-modal-overlay");
-  const closeTxModal = document.getElementById("close-tx-modal");
-  const cancelTxBtn = document.getElementById("cancel-tx-btn");
-  const txForm = document.getElementById("tx-form");
-  const txModalTitle = document.getElementById("tx-modal-title");
-  const txModalSubtitle = document.getElementById("tx-modal-subtitle");
-  const txDate = document.getElementById("tx-date");
-  const txQty = document.getElementById("tx-qty");
-  const txIncomeType = document.getElementById("tx-income-type");
-  const txTypeWrapper = document.getElementById("tx-type-wrapper");
+  const closeTxModal   = document.getElementById("close-tx-modal");
+  const cancelTxBtn    = document.getElementById("cancel-tx-btn");
+  const txForm         = document.getElementById("tx-form");
+  const txModalTitle   = document.getElementById("tx-modal-title");
+  const txModalSubtitle= document.getElementById("tx-modal-subtitle");
+  const txDate         = document.getElementById("tx-date");
+  const txQty          = document.getElementById("tx-qty");
+  const txIncomeType   = document.getElementById("tx-income-type");
+  const txTypeWrapper  = document.getElementById("tx-type-wrapper");
   const txParticularsWrapper = document.getElementById("tx-particulars-wrapper");
-  const txParticulars = document.getElementById("tx-particulars");
-  const txDesc = document.getElementById("tx-desc");
-  const txPrice = document.getElementById("tx-price");
+  const txParticulars  = document.getElementById("tx-particulars");
+  const txDesc         = document.getElementById("tx-desc");
+  const txPrice        = document.getElementById("tx-price");
 
   const receiptModalOverlay = document.getElementById("receipt-modal-overlay");
-  const closeReceiptModal = document.getElementById("close-receipt-modal");
-  const cancelReceiptBtn = document.getElementById("cancel-receipt-btn");
-  const receiptForm = document.getElementById("receipt-form");
-  const receiptFile = document.getElementById("receipt-file");
-  const receiptDesc = document.getElementById("receipt-desc");
-  const receiptDate = document.getElementById("receipt-date");
+  const closeReceiptModal   = document.getElementById("close-receipt-modal");
+  const cancelReceiptBtn    = document.getElementById("cancel-receipt-btn");
+  const receiptForm         = document.getElementById("receipt-form");
+  const receiptFile         = document.getElementById("receipt-file");
+  const receiptDesc         = document.getElementById("receipt-desc");
+  const receiptDate         = document.getElementById("receipt-date");
 
-  const budgetModalOverlay = document.getElementById("budget-modal-overlay");
-  const closeBudgetModal = document.getElementById("close-budget-modal");
-  const cancelBudgetBtn = document.getElementById("cancel-budget-btn");
-  const budgetForm = document.getElementById("budget-form");
-  const budgetAmountInput = document.getElementById("budget-amount");
+  const budgetModalOverlay  = document.getElementById("budget-modal-overlay");
+  const closeBudgetModal    = document.getElementById("close-budget-modal");
+  const cancelBudgetBtn     = document.getElementById("cancel-budget-btn");
+  const budgetForm          = document.getElementById("budget-form");
+  const budgetAmountInput   = document.getElementById("budget-amount");
 
   const confirmGenerateOverlay = document.getElementById("confirm-generate-overlay");
-  const closeGenerateModal = document.getElementById("close-generate-modal");
-  const cancelGenerateBtn = document.getElementById("cancel-generate-btn");
-  const confirmGenerateBtn = document.getElementById("confirm-generate-btn");
+  const closeGenerateModal     = document.getElementById("close-generate-modal");
+  const cancelGenerateBtn      = document.getElementById("cancel-generate-btn");
+  const confirmGenerateBtn     = document.getElementById("confirm-generate-btn");
 
-  const confirmSubmitOverlay = document.getElementById("confirm-submit-overlay");
-  const closeSubmitModal = document.getElementById("close-submit-modal");
-  const cancelSubmitBtn = document.getElementById("cancel-submit-btn");
-  const confirmSubmitBtn = document.getElementById("confirm-submit-btn");
+  const confirmSubmitOverlay   = document.getElementById("confirm-submit-overlay");
+  const closeSubmitModal       = document.getElementById("close-submit-modal");
+  const cancelSubmitBtn        = document.getElementById("cancel-submit-btn");
+  const confirmSubmitBtn       = document.getElementById("confirm-submit-btn");
 
   const generateReportBtn = document.getElementById("generate-report-btn");
-  const previewReportBtn = document.getElementById("preview-report-btn");
-  const printReportBtn = document.getElementById("print-report-btn");
-  const submitReportBtn = document.getElementById("submit-report-btn");
+  const previewReportBtn  = document.getElementById("preview-report-btn");
+  const printReportBtn    = document.getElementById("print-report-btn");
+  const submitReportBtn   = document.getElementById("submit-report-btn");
 
   const toastContainer = document.getElementById("toast-container");
 
@@ -406,11 +420,11 @@ const receiptsIconUrl = document.body.dataset.receiptsIcon;
       (currentWallet.totalExpenses || 0);
 
     document.getElementById("stat-income").textContent =
-      `Php ${ (currentWallet.totalIncome || 0).toFixed(2) }`;
+      `Php ${(currentWallet.totalIncome || 0).toFixed(2)}`;
     document.getElementById("stat-expense").textContent =
-      `Php ${ (currentWallet.totalExpenses || 0).toFixed(2) }`;
+      `Php ${(currentWallet.totalExpenses || 0).toFixed(2)}`;
     document.getElementById("stat-ending").textContent =
-      `Php ${ (currentWallet.endingCash || 0).toFixed(2) }`;
+      `Php ${(currentWallet.endingCash || 0).toFixed(2)}`;
 
     renderWalletTransactions();
     hideTxModal();
@@ -492,11 +506,86 @@ const receiptsIconUrl = document.body.dataset.receiptsIcon;
     submitReportBtn.style.display = "none";
   }
 
+  // Generate button -> open report details modal
   generateReportBtn.addEventListener("click", () => {
     if (!currentWallet) {
       showToast("Select a wallet first.", true);
       return;
     }
+
+    // Prefill automatic fields
+    repEventName.value = currentWallet.name || "";
+    repDatePrepared.valueAsDate = new Date();
+
+    repNumber.value = `FR-${String(nextReportNumber).padStart(3, "0")}`;
+
+    repBudget.value       = (currentWallet.beginningCash  || 0).toFixed(2);
+    repTotalExpense.value = (currentWallet.totalExpenses || 0).toFixed(2);
+
+    repReimb.value    = currentReportDetails?.reimb    ?? "";
+    repPrevFund.value = currentReportDetails?.prevFund ?? "";
+
+    [repEventName, repDatePrepared, repBudget, repTotalExpense, repReimb, repPrevFund]
+      .forEach(clearFieldError);
+
+    reportDetailsOverlay.classList.add("active");
+  });
+
+  function hideReportDetailsModal() {
+    reportDetailsOverlay.classList.remove("active");
+  }
+
+  closeReportDetails.addEventListener("click", hideReportDetailsModal);
+  cancelReportDetails.addEventListener("click", hideReportDetailsModal);
+  reportDetailsOverlay.addEventListener("click", (e) => {
+    if (e.target === reportDetailsOverlay) hideReportDetailsModal();
+  });
+
+  reportDetailsForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    let valid = true;
+    const fields = [
+      [repEventName,    "Name of the event is required."],
+      [repDatePrepared, "Date prepared is required."],
+      [repBudget,       "Budget is required."],
+      [repTotalExpense, "Total expenses is required."],
+      [repReimb,        "Reimbursement is required."],
+      [repPrevFund,     "Previous remaining fund is required."]
+    ];
+
+    fields.forEach(([field, msg]) => {
+      if (!field.value.trim()) {
+        showFieldError(field, msg);
+        valid = false;
+      } else if (
+        ["rep-budget","rep-total-expense","rep-reimb","rep-prev-fund"]
+          .includes(field.id) &&
+        Number(field.value) < 0
+      ) {
+        showFieldError(field, "Value must be zero or more.");
+        valid = false;
+      } else {
+        clearFieldError(field);
+      }
+    });
+
+    if (!valid) {
+      showToast("Please complete all report details.", true);
+      return;
+    }
+
+    currentReportDetails = {
+      eventName:    repEventName.value.trim(),
+      datePrepared: repDatePrepared.value,
+      number:       repNumber.value,
+      budget:       Number(repBudget.value),
+      totalExpense: Number(repTotalExpense.value),
+      reimb:        Number(repReimb.value),
+      prevFund:     Number(repPrevFund.value)
+    };
+
+    hideReportDetailsModal();
     confirmGenerateOverlay.classList.add("active");
   });
 
@@ -514,7 +603,6 @@ const receiptsIconUrl = document.body.dataset.receiptsIcon;
     hideGenerateModal();
     showToast("Generating report...", false);
 
-    // Simulate backend generation delay
     setTimeout(() => {
       if (!currentWallet) {
         showToast("Failed to generate report. No wallet selected.", true);
@@ -523,6 +611,7 @@ const receiptsIconUrl = document.body.dataset.receiptsIcon;
       reportGeneratedForWalletId = currentWallet.id;
       showReportButtons();
       showToast("Report generated successfully.");
+      nextReportNumber += 1;
     }, 1000);
   });
 
@@ -532,7 +621,6 @@ const receiptsIconUrl = document.body.dataset.receiptsIcon;
       return;
     }
     showToast("Previewing report (placeholder).");
-    // Here you would open a preview modal or window with the generated PDF/DOC.
   });
 
   printReportBtn.addEventListener("click", () => {
@@ -567,7 +655,6 @@ const receiptsIconUrl = document.body.dataset.receiptsIcon;
 
     setTimeout(() => {
       showToast("Report submitted successfully.");
-      // Optionally disable buttons after submission
       hideReportButtons();
     }, 1000);
   });
@@ -590,7 +677,6 @@ const receiptsIconUrl = document.body.dataset.receiptsIcon;
     document.getElementById("stat-ending").textContent =
       `Php ${(currentWallet.endingCash || 0).toFixed(2)}`;
 
-    // When switching wallets, only show report buttons if already generated for this wallet
     if (reportGeneratedForWalletId === currentWallet.id) {
       showReportButtons();
     } else {
@@ -635,12 +721,12 @@ const receiptsIconUrl = document.body.dataset.receiptsIcon;
 
     if (filteredTransactions.length === 0) {
       container.innerHTML = `
-  <div class="empty-state">
-    <img src="${historyIconUrl}" alt="No transactions" />
-    <h4>No transactions found</h4>
-    <p>There are no transactions for the selected filter.</p>
-  </div>
-`;
+        <div class="empty-state">
+          <img src="${historyIconUrl}" alt="No transactions" />
+          <h4>No transactions found</h4>
+          <p>There are no transactions for the selected filter.</p>
+        </div>
+      `;
       return;
     }
 
@@ -679,7 +765,7 @@ const receiptsIconUrl = document.body.dataset.receiptsIcon;
     if (walletReceipts.length === 0) {
       container.innerHTML = `
         <div class="empty-state" style="grid-column: 1 / -1;">
-<img src="${receiptsIconUrl}" alt="No receipts" />
+          <img src="${receiptsIconUrl}" alt="No receipts" />
           <h4>No receipts yet</h4>
           <p>Upload receipts to keep track of your expenses.</p>
         </div>
