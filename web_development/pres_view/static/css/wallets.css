@@ -191,6 +191,15 @@ html {
   font-size: 14px;
 }
 
+.month-filter {
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid #ecdcc6;
+  font-family: "Poppins";
+  font-size: 14px;
+  outline: none;
+}
+
 /* Buttons */
 .primary-btn {
   padding: 10px 18px;
@@ -247,16 +256,16 @@ html {
 }
 
 .wallet-card-item {
-  border-radius: 10px;
-  padding: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  min-height: 150px;
-  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
+ border-radius: 10px;
+padding: 20px;
+cursor: pointer;
+transition: all 0.3s ease;
+position: relative;
+min-height: 150px;
+box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+display: flex;
+align-items: flex-end;
+justify-content: flex-start;
 }
 
 .wallet-card-item:hover {
@@ -266,14 +275,14 @@ html {
 
 .wallet-card-item h5 {
   position: left;
-  margin: -15px;
-  font-weight: 600;
-  font-size: 16px;
-  color: #000;
-  justify-content: left;  
-  background: rgba(255, 255, 255, 0.85);
+margin: -15px;
+ font-weight: 600;
+ font-size: 16px;
+ color: #000;
+ justify-content: left; 
+ background: rgba(255, 255, 255, 0.85);
   padding: 4px 10px;
-  border-radius: 8px;
+   border-radius: 8px;
 }
 
 /* Tab Navigation */
@@ -467,6 +476,24 @@ html {
 
 .print-btn:hover {
   background: #8b3a00;
+}
+
+.generate-btn {
+  background: #ffffff;
+  color: #000;
+}
+
+.generate-btn:hover {
+  background: #ecddc6;
+}
+
+.submit-btn {
+  background: #2e7d32;
+  color: #fff;
+}
+
+.submit-btn:hover {
+  background: #1b5e20;
 }
 
 /* Report stats */
@@ -683,16 +710,15 @@ html {
   gap: 10px;
 }
 
-
 .wallet-detail-header {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
 .header-add-btn {
-  margin-left: auto;  /* pushes it to the right side */
+  margin-left: auto;
 }
-
 
 /* actions dropdown */
 .wallet-actions-menu {
@@ -760,11 +786,11 @@ html {
   100% { transform: translateX(0); }
 }
 
-/* toast */
+/* toast top-right */
 #toast-container {
   position: fixed;
   top: 20px;
-  left: 20px;
+  right: 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -775,25 +801,23 @@ html {
   min-width: 220px;
   padding: 10px 14px;
   border-radius: 10px;
-  background: #ffffff;
+  background: #2e7d32; /* success bg */
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
   font-size: 13px;
-  color: #333;
-  border-left: 4px solid #2e7d32; /* success default */
+  color: #ffffff;
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateX(20px);
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .toast.show {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(0);
 }
 
 .toast.error {
-  border-left-color: #c62828;
+  background: #c62828;
 }
-
 
 /* Responsive */
 @media (max-width: 992px) {

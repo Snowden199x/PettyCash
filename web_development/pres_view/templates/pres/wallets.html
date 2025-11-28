@@ -18,7 +18,12 @@
       rel="stylesheet"
     />
   </head>
-  <body data-wallet-img="{{ url_for('pres.static', filename='images/wallet.png') }}">
+  <body
+  data-wallet-img="{{ url_for('pres.static', filename='images/wallet.png') }}"
+  data-history-icon="{{ url_for('pres.static', filename='images/nav_history.png') }}"
+  data-receipts-icon="{{ url_for('pres.static', filename='images/receipts.png') }}"
+>
+
     <div class="container">
       <!-- Sidebar -->
       <aside class="sidebar">
@@ -88,9 +93,11 @@
                   id="wallet-search"
                   placeholder="Search wallet..."
                 />
-                <button id="add-wallet-btn" class="primary-btn">
-                  + Add Wallet
-                </button>
+                <input
+                  type="month"
+                  id="wallet-month-filter"
+                  class="month-filter"
+                />
               </div>
             </div>
 
@@ -107,6 +114,9 @@
               <h3 id="wallet-name">Wallet</h3>
               <button id="wallet-actions-btn" class="primary-btn header-add-btn">
                 + Add
+              </button>
+              <button id="wallet-budget-btn" class="secondary-btn">
+                Add budget for this month
               </button>
             </div>
 
@@ -139,32 +149,47 @@
             <div class="tab-content" id="reports-tab">
               <div class="report-section">
                 <div class="report-header">
-                  <img
-                    src="{{ url_for('pres.static', filename='images/folder_icon.png') }}"
-                    alt="Folder"
-                    style="width: 50px;"
-                  />
-                  <div>
-                    <h4>Generate Financial Report</h4>
-                    <p>Create an Activity Financial Statement for this wallet</p>
-                  </div>
-                  <div class="report-actions">
-                    <button class="action-btn preview-btn">
-                      <img
-                        src="{{ url_for('pres.static', filename='images/preview_icon.png') }}"
-                        alt="Preview"
-                      />
-                      Preview
-                    </button>
-                    <button class="action-btn print-btn">
-                      <img
-                        src="{{ url_for('pres.static', filename='images/print_icon.png') }}"
-                        alt="Print"
-                      />
-                      Print
-                    </button>
-                  </div>
-                </div>
+  <img
+    src="{{ url_for('pres.static', filename='images/reports.png') }}"
+    alt="Reports"
+    style="width: 50px;"
+  />
+  <div>
+    <h4>Generate Financial Report</h4>
+    <p>Create an Activity Financial Statement for this wallet</p>
+  </div>
+  <div class="report-actions">
+    <button class="action-btn generate-btn" id="generate-report-btn">
+      <img
+        src="{{ url_for('pres.static', filename='images/reports.png') }}"
+        alt="Generate"
+      />
+      Generate report
+    </button>
+    <button class="action-btn preview-btn" id="preview-report-btn" style="display:none;">
+      <img
+        src="{{ url_for('pres.static', filename='images/preview.png') }}"
+        alt="Preview"
+      />
+      Preview
+    </button>
+    <button class="action-btn print-btn" id="print-report-btn" style="display:none;">
+      <img
+        src="{{ url_for('pres.static', filename='images/print.png') }}"
+        alt="Print"
+      />
+      Print
+    </button>
+    <button class="action-btn submit-btn" id="submit-report-btn" style="display:none;">
+      <img
+        src="{{ url_for('pres.static', filename='images/submit.png') }}"
+        alt="Submit"
+      />
+      Submit
+    </button>
+  </div>
+</div>
+
 
                 <div class="report-stats">
                   <div class="stat-card">
@@ -195,61 +220,6 @@
           </section>
         </div>
       </main>
-    </div>
-
-    <!-- Add Wallet Modal -->
-    <div class="modal-overlay" id="wallet-modal-overlay">
-      <div class="modal">
-        <div class="modal-header">
-          <h3>Add Wallet</h3>
-          <button class="close-modal" id="close-wallet-modal">&times;</button>
-        </div>
-        <p class="modal-subtitle">
-          Create a new wallet for a month.
-        </p>
-
-        <form id="add-wallet-form" novalidate>
-  <div class="form-group">
-    <label for="wallet-month">Month</label>
-    <select id="wallet-month" required>
-      <option value="">Select month</option>
-      <option>January 2025</option>
-      <option>February 2025</option>
-      <option>March 2025</option>
-      <option>April 2025</option>
-      <option>May 2025</option>
-      <option>June 2025</option>
-      <option>July 2025</option>
-      <option>August 2025</option>
-      <option>September 2025</option>
-      <option>October 2025</option>
-      <option>November 2025</option>
-      <option>December 2025</option>
-    </select>
-    <span class="error-msg"></span>
-  </div>
-
-  <div class="form-group">
-    <label for="wallet-budget">Budget (PHP)</label>
-    <input
-      type="number"
-      id="wallet-budget"
-      min="0"
-      step="0.01"
-      required
-    />
-    <span class="error-msg"></span>
-  </div>
-
-  <div class="modal-footer">
-    <button type="button" class="secondary-btn" id="cancel-wallet-btn">
-      Cancel
-    </button>
-    <button type="submit" class="primary-btn">Create</button>
-  </div>
-</form>
-
-      </div>
     </div>
 
     <!-- Add Transaction Modal (income/expense) -->
@@ -285,6 +255,13 @@
               <option value="Registration Fee">Registration Fee</option>
               <option value="Membership Fee">Membership Fee</option>
             </select>
+            <span class="error-msg"></span>
+          </div>
+
+          <!-- Expense only -->
+          <div class="form-group" id="tx-particulars-wrapper">
+            <label for="tx-particulars">Particulars</label>
+            <input type="text" id="tx-particulars" />
             <span class="error-msg"></span>
           </div>
 
@@ -347,6 +324,76 @@
             <button type="submit" class="primary-btn">Save</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Budget Modal -->
+    <div class="modal-overlay" id="budget-modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Add Budget</h3>
+          <button class="close-modal" id="close-budget-modal">&times;</button>
+        </div>
+        <p class="modal-subtitle">
+          Set or update the budget for this month.
+        </p>
+
+        <form id="budget-form" novalidate>
+          <div class="form-group">
+            <label for="budget-amount">Budget (PHP)</label>
+            <input type="number" id="budget-amount" min="0" step="0.01" required />
+            <span class="error-msg"></span>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="secondary-btn" id="cancel-budget-btn">
+              Cancel
+            </button>
+            <button type="submit" class="primary-btn">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Confirm Generate Modal -->
+    <div class="modal-overlay" id="confirm-generate-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Generate Report</h3>
+          <button class="close-modal" id="close-generate-modal">&times;</button>
+        </div>
+        <p class="modal-subtitle">
+          Generate the financial report for this wallet? This may take a moment.
+        </p>
+        <div class="modal-footer">
+          <button type="button" class="secondary-btn" id="cancel-generate-btn">
+            Cancel
+          </button>
+          <button type="button" class="primary-btn" id="confirm-generate-btn">
+            Yes, generate
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm Submit Modal -->
+    <div class="modal-overlay" id="confirm-submit-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Submit Report</h3>
+          <button class="close-modal" id="close-submit-modal">&times;</button>
+        </div>
+        <p class="modal-subtitle">
+          Submit this financial report to OSAS? You will not be able to edit it after submission.
+        </p>
+        <div class="modal-footer">
+          <button type="button" class="secondary-btn" id="cancel-submit-btn">
+            Cancel
+          </button>
+          <button type="button" class="primary-btn" id="confirm-submit-btn">
+            Yes, submit
+          </button>
+        </div>
       </div>
     </div>
 
