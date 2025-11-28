@@ -181,6 +181,24 @@ def get_archived_organizations():
             })
     return jsonify({'organizations': orgs})
 
+@osas.route('/api/archive/empty', methods=['DELETE'])
+def empty_archive():
+    if 'osas_admin' not in session:
+        return jsonify({'error': 'Not logged in'}), 401
+
+    try:
+        admin = get_admin_data(session['osas_admin'])
+        admin_id = admin['id'] if admin else None
+        supabase.table('organizations').delete().eq('status', 'Archived').execute()
+
+        if admin_id:
+            log_activity(admin_id, 'archive', 'Emptied organization archive')
+
+        return jsonify({'message': 'Archive emptied successfully'}), 200
+    except Exception as e:
+        print("Error emptying archive:", e)
+        return jsonify({'error': 'Failed to empty archive'}), 500
+
 @osas.route('/add_organization', methods=['POST'])
 def add_organization():
     if 'osas_admin' not in session:
