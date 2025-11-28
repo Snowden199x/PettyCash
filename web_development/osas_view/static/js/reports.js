@@ -25,14 +25,55 @@ document.addEventListener("DOMContentLoaded", () => {
   const pageSize = 6;
   let departments = [];
 
-   // ===== LOGO CLICK =====
+  // ===== LOGO CLICK =====
   const logoLink = document.getElementById("logoLink");
   if (logoLink) {
     logoLink.addEventListener("click", () => {
       window.location.href = "/osas/dashboard";
     });
   }
-  
+
+  // MONTH CONFIG
+  const MONTH_KEYS = [
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+    "january",
+    "february",
+    "march",
+    "april",
+    "may"
+  ];
+
+  const MONTH_LABELS = {
+    august: "August",
+    september: "September",
+    october: "October",
+    november: "November",
+    december: "December",
+    january: "January",
+    february: "February",
+    march: "March",
+    april: "April",
+    may: "May"
+  };
+
+  // LOADING UI
+  function showLoading() {
+    reportsGrid.style.display = "block";
+    emptyState.style.display = "none";
+    paginationEl.innerHTML = "";
+    reportsGrid.innerHTML =
+      `<div style="grid-column: 1 / -1; text-align: center; padding: 48px 0;">
+        <span class="loading-spinner"></span>
+        <span style="margin-left: 10px; font-size: 16px; color: #a17c50;">
+          Loading reports...
+        </span>
+      </div>`;
+  }
+
   // --- Department Filter ---
   async function loadDepartmentFilter() {
     try {
