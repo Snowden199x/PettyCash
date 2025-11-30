@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'transaction_history_screen.dart';
 import 'profile_screen.dart';
+import 'wallet_month.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -13,8 +14,23 @@ class WalletScreen extends StatefulWidget {
 class _WalletScreenState extends State<WalletScreen> {
   final int _selectedIndex = 2; // Highlight Wallet tab
 
-  final List<String> _folders = [];
-  final TextEditingController _folderNameController = TextEditingController();
+  // Months from August to May
+  final List<String> _months = [
+    'AUGUST 2024',
+    'SEPTEMBER',
+    'OCTOBER',
+    'NOVEMBER',
+    'DECEMBER',
+    'JANUARY 2025',
+    'FEBRUARY',
+    'MARCH',
+    'APRIL',
+    'MAY',
+  ];
+
+  // Sorting state
+  String _sortField = 'Month';
+  String _sortOrder = 'New to old';
 
   final iconPaths = {
     'home': {
@@ -34,6 +50,8 @@ class _WalletScreenState extends State<WalletScreen> {
       'inactive': 'assets/Icons/navigation_icons/nav_profile.png',
     },
   };
+
+  final GlobalKey _sortKey = GlobalKey();
 
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
@@ -66,233 +84,262 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
-  void _showNewWalletDialog() {
-    _folderNameController.clear();
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            'New Wallet',
-            textAlign: TextAlign.center,
-          ),
-          content: TextField(
-            controller: _folderNameController,
-            decoration: const InputDecoration(
-              hintText: 'Folder name',
-              border: OutlineInputBorder(),
+  void _showCustomSortMenu() {
+    final renderBox =
+        _sortKey.currentContext?.findRenderObject() as RenderBox?;
+    final overlayBox =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    if (renderBox == null) return;
+
+    final position =
+        renderBox.localToGlobal(Offset.zero, ancestor: overlayBox);
+
+    late OverlayEntry entry;
+
+    entry = OverlayEntry(
+      builder: (_) => Stack(
+        children: [
+          // tap outside to close
+          GestureDetector(
+            onTap: () => entry.remove(),
+            behavior: HitTestBehavior.translucent,
+            child: SizedBox(
+              width: overlayBox.size.width,
+              height: overlayBox.size.height,
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
+          Positioned(
+            left: position.dx,
+            top: position.dy,
+            child: Material(
+              color: Colors.transparent,
+              child: _buildSortMenuContent(entry),
             ),
-            TextButton(
-              onPressed: () {
-                final name = _folderNameController.text.trim();
-                if (name.isNotEmpty) {
-                  setState(() {
-                    _folders.add(name);
-                  });
-                }
-                Navigator.of(context).pop();
-              },
-              child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+
+    Overlay.of(context).insert(entry);
+  }
+
+  Widget _buildSortMenuContent(OverlayEntry entry) {
+    return Container(
+      width: 163,
+      height: 142,
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8D7AA),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.black, width: 1),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Sort by',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              fontFamily: 'Poppins',
+            ),
+          ),
+          const SizedBox(height: 6),
+          _buildCustomMenuRow('Month', entry),
+          _buildCustomMenuRow('Date Modified', entry),
+          const Divider(height: 14, thickness: 1),
+          _buildCustomMenuRow('New to old', entry, isOrder: true),
+          _buildCustomMenuRow('Old to new', entry, isOrder: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCustomMenuRow(
+      String label, OverlayEntry entry, {bool isOrder = false}) {
+    final bool selected = isOrder
+        ? _sortOrder == label
+        : _sortField == label ||
+            (_sortField == 'Month' && label == 'Month');
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        setState(() {
+          if (isOrder) {
+            _sortOrder = label;
+          } else {
+            _sortField = label;
+          }
+        });
+        entry.remove();
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 18,
+              child: selected
+                  ? const Icon(
+                      Icons.check,
+                      size: 18,
+                      color: Colors.black,
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.black,
+                fontFamily: 'Poppins',
+              ),
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final String sortLabel =
+        _sortField == 'Month' ? 'Sort by month' : 'Sort by date modified';
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
-        title: const Text(
-          "Wallet",
-          style: TextStyle(
-            fontStyle: FontStyle.italic,
-            fontFamily: 'Times New Roman',
-            fontSize: 22,
-            color: Colors.black,
-          ),
-        ),
+        toolbarHeight: 0,
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFF8EBD5), Color(0xFFFFF8EE)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Balance",
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                "PHP 750",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Total Income",
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                "PHP 500",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Total Expenses",
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            "PHP 1250",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+          padding: const EdgeInsets.only(left: 20, top: 30.0, right: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Wallet",
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  fontFamily: 'Times New Roman',
+                  fontSize: 32,
+                  fontWeight: FontWeight.w300,
+                  color: Colors.black,
                 ),
-                const SizedBox(height: 30),
-                Row(
+              ),
+              const SizedBox(height: 12),
+              GestureDetector(
+                key: _sortKey,
+                onTap: _showCustomSortMenu,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(child: _buildNavButton("Wallets", isActive: true)),
-                    const SizedBox(width: 8),
-                    Expanded(child: _buildNavButton("Reports")),
-                    const SizedBox(width: 8),
-                    Expanded(child: _buildNavButton("Receipts")),
+                    Text(
+                      sortLabel,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Image.asset(
+                      'assets/Icons/dropdown.png',
+                      width: 16,
+                      height: 16,
+                    ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                if (_folders.isNotEmpty)
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _folders.length,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 150.74 / 128.13,
-                    ),
-                    itemBuilder: (context, index) {
-                      final name = _folders[index];
-                      return Container(
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: GridView.builder(
+                  itemCount: _months.length,
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 150.74 / 128.13,
+                  ),
+                  itemBuilder: (context, index) {
+                    final name = _months[index];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                WalletMonthScreen(month: name),
+                          ),
+                        );
+                      },
+                      child: SizedBox(
                         width: 150.74,
                         height: 128.13,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 3,
-                              offset: Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(0),
-                              child: Image.asset(
-                                'assets/Icons/wallet_folder.png',
-                                width: 150.74,
-                                height: 128.13,
-                                fit: BoxFit.cover,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 3,
+                                offset: Offset(0, 1),
                               ),
-                            ),
-                            Positioned(
-                              left: 5,
-                              bottom: 3,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.transparent,
-                                  border: Border.all(color: Colors.black, width: 1),
-                                  borderRadius: BorderRadius.circular(5),
+                            ],
+                          ),
+                          child: Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(0),
+                                child: Image.asset(
+                                  'assets/Icons/wallet_folder.png',
+                                  width: 150.74,
+                                  height: 128.13,
+                                  fit: BoxFit.cover,
                                 ),
-                                child: Text(
-                                  name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    color: Colors.black,
+                              ),
+                              Positioned(
+                                left: 7,
+                                bottom: 7,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.transparent,
+                                    border: Border.all(
+                                        color: Colors.black, width: 1),
+                                    borderRadius: BorderRadius.circular(5),
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  child: Text(
+                                    name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: Colors.black,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      );
-                    },
-                  ),
-              ],
-            ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showNewWalletDialog,
-        backgroundColor: const Color(0xFF8B3B08),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
@@ -346,22 +393,6 @@ class _WalletScreenState extends State<WalletScreen> {
         ),
       ),
       label: label,
-    );
-  }
-
-  Widget _buildNavButton(String label, {bool isActive = false}) {
-    return ElevatedButton(
-      onPressed: () {},
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isActive ? const Color(0xFFFFE4B5) : Colors.white,
-        foregroundColor: Colors.black,
-        side: const BorderSide(color: Colors.black),
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(6),
-        ),
-      ),
-      child: Text(label),
     );
   }
 }

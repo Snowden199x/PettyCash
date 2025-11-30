@@ -36,6 +36,7 @@ flutter:
     - assets/Icons/navigation_icons/nav_profile.png
     - assets/Icons/navigation_icons/nav_wallet.png
     - assets/profile_pictures/ituh_logo.jpg
+    - assets/Icons/dropdown.png
     - assets/Fonts/
 
     
