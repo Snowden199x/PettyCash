@@ -207,25 +207,26 @@ document.addEventListener("DOMContentLoaded", () => {
     currentOrgId = null;
   });
 
-  confirmPermanentDeleteBtn.addEventListener("click", async () => {
-    if (!currentOrgId) return;
-    try {
-      // DELETE request for permanent deletion (make sure backend exists)
-      const res = await fetch(`/osas/api/organizations/${currentOrgId}`, {
-        method: "DELETE"
-      });
-      if (!res.ok) throw new Error("Failed to delete organization permanently");
-      archivedOrgs = archivedOrgs.filter(org => org.id !== currentOrgId);
-      showToast("Organization deleted permanently", "warning");
-      updateStats();
-      renderArchive();
-      permanentDeleteModal.style.display = "none";
-      currentOrgId = null;
-    } catch (err) {
-      console.error("Error deleting organization:", err);
-      showToast("Error deleting organization", "error");
-    }
-  });
+confirmPermanentDeleteBtn.addEventListener("click", async () => {
+  if (!currentOrgId) return;
+  try {
+    const res = await fetch(`/osas/api/archive/organizations/${currentOrgId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (!res.ok) throw new Error("Failed to delete organization permanently");
+
+    archivedOrgs = archivedOrgs.filter(org => org.id !== currentOrgId);
+    showToast("Organization deleted permanently", "warning");
+    updateStats();
+    renderArchive();
+    permanentDeleteModal.style.display = "none";
+    currentOrgId = null;
+  } catch (err) {
+    console.error("Error deleting organization:", err);
+    showToast("Error deleting organization", "error");
+  }
+});
 
   // ============================
   // EMPTY ARCHIVE MODAL

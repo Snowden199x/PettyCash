@@ -26,24 +26,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const logoLink = document.getElementById("logoLink");
 
-  const departmentSelect = document.getElementById("orgDepartment"); // For modal "Add/Edit"
+  const departmentSelect = document.getElementById("orgDepartment");
   let departments = [];
   let orgs = [];
   let editingOrgId = null;
   let orgIdToDelete = null;
 
-    // ============================
   // LOGO CLICK
-  // ============================
   if (logoLink) {
     logoLink.addEventListener("click", () => {
       window.location.href = "/osas/dashboard";
     });
   }
 
-  // ============================
-  // POPULATE DEPARTMENT FILTER (for main filter dropdown)
-  // ============================
+  // POPULATE DEPARTMENT FILTER
   async function loadDepartmentFilter() {
     try {
       const res = await fetch("/osas/api/departments");
@@ -58,9 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ============================
-  // POPULATE DEPARTMENT SELECT (modal add/edit dropdown)
-  // ============================
+  // POPULATE DEPARTMENT SELECT (modal)
   async function loadDepartmentsSelect(selectedId = "") {
     try {
       if (!departments.length) {
@@ -79,9 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ============================
-  // ORGANIZATION TABLE RENDERING
-  // ============================
+  // TABLE RENDERING
   function renderTable() {
     tableBody.innerHTML = "";
     orgs.forEach((org) => {
@@ -114,9 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
     emptyState.style.display = orgs.length === 0 ? "flex" : "none";
   }
 
-  // ============================
-  // ORGANIZATION LOADING
-  // ============================
+  // LOAD ORGANIZATIONS
   async function loadOrganizations() {
     showLoading();
     try {
@@ -139,9 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
     emptyState.style.display = "none";
   }
 
-  // ============================
   // FILTERS AND SEARCH
-  // ============================
   searchInput.addEventListener("input", applyFilters);
   departmentFilter.addEventListener("change", applyFilters);
 
@@ -200,9 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
     emptyState.style.display = "none";
   }
 
-  // ============================
   // MODALS & BUTTONS
-  // ============================
   addOrgBtn.addEventListener("click", openAddModal);
   closeModalBtn.addEventListener(
     "click",
@@ -240,19 +226,16 @@ document.addEventListener("DOMContentLoaded", () => {
     saveBtn.textContent = "Save";
     document.getElementById("orgName").value = org.name;
     usernameField.value = org.username;
-    passwordField.value = ""; // Blank for security!
-    document.getElementById("accreditationDate").value = org.date;
+    passwordField.value = "";
+    document.getElementById("accreditationDate").value = org.date || "";
 
     let deptId = "";
-
     const dep = departments.find((d) => d.name === org.department);
     if (dep) deptId = dep.id;
     await loadDepartmentsSelect(deptId);
   }
 
-  // ============================
   // FORM SUBMISSION
-  // ============================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -278,6 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       if (editingOrgId) {
+        // UPDATE
         const res = await fetch(`/osas/api/organizations/${editingOrgId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -286,17 +270,25 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!res.ok) throw new Error("Failed to update organization");
         showToast("Organization updated successfully!");
       } else {
-        orgData.password = password;
+        // CREATE
         if (!password) {
           alert("Password is required when creating an organization!");
           return;
         }
+        orgData.password = password;
+
         const res = await fetch("/osas/add_organization", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(orgData),
         });
-        if (!res.ok) throw new Error("Failed to add organization");
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to add organization");
+        }
+
         showToast("Organization added successfully!");
       }
 
@@ -304,14 +296,12 @@ document.addEventListener("DOMContentLoaded", () => {
       addOrgModal.style.display = "none";
       await loadOrganizations();
     } catch (err) {
-      console.error(err);
-      showToast("Error saving organization.", "error");
+      console.error("Error saving organization:", err);
+      showToast(err.message || "Error saving organization.", "error");
     }
   });
 
-  // ============================
   // DELETE FUNCTIONALITY
-  // ============================
   closeDeleteModal.addEventListener("click", () => {
     deleteModal.style.display = "none";
     orgIdToDelete = null;
@@ -347,9 +337,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ============================
   // GEN BUTTONS
-  // ============================
   genCodeBtn.addEventListener(
     "click",
     () => (usernameField.value = generateUsername())
@@ -372,9 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return pass;
   }
 
-  // ============================
   // TABLE EVENTS (Edit/Delete)
-  // ============================
   tableBody.addEventListener("click", (e) => {
     const target = e.target;
     if (target.closest(".dropdown-btn")) {
@@ -411,14 +397,12 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => (toast.style.display = "none"), 2500);
   }
 
-  // Dashboard logo click
+  // Scroll to top on logo click
   logoLink.addEventListener("click", () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
-  // ============================
   // INITIAL LOAD
-  // ============================
   loadDepartmentFilter();
   loadDepartmentsSelect();
   loadOrganizations();

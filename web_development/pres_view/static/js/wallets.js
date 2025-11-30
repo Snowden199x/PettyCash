@@ -1,154 +1,120 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const walletImageUrl  = document.body.dataset.walletImg;
-  const historyIconUrl  = document.body.dataset.historyIcon;
+  const walletImageUrl = document.body.dataset.walletImg;
+  const historyIconUrl = document.body.dataset.historyIcon;
   const receiptsIconUrl = document.body.dataset.receiptsIcon;
 
-  // report details modal
-  const reportDetailsOverlay = document.getElementById("report-details-overlay");
-  const closeReportDetails   = document.getElementById("close-report-details");
-  const cancelReportDetails  = document.getElementById("cancel-report-details");
-  const reportDetailsForm    = document.getElementById("report-details-form");
-  const repEventName         = document.getElementById("rep-event-name");
-  const repDatePrepared      = document.getElementById("rep-date-prepared");
-  const repNumber            = document.getElementById("rep-number");
-  const repBudget            = document.getElementById("rep-budget");
-  const repTotalExpense      = document.getElementById("rep-total-expense");
-  const repReimb             = document.getElementById("rep-reimb");
-  const repPrevFund          = document.getElementById("rep-prev-fund");
+  // ===== Report details modal =====
+  const reportDetailsOverlay = document.getElementById(
+    "report-details-overlay"
+  );
+  const closeReportDetails = document.getElementById("close-report-details");
+  const cancelReportDetails = document.getElementById("cancel-report-details");
+  const reportDetailsForm = document.getElementById("report-details-form");
+  const repEventName = document.getElementById("rep-event-name");
+  const repDatePrepared = document.getElementById("rep-date-prepared");
+  const repNumber = document.getElementById("rep-number");
+  const repBudget = document.getElementById("rep-budget");
+  const repTotalExpense = document.getElementById("rep-total-expense");
+  const repReimb = document.getElementById("rep-reimb");
+  const repPrevFund = document.getElementById("rep-prev-fund");
 
+  // ===== State =====
+  // currentWallet = wallet_budgets row (folder) for current org + wallet + month
+  // { id: folder_id, walletId, name, month, beginningCash, totalIncome, totalExpenses, endingCash }
   let currentWallet = null;
   let currentFilter = "all";
+  let wallets = [];
   let walletsFiltered = [];
+  let walletTransactions = {}; // key: folder_id
+  let walletReceipts = {}; // key: folder_id
+  let walletArchives = {}; // key: folder_id
   let currentTxType = "income";
-  let reportGeneratedForWalletId = null;
+
+  let currentOrgId = null; // para sa per-org report draft keys
+
+  // per-folder flag ng generated report
+  let reportGeneratedForFolderId = null;
   let nextReportNumber = 1;
   let currentReportDetails = null;
 
-  // Fixed wallets August–May (use ISO month for filtering)
-  const wallets = [
-    { id: 1,  name: "AUGUST",    month: "2024-08", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
-    { id: 2,  name: "SEPTEMBER", month: "2024-09", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
-    { id: 3,  name: "OCTOBER",   month: "2024-10", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
-    { id: 4,  name: "NOVEMBER",  month: "2024-11", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
-    { id: 5,  name: "DECEMBER",  month: "2024-12", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
-    { id: 6,  name: "JANUARY",   month: "2025-01", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
-    { id: 7,  name: "FEBRUARY",  month: "2025-02", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
-    { id: 8,  name: "MARCH",     month: "2025-03", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
-    { id: 9,  name: "APRIL",     month: "2025-04", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 },
-    { id: 10, name: "MAY",       month: "2025-05", beginningCash: 0, totalIncome: 0, totalExpenses: 0, endingCash: 0 }
-  ];
-
-  // Sample transactions (per wallet)
-  const walletTransactions = {
-    7: [
-      {
-        event: "FEBRUARY",
-        description: "(24) Number of Customers",
-        amount: 852,
-        date: "2025-02-14",
-        type: "income"
-      },
-      {
-        event: "FEBRUARY",
-        description: "(24) Number of Customers",
-        amount: 515,
-        date: "2025-02-13",
-        type: "income"
-      },
-      {
-        event: "FEBRUARY",
-        description: "(1 set) Bracelet Locks",
-        amount: -73,
-        date: "2025-02-09",
-        type: "expense"
-      }
-    ]
-  };
-
-  // Sample receipts
-  const walletReceipts = [
-    { name: "Materials", date: "2025-02-11" },
-    { name: "Materials", date: "2025-02-11" }
-  ];
-
-  walletsFiltered = [...wallets];
-
   // DOM elements
-  const backBtn        = document.getElementById("back-to-wallets");
-  const tabButtons     = document.querySelectorAll(".tab-btn");
-  const filterButtons  = document.querySelectorAll(".filter-btn");
+  const backBtn = document.getElementById("back-to-wallets");
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  const filterButtons = document.querySelectorAll(".filter-btn");
 
   const walletSearchInput = document.getElementById("wallet-search");
   const walletMonthFilter = document.getElementById("wallet-month-filter");
 
-  const walletActionsBtn  = document.getElementById("wallet-actions-btn");
-  const walletBudgetBtn   = document.getElementById("wallet-budget-btn");
+  const walletActionsBtn = document.getElementById("wallet-actions-btn");
+  const walletBudgetBtn = document.getElementById("wallet-budget-btn");
   const walletActionsMenu = document.getElementById("wallet-actions-menu");
 
   const txModalOverlay = document.getElementById("tx-modal-overlay");
-  const closeTxModal   = document.getElementById("close-tx-modal");
-  const cancelTxBtn    = document.getElementById("cancel-tx-btn");
-  const txForm         = document.getElementById("tx-form");
-  const txModalTitle   = document.getElementById("tx-modal-title");
-  const txModalSubtitle= document.getElementById("tx-modal-subtitle");
-  const txDate         = document.getElementById("tx-date");
-  const txQty          = document.getElementById("tx-qty");
-  const txIncomeType   = document.getElementById("tx-income-type");
-  const txTypeWrapper  = document.getElementById("tx-type-wrapper");
-  const txParticularsWrapper = document.getElementById("tx-particulars-wrapper");
-  const txParticulars  = document.getElementById("tx-particulars");
-  const txDesc         = document.getElementById("tx-desc");
-  const txPrice        = document.getElementById("tx-price");
+  const closeTxModal = document.getElementById("close-tx-modal");
+  const cancelTxBtn = document.getElementById("cancel-tx-btn");
+  const txForm = document.getElementById("tx-form");
+  const txModalTitle = document.getElementById("tx-modal-title");
+  const txModalSubtitle = document.getElementById("tx-modal-subtitle");
+  const txDate = document.getElementById("tx-date");
+  const txQty = document.getElementById("tx-qty");
+  const txIncomeType = document.getElementById("tx-income-type");
+  const txTypeWrapper = document.getElementById("tx-type-wrapper");
+  const txParticularsWrapper = document.getElementById(
+    "tx-particulars-wrapper"
+  );
+  const txParticulars = document.getElementById("tx-particulars");
+  const txDesc = document.getElementById("tx-desc");
+  const txPrice = document.getElementById("tx-price");
 
   const receiptModalOverlay = document.getElementById("receipt-modal-overlay");
-  const closeReceiptModal   = document.getElementById("close-receipt-modal");
-  const cancelReceiptBtn    = document.getElementById("cancel-receipt-btn");
-  const receiptForm         = document.getElementById("receipt-form");
-  const receiptFile         = document.getElementById("receipt-file");
-  const receiptDesc         = document.getElementById("receipt-desc");
-  const receiptDate         = document.getElementById("receipt-date");
+  const closeReceiptModal = document.getElementById("close-receipt-modal");
+  const cancelReceiptBtn = document.getElementById("cancel-receipt-btn");
+  const receiptForm = document.getElementById("receipt-form");
+  const receiptFile = document.getElementById("receipt-file");
+  const receiptDesc = document.getElementById("receipt-desc");
+  const receiptDate = document.getElementById("receipt-date");
 
-  const budgetModalOverlay  = document.getElementById("budget-modal-overlay");
-  const closeBudgetModal    = document.getElementById("close-budget-modal");
-  const cancelBudgetBtn     = document.getElementById("cancel-budget-btn");
-  const budgetForm          = document.getElementById("budget-form");
-  const budgetAmountInput   = document.getElementById("budget-amount");
+  const budgetModalOverlay = document.getElementById("budget-modal-overlay");
+  const closeBudgetModal = document.getElementById("close-budget-modal");
+  const cancelBudgetBtn = document.getElementById("cancel-budget-btn");
+  const budgetForm = document.getElementById("budget-form");
+  const budgetAmountInput = document.getElementById("budget-amount");
 
-  const confirmGenerateOverlay = document.getElementById("confirm-generate-overlay");
-  const closeGenerateModal     = document.getElementById("close-generate-modal");
-  const cancelGenerateBtn      = document.getElementById("cancel-generate-btn");
-  const confirmGenerateBtn     = document.getElementById("confirm-generate-btn");
+  const confirmGenerateOverlay = document.getElementById(
+    "confirm-generate-overlay"
+  );
+  const closeGenerateModal = document.getElementById("close-generate-modal");
+  const cancelGenerateBtn = document.getElementById("cancel-generate-btn");
+  const confirmGenerateBtn = document.getElementById("confirm-generate-btn");
 
-  const confirmSubmitOverlay   = document.getElementById("confirm-submit-overlay");
-  const closeSubmitModal       = document.getElementById("close-submit-modal");
-  const cancelSubmitBtn        = document.getElementById("cancel-submit-btn");
-  const confirmSubmitBtn       = document.getElementById("confirm-submit-btn");
+  const confirmSubmitOverlay = document.getElementById(
+    "confirm-submit-overlay"
+  );
+  const closeSubmitModal = document.getElementById("close-submit-modal");
+  const cancelSubmitBtn = document.getElementById("cancel-submit-btn");
+  const confirmSubmitBtn = document.getElementById("confirm-submit-btn");
 
   const generateReportBtn = document.getElementById("generate-report-btn");
-  const previewReportBtn  = document.getElementById("preview-report-btn");
-  const printReportBtn    = document.getElementById("print-report-btn");
-  const submitReportBtn   = document.getElementById("submit-report-btn");
+  const previewReportBtn = document.getElementById("preview-report-btn");
+  const printReportBtn = document.getElementById("print-report-btn");
+  const submitReportBtn = document.getElementById("submit-report-btn");
 
   const toastContainer = document.getElementById("toast-container");
 
-  // Toast helper (top-right, slide in)
+  // ===== Helpers =====
+
   function showToast(message, isError = false) {
     const toast = document.createElement("div");
     toast.className = "toast" + (isError ? " error" : "");
     toast.textContent = message;
     toastContainer.appendChild(toast);
-
-    requestAnimationFrame(() => {
-      toast.classList.add("show");
-    });
-
+    requestAnimationFrame(() => toast.classList.add("show"));
     setTimeout(() => {
       toast.classList.remove("show");
       setTimeout(() => toast.remove(), 200);
     }, 2500);
   }
 
-  // Validation helpers
   function showFieldError(field, message) {
     field.classList.add("input-error", "shake");
     const msgSpan = field.parentElement.querySelector(".error-msg");
@@ -162,44 +128,139 @@ document.addEventListener("DOMContentLoaded", () => {
     if (msgSpan) msgSpan.textContent = "";
   }
 
-  // Render wallets list
+  async function apiGet(url) {
+    const res = await fetch(url, { credentials: "include" });
+    if (!res.ok) throw new Error("Request failed");
+    return res.json();
+  }
+
+  async function apiPost(url, body) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error("Request failed");
+    return res.json();
+  }
+
+  // localStorage view state
+  function getViewState() {
+    try {
+      const raw = localStorage.getItem("walletViewState");
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function setViewState(patch) {
+    const prev = getViewState();
+    localStorage.setItem(
+      "walletViewState",
+      JSON.stringify({ ...prev, ...patch })
+    );
+  }
+
+  // ===== Auth (for per-org draft keys) =====
+
+  async function loadAuth() {
+    try {
+      const auth = await apiGet("/pres/api/auth_status");
+      if (auth.logged_in) currentOrgId = auth.org_id;
+    } catch {
+      currentOrgId = null;
+    }
+  }
+
+  function draftKeyFor(wallet) {
+    return `reportDraft:${currentOrgId || "org"}:${wallet.walletId}`;
+  }
+
+  // ===== Load wallets (folders) =====
+
+  async function loadWallets() {
+    try {
+      await loadAuth();
+
+      const data = await apiGet("/pres/api/wallets");
+      wallets = data.map((w) => ({
+        id: w.id, // folder_id
+        walletId: w.wallet_id, // wallets.id
+        name: w.name,
+        month: w.month, // yyyy-mm
+        beginningCash: Number(w.beginning_cash || 0),
+        totalIncome: 0,
+        totalExpenses: 0,
+        endingCash: Number(w.beginning_cash || 0),
+      }));
+      walletsFiltered = [...wallets];
+      renderWalletsList();
+
+      const state = getViewState();
+      if (state.view === "detail" && state.folderId) {
+        await showWalletDetail(state.folderId);
+        if (state.filter) {
+          currentFilter = state.filter;
+          filterButtons.forEach((b) => {
+            b.classList.toggle("active", b.dataset.filter === currentFilter);
+          });
+          renderWalletTransactions();
+        }
+        if (state.tab) {
+          switchTab(state.tab);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to load wallets.", true);
+    }
+  }
+
+  // ===== Wallet list & filters =====
+
   function renderWalletsList() {
     const walletsGrid = document.getElementById("wallets-grid");
-
-    if (walletsFiltered.length === 0) {
+    if (!walletsFiltered.length) {
       walletsGrid.innerHTML = `
         <div class="empty-state" style="grid-column: 1 / -1;">
-          <img src="/static/images/nav_wallet.png" alt="No wallets" />
+          <img src="${walletImageUrl}" alt="No wallets" />
           <h4>No wallets found</h4>
           <p>Adjust your search or date filter.</p>
         </div>
       `;
-    } else {
-      walletsGrid.innerHTML = walletsFiltered
-        .map(
-          (wallet) => `
-        <div class="wallet-card-item"
-             style="background:url('${walletImageUrl}') center/cover no-repeat;"
-             onclick="window.walletManager.showWalletDetail(${wallet.id})">
-          <h5>${wallet.name}</h5>
-        </div>
-      `
-        )
-        .join("");
+      return;
     }
+
+    walletsGrid.innerHTML = walletsFiltered
+      .map(
+        (wallet) => `
+      <div class="wallet-card-item"
+           style="background:url('${walletImageUrl}') center/cover no-repeat;"
+           data-wallet-id="${wallet.id}">
+        <h5>${wallet.name}</h5>
+      </div>
+    `
+      )
+      .join("");
+
+    document.querySelectorAll(".wallet-card-item").forEach((card) => {
+      card.addEventListener("click", () => {
+        const id = Number(card.dataset.walletId);
+        showWalletDetail(id);
+      });
+    });
   }
 
-  renderWalletsList();
-
-  // Search + month filter
   function applyWalletFilters() {
     const q = walletSearchInput.value.toLowerCase();
-    const monthVal = walletMonthFilter.value; // yyyy-mm or ""
+    const monthVal = walletMonthFilter.value;
 
     walletsFiltered = wallets.filter((w) => {
       const matchesText =
         w.name.toLowerCase().includes(q) ||
-        w.month.toLowerCase().includes(q);
+        (w.month || "").toLowerCase().includes(q);
       const matchesMonth = monthVal ? w.month === monthVal : true;
       return matchesText && matchesMonth;
     });
@@ -210,7 +271,8 @@ document.addEventListener("DOMContentLoaded", () => {
   walletSearchInput.addEventListener("input", applyWalletFilters);
   walletMonthFilter.addEventListener("input", applyWalletFilters);
 
-  // Detail navigation
+  // ===== Navigation / tabs / filters =====
+
   backBtn.addEventListener("click", showWalletsList);
 
   tabButtons.forEach((btn) => {
@@ -225,10 +287,10 @@ document.addEventListener("DOMContentLoaded", () => {
       e.target.classList.add("active");
       currentFilter = e.target.dataset.filter;
       renderWalletTransactions();
+      setViewState({ filter: currentFilter });
     });
   });
 
-  // Actions dropdown
   walletActionsBtn.addEventListener("click", () => {
     walletActionsMenu.classList.toggle("open");
   });
@@ -254,15 +316,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Budget modal
-  walletBudgetBtn.addEventListener("click", () => {
+  // ===== Budget modal =====
+
+  walletBudgetBtn.addEventListener("click", async () => {
     if (!currentWallet) {
       showToast("Select a wallet first.", true);
       return;
     }
     budgetForm.reset();
     clearFieldError(budgetAmountInput);
-    budgetAmountInput.value = currentWallet.beginningCash || "";
+
+    try {
+      const data = await apiGet(
+        `/pres/api/wallets/${currentWallet.id}/budget/current-month`
+      );
+      if (data && data.amount != null) {
+        budgetAmountInput.value = data.amount;
+      } else {
+        budgetAmountInput.value = currentWallet.beginningCash || "";
+      }
+    } catch {
+      budgetAmountInput.value = currentWallet.beginningCash || "";
+    }
+
     budgetModalOverlay.classList.add("active");
   });
 
@@ -276,7 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === budgetModalOverlay) hideBudgetModal();
   });
 
-  budgetForm.addEventListener("submit", (e) => {
+  budgetForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentWallet) {
       showToast("No wallet selected.", true);
@@ -301,33 +377,53 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const num = Number(amount);
-    currentWallet.beginningCash = num;
-    currentWallet.endingCash = num + (currentWallet.totalIncome || 0) - (currentWallet.totalExpenses || 0);
+    try {
+      const payload = { amount: Number(amount) };
+      await apiPost(`/pres/api/wallets/${currentWallet.id}/budget`, payload);
 
-    document.getElementById("stat-budget").textContent = `Php ${currentWallet.beginningCash.toFixed(2)}`;
-    document.getElementById("stat-ending").textContent = `Php ${currentWallet.endingCash.toFixed(2)}`;
+      const num = Number(amount);
+      currentWallet.beginningCash = num;
+      currentWallet.endingCash =
+        num +
+        (currentWallet.totalIncome || 0) -
+        (currentWallet.totalExpenses || 0);
 
-    hideBudgetModal();
-    showToast("Budget saved successfully.");
+      document.getElementById(
+        "stat-budget"
+      ).textContent = `Php ${currentWallet.beginningCash.toFixed(2)}`;
+      document.getElementById(
+        "stat-ending"
+      ).textContent = `Php ${currentWallet.endingCash.toFixed(2)}`;
+
+      hideBudgetModal();
+      showToast("Budget saved successfully.");
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to save budget.", true);
+    }
   });
 
-  // Transaction modal
+  // ===== Transaction modal =====
+
   function openTxModal(type) {
     currentTxType = type;
     txForm.reset();
-    [txDate, txQty, txIncomeType, txParticulars, txDesc, txPrice].forEach(clearFieldError);
+    [txDate, txQty, txIncomeType, txParticulars, txDesc, txPrice].forEach(
+      clearFieldError
+    );
 
     if (type === "income") {
       txModalTitle.textContent = "Add Income Transaction";
-      txModalSubtitle.textContent = "Record an income transaction for this wallet.";
+      txModalSubtitle.textContent =
+        "Record an income transaction for this wallet.";
       txTypeWrapper.style.display = "block";
       txIncomeType.required = true;
       txParticularsWrapper.style.display = "none";
       txParticulars.required = false;
     } else {
       txModalTitle.textContent = "Add Expense Transaction";
-      txModalSubtitle.textContent = "Record an expense transaction for this wallet.";
+      txModalSubtitle.textContent =
+        "Record an expense transaction for this wallet.";
       txTypeWrapper.style.display = "none";
       txIncomeType.required = false;
       txParticularsWrapper.style.display = "block";
@@ -347,16 +443,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === txModalOverlay) hideTxModal();
   });
 
-  txForm.addEventListener("submit", (e) => {
+  txForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     let valid = true;
-
     let fields = [
       [txDate, "Date is required."],
       [txQty, "Quantity is required."],
       [txDesc, "Description is required."],
-      [txPrice, "Price is required."]
+      [txPrice, "Price is required."],
     ];
 
     if (currentTxType === "income") {
@@ -384,58 +479,104 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const amount = Number(txPrice.value) * Number(txQty.value);
+    const qty = Number(txQty.value);
+    const price = Number(txPrice.value);
 
-    let descriptionText;
-    if (currentTxType === "income") {
-      descriptionText =
-        `${txQty.value} x ${txIncomeType.value} - ${txDesc.value}`;
-    } else {
-      descriptionText =
-        `${txQty.value} x ${txParticulars.value} - ${txDesc.value}`;
-    }
-
-    const tx = {
-      event: currentWallet.name,
-      description: descriptionText,
-      amount: currentTxType === "expense" ? -amount : amount,
-      date: txDate.value,
-      type: currentTxType
+    const payload = {
+      kind: currentTxType,
+      date_issued: txDate.value,
+      quantity: qty,
+      income_type: currentTxType === "income" ? txIncomeType.value : null,
+      particulars: currentTxType === "expense" ? txParticulars.value : null,
+      description: txDesc.value,
+      price: price,
     };
 
-    if (!walletTransactions[currentWallet.id]) {
-      walletTransactions[currentWallet.id] = [];
+    try {
+      const res = await apiPost(
+        `/pres/api/wallets/${currentWallet.id}/transactions`,
+        payload
+      );
+      const saved = res.transaction;
+
+      const tx = {
+        id: saved.id,
+        event: currentWallet.name,
+        quantity: qty,
+        price: price,
+        income_type: saved.income_type,
+        particulars: saved.particulars,
+        raw_description: saved.description,
+        amount:
+          saved.kind === "expense" ? -saved.total_amount : saved.total_amount,
+        date: saved.date_issued,
+        type: saved.kind,
+      };
+
+      if (!walletTransactions[currentWallet.id]) {
+        walletTransactions[currentWallet.id] = [];
+      }
+      walletTransactions[currentWallet.id].push(tx);
+
+      recomputeTotalsForFolder(currentWallet.id);
+      updateStatsUI();
+      renderWalletTransactions();
+      hideTxModal();
+      showToast(
+        currentTxType === "income"
+          ? "Income transaction added."
+          : "Expense transaction added."
+      );
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to save transaction.", true);
     }
-    walletTransactions[currentWallet.id].push(tx);
-
-    // Update wallet totals
-    if (currentTxType === "income") {
-      currentWallet.totalIncome = (currentWallet.totalIncome || 0) + amount;
-    } else {
-      currentWallet.totalExpenses = (currentWallet.totalExpenses || 0) + amount;
-    }
-    currentWallet.endingCash =
-      (currentWallet.beginningCash || 0) +
-      (currentWallet.totalIncome || 0) -
-      (currentWallet.totalExpenses || 0);
-
-    document.getElementById("stat-income").textContent =
-      `Php ${(currentWallet.totalIncome || 0).toFixed(2)}`;
-    document.getElementById("stat-expense").textContent =
-      `Php ${(currentWallet.totalExpenses || 0).toFixed(2)}`;
-    document.getElementById("stat-ending").textContent =
-      `Php ${(currentWallet.endingCash || 0).toFixed(2)}`;
-
-    renderWalletTransactions();
-    hideTxModal();
-    showToast(
-      currentTxType === "income"
-        ? "Income transaction added."
-        : "Expense transaction added."
-    );
   });
 
-  // Receipt modal
+  function recomputeTotalsForFolder(folderId) {
+    const txs = walletTransactions[folderId] || [];
+    let income = 0;
+    let expenses = 0;
+    txs.forEach((tx) => {
+      if (tx.type === "income") income += tx.amount;
+      else if (tx.type === "expense") expenses += Math.abs(tx.amount);
+    });
+
+    const w = wallets.find((w) => w.id === folderId);
+    if (w) {
+      w.totalIncome = income;
+      w.totalExpenses = expenses;
+      w.endingCash =
+        (w.beginningCash || 0) + (w.totalIncome || 0) - (w.totalExpenses || 0);
+    }
+    if (currentWallet && currentWallet.id === folderId) {
+      currentWallet.totalIncome = income;
+      currentWallet.totalExpenses = expenses;
+      currentWallet.endingCash =
+        (currentWallet.beginningCash || 0) +
+        (currentWallet.totalIncome || 0) -
+        (currentWallet.totalExpenses || 0);
+    }
+  }
+
+  function updateStatsUI() {
+    if (!currentWallet) return;
+    document.getElementById("stat-budget").textContent = `Php ${(
+      currentWallet.beginningCash || 0
+    ).toFixed(2)}`;
+    document.getElementById("stat-expense").textContent = `Php ${(
+      currentWallet.totalExpenses || 0
+    ).toFixed(2)}`;
+    document.getElementById("stat-income").textContent = `Php ${(
+      currentWallet.totalIncome || 0
+    ).toFixed(2)}`;
+    document.getElementById("stat-ending").textContent = `Php ${(
+      currentWallet.endingCash || 0
+    ).toFixed(2)}`;
+  }
+
+  // ===== Receipts =====
+
   function openReceiptModal() {
     receiptForm.reset();
     [receiptFile, receiptDesc, receiptDate].forEach(clearFieldError);
@@ -452,7 +593,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === receiptModalOverlay) hideReceiptModal();
   });
 
-  receiptForm.addEventListener("submit", (e) => {
+  receiptForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     let valid = true;
@@ -483,17 +624,146 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    walletReceipts.push({
-      name: receiptDesc.value,
-      date: receiptDate.value
-    });
+    if (!currentWallet) {
+      showToast("No wallet selected.", true);
+      return;
+    }
 
-    renderReceipts();
-    hideReceiptModal();
-    showToast("Receipt added successfully.");
+    try {
+      const formData = new FormData();
+      formData.append("receipt-file", receiptFile.files[0]);
+      formData.append("receipt-desc", receiptDesc.value);
+      formData.append("receipt-date", receiptDate.value);
+
+      const res = await fetch(
+        `/pres/api/wallets/${currentWallet.id}/receipts`,
+        {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        }
+      );
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+
+      if (!walletReceipts[currentWallet.id]) {
+        walletReceipts[currentWallet.id] = [];
+      }
+      walletReceipts[currentWallet.id].push({
+        id: data.id,
+        name: data.name,
+        date: data.date,
+      });
+
+      renderReceipts();
+      hideReceiptModal();
+      showToast("Receipt added successfully.");
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to upload receipt.", true);
+    }
   });
 
-  // Generate / Preview / Print / Submit logic
+  const imageViewerOverlay = document.getElementById("image-viewer-overlay");
+  const imageViewerImg = document.getElementById("image-viewer-img");
+  const closeImageViewer = document.getElementById("close-image-viewer");
+
+  closeImageViewer.addEventListener("click", () => {
+    imageViewerOverlay.classList.remove("active");
+  });
+
+  imageViewerOverlay.addEventListener("click", (e) => {
+    if (e.target === imageViewerOverlay) {
+      imageViewerOverlay.classList.remove("active");
+    }
+  });
+
+  function renderReceipts() {
+    const container = document.getElementById("receipts-container");
+    const receipts = walletReceipts[currentWallet?.id] || [];
+
+    if (!receipts.length) {
+      container.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        <img src="${receiptsIconUrl}" alt="No receipts" />
+        <h4>No receipts yet</h4>
+        <p>Upload receipts to keep track of your expenses.</p>
+      </div>
+    `;
+      return;
+    }
+
+    container.innerHTML = receipts
+      .map(
+        (receipt) => `
+        <div class="receipt-card" data-receipt-id="${receipt.id}">
+          <div class="receipt-icon">
+            <img src="${receiptsIconUrl}" alt="Receipt" />
+          </div>
+          <h5>${receipt.name}</h5>
+          <p>${receipt.date}</p>
+          <div class="receipt-actions">
+            <button class="receipt-action-btn view">👁 View</button>
+            <button class="receipt-action-btn download">⬇ Download</button>
+            <button class="receipt-action-btn delete">🗑 Delete</button>
+          </div>
+        </div>
+      `
+      )
+      .join("");
+
+    container.querySelectorAll(".receipt-card").forEach((card) => {
+      const id = card.dataset.receiptId;
+      const viewBtn = card.querySelector(".view");
+      const downloadBtn = card.querySelector(".download");
+      const deleteBtn = card.querySelector(".delete");
+
+      viewBtn.addEventListener("click", async () => {
+        try {
+          const res = await apiGet(`/pres/api/receipts/${id}/url`);
+          if (!res.url) throw new Error("No URL");
+          imageViewerImg.src = res.url;
+          imageViewerOverlay.classList.add("active");
+        } catch (err) {
+          console.error(err);
+          showToast("Failed to load receipt.", true);
+        }
+      });
+
+      downloadBtn.addEventListener("click", async () => {
+        try {
+          const res = await apiGet(`/pres/api/receipts/${id}/download-url`);
+          if (!res.url) throw new Error("No URL");
+          window.open(res.url, "_blank");
+        } catch (err) {
+          console.error(err);
+          showToast("Failed to download receipt.", true);
+        }
+      });
+
+      deleteBtn.addEventListener("click", async () => {
+        if (!confirm("Delete this receipt?")) return;
+        try {
+          await fetch(`/pres/api/receipts/${id}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+
+          walletReceipts[currentWallet.id] = (
+            walletReceipts[currentWallet.id] || []
+          ).filter((r) => String(r.id) !== String(id));
+          renderReceipts();
+          showToast("Receipt deleted.");
+        } catch (err) {
+          console.error(err);
+          showToast("Failed to delete receipt.", true);
+        }
+      });
+    });
+  }
+
+  // ===== Reports (financial_reports) =====
+
   function showReportButtons() {
     previewReportBtn.style.display = "inline-flex";
     printReportBtn.style.display = "inline-flex";
@@ -506,27 +776,63 @@ document.addEventListener("DOMContentLoaded", () => {
     submitReportBtn.style.display = "none";
   }
 
-  // Generate button -> open report details modal
-  generateReportBtn.addEventListener("click", () => {
+  generateReportBtn.addEventListener("click", async () => {
     if (!currentWallet) {
       showToast("Select a wallet first.", true);
       return;
     }
 
-    // Prefill automatic fields
-    repEventName.value = currentWallet.name || "";
-    repDatePrepared.valueAsDate = new Date();
+    try {
+      const draftRaw = localStorage.getItem(draftKeyFor(currentWallet));
+      if (draftRaw) {
+        currentReportDetails = JSON.parse(draftRaw);
+      }
+    } catch {
+      currentReportDetails = null;
+    }
 
-    repNumber.value = `FR-${String(nextReportNumber).padStart(3, "0")}`;
+    try {
+      const data = await apiGet(
+        `/pres/api/wallets/${currentWallet.walletId}/budgets/${currentWallet.id}/reports/next-number`
+      );
+      if (data && data.next_number) {
+        nextReportNumber = data.next_number;
+      } else {
+        nextReportNumber = 1;
+      }
+    } catch {
+      nextReportNumber = 1;
+    }
 
-    repBudget.value       = (currentWallet.beginningCash  || 0).toFixed(2);
-    repTotalExpense.value = (currentWallet.totalExpenses || 0).toFixed(2);
+    const today = new Date().toISOString().slice(0, 10);
 
-    repReimb.value    = currentReportDetails?.reimb    ?? "";
+    repEventName.value =
+      currentReportDetails?.eventName || currentWallet.name || "";
+    repDatePrepared.value = currentReportDetails?.datePrepared || today;
+    repNumber.value =
+      currentReportDetails?.number ||
+      `FR-${String(nextReportNumber).padStart(3, "0")}`;
+    repBudget.value = (
+      currentReportDetails?.budget ??
+      currentWallet.beginningCash ??
+      0
+    ).toFixed(2);
+    repTotalExpense.value = (
+      currentReportDetails?.totalExpense ??
+      currentWallet.totalExpenses ??
+      0
+    ).toFixed(2);
+    repReimb.value = currentReportDetails?.reimb ?? "";
     repPrevFund.value = currentReportDetails?.prevFund ?? "";
 
-    [repEventName, repDatePrepared, repBudget, repTotalExpense, repReimb, repPrevFund]
-      .forEach(clearFieldError);
+    [
+      repEventName,
+      repDatePrepared,
+      repBudget,
+      repTotalExpense,
+      repReimb,
+      repPrevFund,
+    ].forEach(clearFieldError);
 
     reportDetailsOverlay.classList.add("active");
   });
@@ -546,12 +852,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let valid = true;
     const fields = [
-      [repEventName,    "Name of the event is required."],
+      [repEventName, "Name of the event is required."],
       [repDatePrepared, "Date prepared is required."],
-      [repBudget,       "Budget is required."],
+      [repBudget, "Budget is required."],
       [repTotalExpense, "Total expenses is required."],
-      [repReimb,        "Reimbursement is required."],
-      [repPrevFund,     "Previous remaining fund is required."]
+      [repReimb, "Reimbursement is required."],
+      [repPrevFund, "Previous remaining fund is required."],
     ];
 
     fields.forEach(([field, msg]) => {
@@ -559,8 +865,12 @@ document.addEventListener("DOMContentLoaded", () => {
         showFieldError(field, msg);
         valid = false;
       } else if (
-        ["rep-budget","rep-total-expense","rep-reimb","rep-prev-fund"]
-          .includes(field.id) &&
+        [
+          "rep-budget",
+          "rep-total-expense",
+          "rep-reimb",
+          "rep-prev-fund",
+        ].includes(field.id) &&
         Number(field.value) < 0
       ) {
         showFieldError(field, "Value must be zero or more.");
@@ -576,14 +886,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     currentReportDetails = {
-      eventName:    repEventName.value.trim(),
+      eventName: repEventName.value.trim(),
       datePrepared: repDatePrepared.value,
-      number:       repNumber.value,
-      budget:       Number(repBudget.value),
+      number: repNumber.value,
+      budget: Number(repBudget.value),
       totalExpense: Number(repTotalExpense.value),
-      reimb:        Number(repReimb.value),
-      prevFund:     Number(repPrevFund.value)
+      reimb: Number(repReimb.value),
+      prevFund: Number(repPrevFund.value),
     };
+
+    if (currentWallet) {
+      localStorage.setItem(
+        draftKeyFor(currentWallet),
+        JSON.stringify(currentReportDetails)
+      );
+    }
 
     hideReportDetailsModal();
     confirmGenerateOverlay.classList.add("active");
@@ -599,41 +916,63 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === confirmGenerateOverlay) hideGenerateModal();
   });
 
-  confirmGenerateBtn.addEventListener("click", () => {
+  confirmGenerateBtn.addEventListener("click", async () => {
     hideGenerateModal();
-    showToast("Generating report...", false);
+    if (!currentWallet || !currentReportDetails) {
+      showToast("No wallet selected or report details missing.", true);
+      return;
+    }
 
-    setTimeout(() => {
-      if (!currentWallet) {
-        showToast("Failed to generate report. No wallet selected.", true);
-        return;
-      }
-      reportGeneratedForWalletId = currentWallet.id;
+    showToast("Generating report...", false);
+    try {
+      const payload = {
+        wallet_id: currentWallet.walletId,
+        budget_id: currentWallet.id,
+        event_name: currentReportDetails.eventName,
+        date_prepared: currentReportDetails.datePrepared,
+        report_no: currentReportDetails.number,
+        budget: currentReportDetails.budget,
+        total_expense: currentReportDetails.totalExpense,
+        reimbursement: currentReportDetails.reimb,
+        previous_fund: currentReportDetails.prevFund,
+      };
+      await apiPost(`/pres/api/reports/generate`, payload);
+
+      reportGeneratedForFolderId = currentWallet.id;
       showReportButtons();
       showToast("Report generated successfully.");
       nextReportNumber += 1;
-    }, 1000);
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to generate report.", true);
+    }
   });
 
   previewReportBtn.addEventListener("click", () => {
-    if (!currentWallet || reportGeneratedForWalletId !== currentWallet.id) {
-      showToast("Generate the report first.", true);
+    if (!currentWallet || reportGeneratedForFolderId !== currentWallet.id) {
+      showToast("Generate the report first for this month.", true);
       return;
     }
-    showToast("Previewing report (placeholder).");
+    window.open(
+      `/pres/reports/${currentWallet.walletId}/budgets/${currentWallet.id}/preview`,
+      "_blank"
+    );
   });
 
   printReportBtn.addEventListener("click", () => {
-    if (!currentWallet || reportGeneratedForWalletId !== currentWallet.id) {
-      showToast("Generate the report first.", true);
+    if (!currentWallet || reportGeneratedForFolderId !== currentWallet.id) {
+      showToast("Generate the report first for this month.", true);
       return;
     }
-    showToast("Print is handled by backend.", false);
+    window.open(
+      `/pres/reports/${currentWallet.walletId}/budgets/${currentWallet.id}/print`,
+      "_blank"
+    );
   });
 
   submitReportBtn.addEventListener("click", () => {
-    if (!currentWallet || reportGeneratedForWalletId !== currentWallet.id) {
-      showToast("Generate the report first.", true);
+    if (!currentWallet || reportGeneratedForFolderId !== currentWallet.id) {
+      showToast("Generate the report first for this month.", true);
       return;
     }
     confirmSubmitOverlay.classList.add("active");
@@ -649,49 +988,83 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === confirmSubmitOverlay) hideSubmitModal();
   });
 
-  confirmSubmitBtn.addEventListener("click", () => {
+  confirmSubmitBtn.addEventListener("click", async () => {
     hideSubmitModal();
-    showToast("Submitting report to OSAS...", false);
+    if (!currentWallet) return;
 
-    setTimeout(() => {
+    showToast("Submitting report to OSAS...", false);
+    try {
+      await apiPost(`/pres/reports/${currentWallet.walletId}/submit`, {});
+
+      localStorage.removeItem(draftKeyFor(currentWallet));
       showToast("Report submitted successfully.");
       hideReportButtons();
-    }, 1000);
+
+      // reset local state for this folder
+      currentWallet.beginningCash = 0;
+      currentWallet.totalIncome = 0;
+      currentWallet.totalExpenses = 0;
+      currentWallet.endingCash = 0;
+      walletTransactions[currentWallet.id] = [];
+      walletReceipts[currentWallet.id] = [];
+
+      updateStatsUI();
+      renderWalletTransactions();
+      renderReceipts();
+
+      // reload archives
+      await loadWalletArchives(currentWallet.id);
+      if (getViewState().tab === "archives") {
+        renderArchives();
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to submit report.", true);
+    }
   });
 
-  // Detail view functions
-  function showWalletDetail(walletId) {
-    currentWallet = wallets.find((w) => w.id === walletId);
+  // ===== Detail view functions =====
+
+  async function showWalletDetail(folderId) {
+    currentWallet = wallets.find((w) => w.id === folderId);
     if (!currentWallet) return;
 
     document.getElementById("wallet-name").textContent = currentWallet.name;
     document.getElementById("wallets-view").classList.remove("active");
     document.getElementById("wallet-detail-view").classList.add("active");
 
-    document.getElementById("stat-budget").textContent =
-      `Php ${(currentWallet.beginningCash || 0).toFixed(2)}`;
-    document.getElementById("stat-expense").textContent =
-      `Php ${(currentWallet.totalExpenses || 0).toFixed(2)}`;
-    document.getElementById("stat-income").textContent =
-      `Php ${(currentWallet.totalIncome || 0).toFixed(2)}`;
-    document.getElementById("stat-ending").textContent =
-      `Php ${(currentWallet.endingCash || 0).toFixed(2)}`;
+    updateStatsUI();
 
-    if (reportGeneratedForWalletId === currentWallet.id) {
+    if (reportGeneratedForFolderId === folderId) {
       showReportButtons();
     } else {
       hideReportButtons();
     }
 
-    switchTab("transactions");
-    renderWalletTransactions();
-    renderReceipts();
+    setViewState({
+      view: "detail",
+      folderId: currentWallet.id,
+    });
+
+    await Promise.all([
+      loadWalletTransactions(folderId),
+      loadWalletReceipts(folderId),
+      loadWalletArchives(folderId),
+    ]);
+
+    recomputeTotalsForFolder(folderId);
+    updateStatsUI();
+
+    const state = getViewState();
+    const tabToShow = state.tab || "transactions";
+    switchTab(tabToShow);
   }
 
   function showWalletsList() {
     document.getElementById("wallet-detail-view").classList.remove("active");
     document.getElementById("wallets-view").classList.add("active");
     currentWallet = null;
+    setViewState({ view: "list", folderId: null });
   }
 
   function switchTab(tabName) {
@@ -704,7 +1077,86 @@ document.addEventListener("DOMContentLoaded", () => {
       content.classList.remove("active");
     });
     document.getElementById(`${tabName}-tab`).classList.add("active");
+
+    setViewState({ tab: tabName });
+
+    if (tabName === "transactions") {
+      renderWalletTransactions();
+    } else if (tabName === "receipts") {
+      renderReceipts();
+    } else if (tabName === "archives") {
+      renderArchives();
+    }
   }
+
+  // ===== Load transactions / receipts / archives from backend =====
+
+  async function loadWalletTransactions(folderId) {
+    try {
+      const data = await apiGet(`/pres/api/wallets/${folderId}/transactions`);
+      walletTransactions[folderId] = data.map((tx) => ({
+        id: tx.id,
+        event: currentWallet?.name || "",
+        quantity: Number(tx.quantity),
+        price: Number(tx.price),
+        income_type: tx.income_type,
+        particulars: tx.particulars,
+        raw_description: tx.description,
+        amount:
+          tx.kind === "expense"
+            ? -Number(tx.total_amount)
+            : Number(tx.total_amount),
+        date: tx.date_issued,
+        type: tx.kind,
+      }));
+
+      recomputeTotalsForFolder(folderId);
+    } catch (err) {
+      console.error(err);
+      walletTransactions[folderId] = [];
+      recomputeTotalsForFolder(folderId);
+    }
+  }
+
+  async function loadWalletReceipts(folderId) {
+    try {
+      const data = await apiGet(`/pres/api/wallets/${folderId}/receipts`);
+      walletReceipts[folderId] = data.map((r) => ({
+        id: r.id,
+        name: r.description,
+        date: r.receipt_date,
+        file_url: r.file_url,
+      }));
+    } catch (err) {
+      console.error(err);
+      walletReceipts[folderId] = [];
+    }
+  }
+
+  async function loadWalletArchives(folderId) {
+    try {
+      // FIX: use /pres/api/... endpoint that Flask exposes
+      const data = await apiGet(`/pres/api/wallets/${folderId}/archives`);
+      walletArchives[folderId] = (data || []).map((a) => ({
+        id: a.id,
+        report_id: a.report_id,
+        report_no: a.report_no,
+        event_name: a.event_name,
+        date_prepared: a.date_prepared,
+        budget: a.budget,
+        total_expense: a.total_expense,
+        reimbursement: a.reimbursement,
+        previous_fund: a.previous_fund,
+        remaining: a.remaining,
+        file_url: a.file_url,
+      }));
+    } catch (err) {
+      console.error(err);
+      walletArchives[folderId] = [];
+    }
+  }
+
+  // ===== Render transactions =====
 
   function renderWalletTransactions() {
     if (!currentWallet) return;
@@ -744,57 +1196,94 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function createTransactionItem(tx) {
-    const amountDisplay =
-      tx.amount < 0 ? `-PHP ${Math.abs(tx.amount)}` : `PHP ${tx.amount}`;
-    return `
-      <div class="transaction-item">
-        <div class="transaction-left">
-          <h5>${tx.event}</h5>
-          <p>${tx.description}</p>
-          <span class="transaction-date">${tx.date}</span>
-        </div>
-        <div class="transaction-amount ${tx.type}">
-          ${amountDisplay}
-        </div>
-      </div>
-    `;
-  }
+    const qty = Number(tx.quantity || 0);
+    const price = Number(tx.price || 0);
+    const total = qty * price;
 
-  function renderReceipts() {
-    const container = document.getElementById("receipts-container");
-    if (walletReceipts.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state" style="grid-column: 1 / -1;">
-          <img src="${receiptsIconUrl}" alt="No receipts" />
-          <h4>No receipts yet</h4>
-          <p>Upload receipts to keep track of your expenses.</p>
-        </div>
-      `;
-      return;
+    let labelCore;
+    if (tx.type === "income") {
+      labelCore = `${price} x ${qty} (${total}) - ${tx.income_type || ""}`;
+    } else {
+      labelCore = `${price} x ${qty} (${total}) - ${tx.particulars || ""}`;
     }
 
-    container.innerHTML = walletReceipts
-      .map(
-        (receipt) => `
-      <div class="receipt-card">
-        <div class="receipt-icon">
-          <img src="${receiptsIconUrl}" alt="Receipt" />
-        </div>
-        <h5>${receipt.name}</h5>
-        <p>${receipt.date}</p>
-        <div class="receipt-actions">
-          <button class="receipt-action-btn view">👁 View</button>
-          <button class="receipt-action-btn download">⬇ Download</button>
-        </div>
+    const mainLabel = `${labelCore} - ${tx.raw_description || ""}`;
+
+    const amountDisplay =
+      tx.amount < 0 ? `-PHP ${Math.abs(tx.amount)}` : `PHP ${tx.amount}`;
+
+    return `
+    <div class="transaction-item">
+      <div class="transaction-left">
+        <h5>${tx.event}</h5>
+        <p>${mainLabel}</p>
+        <span class="transaction-date">${tx.date}</span>
       </div>
-    `
-      )
-      .join("");
+      <div class="transaction-amount ${tx.type}">
+        ${amountDisplay}
+      </div>
+    </div>
+  `;
   }
+
+  // ===== Archives tab =====
+
+  function renderArchives() {
+  const container = document.getElementById("archives-container");
+  const archives = walletArchives[currentWallet?.id] || [];
+
+  if (!archives.length) {
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        <img src="${historyIconUrl}" alt="No archives" />
+        <h4>No archives found</h4>
+        <p>There are no archived reports for this month.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = archives
+    .map((a) => {
+      const remaining = Number(a.remaining || 0);
+      const remainingFormatted = remaining.toLocaleString("en-PH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+
+      return `
+        <div class="archive-card" data-archive-id="${a.id}">
+          <h5>${a.report_no || "FR-XXX"}</h5>
+          <p><strong>Event:</strong> ${a.event_name || "Untitled"}</p>
+          <p><strong>Date:</strong> ${a.date_prepared || ""}</p>
+          <p class="archive-remaining">
+            <span class="archive-remaining-label">Remaining Balance:</span>
+            <span class="archive-remaining-value">Php ${remainingFormatted}</span>
+          </p>
+          <div class="archive-actions">
+            <button class="archive-btn download">⬇ Download</button>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  container.querySelectorAll(".archive-card").forEach((card) => {
+    const id = card.dataset.archiveId;
+    const downloadBtn = card.querySelector(".download");
+
+    downloadBtn.addEventListener("click", () => {
+      window.open(`/pres/api/archives/${id}/download`, "_blank");
+    });
+  });
+}
+
+
+  // ===== Expose helpers for inline onclick if needed =====
 
   window.walletManager = {
     showWalletDetail,
-    showWalletsList
+    showWalletsList,
   };
 
   const navItems = document.querySelectorAll(".nav-item");
@@ -804,4 +1293,7 @@ document.addEventListener("DOMContentLoaded", () => {
       item.classList.add("active");
     });
   });
+
+  // initial load
+  loadWallets();
 });
