@@ -113,7 +113,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch("/osas/api/organizations");
       const data = await res.json();
       orgs = data.organizations || [];
-      renderTable();
+      // kung may initial search or dept filter, gamitin agad
+      applyFilters();
     } catch (err) {
       console.error("Error loading organizations:", err);
       showToast("Failed to load organizations", "error");
@@ -288,8 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
           try {
             const err = await res.json();
             if (err && err.error) msg = err.error;
-          } catch {
-          }
+          } catch {}
           showToast(msg, "error");
           return;
         }
@@ -411,6 +411,13 @@ document.addEventListener("DOMContentLoaded", () => {
   logoLink.addEventListener("click", () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
+
+  // read search query from URL (?search=...)
+  const params = new URLSearchParams(window.location.search);
+  const initialSearch = params.get("search") || "";
+  if (initialSearch) {
+    searchInput.value = initialSearch;
+  }
 
   // INITIAL LOAD
   loadDepartmentFilter();

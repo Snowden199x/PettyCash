@@ -82,6 +82,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+  const addOrgHomepageBtn = document.getElementById("addOrgHomepageBtn");
+
+  if (addOrgHomepageBtn) {
+    addOrgHomepageBtn.addEventListener("click", () => {
+      window.location.href = "/osas/orgs?open_add=1";
+    });
+  }
 
   // --- Dashboard Data Load ---
   async function loadDashboardData() {
@@ -611,7 +618,6 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>`
         )
         .join("");
-
       // click → punta sa Reports page, open yung org
       notifList.querySelectorAll(".notif-item").forEach((el) => {
         el.addEventListener("click", () => {
@@ -633,7 +639,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (notifDot) notifDot.style.display = "none";
     }
   }
-
   // INITIAL LOAD
   loadDashboardDepartments().then(loadDashboardOrganizations);
   loadDashboardData();
