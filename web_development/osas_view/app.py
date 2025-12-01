@@ -132,6 +132,7 @@ def osas_reports():
         return render_template("osas/reports.html", active_page="reports")
     return redirect(url_for("osas.osas_login"))
 
+
 @osas.route("/api/admin/notifications", methods=["GET"])
 def get_admin_notifications():
     if "osas_admin" not in session:
@@ -153,14 +154,15 @@ def get_admin_notifications():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @osas.route("/api/admin/notifications/<int:notif_id>/read", methods=["POST"])
 def mark_notification_read(notif_id):
     if "osas_admin" not in session:
         return jsonify({"error": "Not logged in"}), 401
     try:
-        supabase.table("osas_notifications").update(
-            {"is_read": True}
-        ).eq("id", notif_id).execute()
+        supabase.table("osas_notifications").update({"is_read": True}).eq(
+            "id", notif_id
+        ).execute()
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -482,12 +484,13 @@ def get_financial_reports_by_org(org_id):
         supabase.table("financial_reports")
         .select("*")
         .eq("organization_id", org_id)
-        .is_("wallet_id", None)      # HUWAG isama ang pres_view rows
+        .is_("wallet_id", None)  # HUWAG isama ang pres_view rows
         .is_("budget_id", None)
         .execute()
     )
     reports = results.data or []
     return jsonify({"reports": reports})
+
 
 @osas.route("/api/organizations/<int:org_id>/financial_reports", methods=["POST"])
 def create_financial_report_by_org(org_id):
