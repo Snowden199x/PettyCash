@@ -732,6 +732,8 @@ def generate_report():
             supabase.table("financial_reports")
             .select("id")
             .eq("organization_id", org_id)
+            .eq("wallet_id", wallet_id)
+            .eq("budget_id", budget_id)
             .eq("status", "Pending Review")
             .limit(1)
             .execute()
@@ -1180,14 +1182,15 @@ def update_osas_financial_report(org_id, budget_id):
 
     # Hanapin OSAS financial_reports row ng org
     fr_res = (
-        supabase.table("financial_reports")
-        .select("*")
-        .eq("organization_id", org_id)
-        .limit(1)
-        .execute()
-    )
-    if not fr_res.data:
-        return
+    supabase.table("financial_reports")
+    .select("*")
+    .eq("organization_id", org_id)
+    .is_("wallet_id", None)     # master row lang
+    .is_("budget_id", None)
+    .limit(1)
+    .execute()
+)
+
 
     report = fr_res.data[0]
     checklist = report.get("checklist") or {}

@@ -491,15 +491,17 @@ def get_departments():
 # ========== FINANCIAL REPORTS API ===========
 @osas.route("/api/organizations/<int:org_id>/financial_reports", methods=["GET"])
 def get_financial_reports_by_org(org_id):
+    # Kunin lang ang OSAS master row (walang wallet/budget) para isang folder lang
     results = (
         supabase.table("financial_reports")
         .select("*")
         .eq("organization_id", org_id)
+        .is_("wallet_id", None)      # HUWAG isama ang pres_view rows
+        .is_("budget_id", None)
         .execute()
     )
-    reports = results.data if results.data else []
+    reports = results.data or []
     return jsonify({"reports": reports})
-
 
 @osas.route("/api/organizations/<int:org_id>/financial_reports", methods=["POST"])
 def create_financial_report_by_org(org_id):

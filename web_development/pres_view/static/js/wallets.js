@@ -795,11 +795,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await apiGet(
         `/pres/api/wallets/${currentWallet.walletId}/budgets/${currentWallet.id}/reports/next-number`
       );
-      if (data && data.next_number) {
-        nextReportNumber = data.next_number;
-      } else {
-        nextReportNumber = 1;
-      }
+      nextReportNumber = data && data.next_number ? data.next_number : 1;
     } catch {
       nextReportNumber = 1;
     }
@@ -1229,29 +1225,29 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== Archives tab =====
 
   function renderArchives() {
-  const container = document.getElementById("archives-container");
-  const archives = walletArchives[currentWallet?.id] || [];
+    const container = document.getElementById("archives-container");
+    const archives = walletArchives[currentWallet?.id] || [];
 
-  if (!archives.length) {
-    container.innerHTML = `
+    if (!archives.length) {
+      container.innerHTML = `
       <div class="empty-state" style="grid-column: 1 / -1;">
         <img src="${historyIconUrl}" alt="No archives" />
         <h4>No archives found</h4>
         <p>There are no archived reports for this month.</p>
       </div>
     `;
-    return;
-  }
+      return;
+    }
 
-  container.innerHTML = archives
-    .map((a) => {
-      const remaining = Number(a.remaining || 0);
-      const remainingFormatted = remaining.toLocaleString("en-PH", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
+    container.innerHTML = archives
+      .map((a) => {
+        const remaining = Number(a.remaining || 0);
+        const remainingFormatted = remaining.toLocaleString("en-PH", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
 
-      return `
+        return `
         <div class="archive-card" data-archive-id="${a.id}">
           <h5>${a.report_no || "FR-XXX"}</h5>
           <p><strong>Event:</strong> ${a.event_name || "Untitled"}</p>
@@ -1265,19 +1261,18 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
       `;
-    })
-    .join("");
+      })
+      .join("");
 
-  container.querySelectorAll(".archive-card").forEach((card) => {
-    const id = card.dataset.archiveId;
-    const downloadBtn = card.querySelector(".download");
+    container.querySelectorAll(".archive-card").forEach((card) => {
+      const id = card.dataset.archiveId;
+      const downloadBtn = card.querySelector(".download");
 
-    downloadBtn.addEventListener("click", () => {
-      window.open(`/pres/api/archives/${id}/download`, "_blank");
+      downloadBtn.addEventListener("click", () => {
+        window.open(`/pres/api/archives/${id}/download`, "_blank");
+      });
     });
-  });
-}
-
+  }
 
   // ===== Expose helpers for inline onclick if needed =====
 
