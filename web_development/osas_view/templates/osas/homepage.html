@@ -49,7 +49,7 @@
         <!-- Notification button -->
         <button class="notif-btn" id="notifBtn" aria-label="Notifications">
           <span class="notif-icon">🔔</span>
-          <span class="notif-dot" id="notifDot" style="display: none;"></span>
+          <span class="notif-dot" id="notifDot" style="display: none"></span>
         </button>
 
         <div class="notif-menu" id="notifMenu">
@@ -150,10 +150,10 @@
           <p>Here's what's happening with your organizations today</p>
         </div>
         <div class="quick-actions">
-          <a href="{{ url_for('osas.osas_orgs') }}" class="action-btn">
+          <button type="button" id="addOrgHomepageBtn" class="action-btn">
             <span class="btn-icon"></span>
             Add Organization
-          </a>
+          </button>
           <a
             href="{{ url_for('osas.osas_reports') }}"
             class="action-btn secondary"
@@ -233,16 +233,12 @@
             <div
               class="dashboard-loading"
               id="deptLoading"
-              style="display: none;"
+              style="display: none"
             >
               <span class="loading-spinner"></span> Loading...
             </div>
             <div class="chart-container" id="deptChartContainer">
-              <canvas
-                id="departmentChart"
-                width="300"
-                height="300"
-              ></canvas>
+              <canvas id="departmentChart" width="300" height="300"></canvas>
             </div>
             <div class="chart-legend" id="deptLegend"></div>
           </div>
@@ -256,7 +252,7 @@
             <div
               class="dashboard-loading"
               id="statusLoading"
-              style="display: none;"
+              style="display: none"
             >
               <span class="loading-spinner"></span> Loading...
             </div>

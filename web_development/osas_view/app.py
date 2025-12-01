@@ -131,54 +131,40 @@ def osas_reports():
     if "osas_admin" in session:
         return render_template("osas/reports.html", active_page="reports")
     return redirect(url_for("osas.osas_login"))
+
 @osas.route("/api/admin/notifications", methods=["GET"])
 def get_admin_notifications():
     if "osas_admin" not in session:
         return jsonify({"error": "Not logged in"}), 401
 
     try:
-        # Kunin latest 20 reports (Pending Review / In Review lang)
         res = (
-            supabase.table("financial_reports")
-            .select("id, organization_id, status, created_at")
-            .in_("status", ["Pending Review", "In Review"])
+            supabase.table("osas_notifications")
+            .select("id, org_id, report_id, org_name, message, created_at, is_read")
             .order("created_at", desc=True)
             .limit(20)
             .execute()
         )
 
-        notifications = []
-        if res.data:
-            org_ids = list(
-                {r["organization_id"] for r in res.data if r.get("organization_id")}
-            )
-            org_map = {}
-            if org_ids:
-                org_res = (
-                    supabase.table("organizations")
-                    .select("id, org_name")
-                    .in_("id", org_ids)
-                    .execute()
-                )
-                if org_res.data:
-                    org_map = {o["id"]: o["org_name"] for o in org_res.data}
+        items = res.data or []
+        has_unread = any(not n.get("is_read") for n in items)
 
-            for row in res.data:
-                org_id = row.get("organization_id")
-                notifications.append(
-                    {
-                        "org_id": org_id,
-                        "report_id": row.get("id"),
-                        "org_name": org_map.get(org_id, "Unknown org"),
-                        "message": f'has a report "{row.get("status", "")}"',
-                        "created_at": row.get("created_at"),
-                    }
-                )
-
-        # has_unread: true kung may at least isang notification
-        return jsonify({"notifications": notifications, "has_unread": bool(notifications)})
+        return jsonify({"notifications": items, "has_unread": has_unread})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@osas.route("/api/admin/notifications/<int:notif_id>/read", methods=["POST"])
+def mark_notification_read(notif_id):
+    if "osas_admin" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+    try:
+        supabase.table("osas_notifications").update(
+            {"is_read": True}
+        ).eq("id", notif_id).execute()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @osas.route("/settings")
 def osas_settings():
@@ -491,15 +477,17 @@ def get_departments():
 # ========== FINANCIAL REPORTS API ===========
 @osas.route("/api/organizations/<int:org_id>/financial_reports", methods=["GET"])
 def get_financial_reports_by_org(org_id):
+    # Kunin lang ang OSAS master row (walang wallet/budget) para isang folder lang
     results = (
         supabase.table("financial_reports")
         .select("*")
         .eq("organization_id", org_id)
+        .is_("wallet_id", None)      # HUWAG isama ang pres_view rows
+        .is_("budget_id", None)
         .execute()
     )
-    reports = results.data if results.data else []
+    reports = results.data or []
     return jsonify({"reports": reports})
-
 
 @osas.route("/api/organizations/<int:org_id>/financial_reports", methods=["POST"])
 def create_financial_report_by_org(org_id):

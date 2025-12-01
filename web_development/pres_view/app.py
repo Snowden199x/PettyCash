@@ -56,6 +56,36 @@ def validate_password(pw: str):
         errors.append("Password must contain a special character.")
     return errors
 
+def create_osas_notification(org_id, report_id, message=None):
+    """
+    Insert a row into osas_notifications so OSAS bell sees a new item.
+    """
+    try:
+        # kunin org_name para sa display
+        org_res = (
+            supabase.table("organizations")
+            .select("org_name")
+            .eq("id", org_id)
+            .single()
+            .execute()
+        )
+        org_name = org_res.data["org_name"] if org_res.data else "Organization"
+
+        if not message:
+            message = 'has a report "Pending Review"'
+
+        supabase.table("osas_notifications").insert(
+            {
+                "org_id": org_id,
+                "report_id": report_id,
+                "org_name": org_name,
+                "message": message,
+                # created_at at is_read may default na sa table definition
+            }
+        ).execute()
+    except Exception:
+        # huwag pabagsakin ang submit kahit mag-fail ang notif
+        pass
 
 def get_real_wallet_id(folder_id: int):
     """
@@ -732,6 +762,8 @@ def generate_report():
             supabase.table("financial_reports")
             .select("id")
             .eq("organization_id", org_id)
+            .eq("wallet_id", wallet_id)
+            .eq("budget_id", budget_id)
             .eq("status", "Pending Review")
             .limit(1)
             .execute()
@@ -803,11 +835,8 @@ def get_next_report_number(wallet_id, budget_id):
         return jsonify({"error": str(e)}), 500
 
 
-@pres.route("/api/wallets/<int:wallet_id>/reports/latest", methods=["GET"])
-def get_latest_report(wallet_id):
-    """
-    UI check kung may existing report (para sa Download/Print/Submit buttons).
-    """
+@pres.route("/api/wallets/<int:wallet_id>/budgets/<int:budget_id>/reports/latest", methods=["GET"])
+def get_latest_report_for_budget(wallet_id, budget_id):
     if not session.get("pres_user"):
         return jsonify({"error": "Unauthorized"}), 401
 
@@ -821,6 +850,7 @@ def get_latest_report(wallet_id):
             )
             .eq("organization_id", org_id)
             .eq("wallet_id", wallet_id)
+            .eq("budget_id", budget_id)
             .order("created_at", desc=True)
             .limit(1)
             .execute()
@@ -830,6 +860,7 @@ def get_latest_report(wallet_id):
         return jsonify({"exists": True, "report": res.data[0]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
 # -----------------------
@@ -1180,14 +1211,15 @@ def update_osas_financial_report(org_id, budget_id):
 
     # Hanapin OSAS financial_reports row ng org
     fr_res = (
-        supabase.table("financial_reports")
-        .select("*")
-        .eq("organization_id", org_id)
-        .limit(1)
-        .execute()
-    )
-    if not fr_res.data:
-        return
+    supabase.table("financial_reports")
+    .select("*")
+    .eq("organization_id", org_id)
+    .is_("wallet_id", None)     # master row lang
+    .is_("budget_id", None)
+    .limit(1)
+    .execute()
+)
+
 
     report = fr_res.data[0]
     checklist = report.get("checklist") or {}
@@ -1265,6 +1297,7 @@ def submitreportwalletid(wallet_id):
                 "updated_at": dt.utcnow().isoformat(),
             }
         ).eq("id", rep_id).execute()
+        create_osas_notification(org_id, rep_id, 'has a report "Pending Review"')
 
         # Compute remaining balance
         budget_val = float(rep.get("budget") or 0)

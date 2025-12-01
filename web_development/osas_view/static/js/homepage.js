@@ -13,6 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const activityFeed = document.getElementById("activityFeed");
   const toast = document.getElementById("toast");
 
+  const addOrgHomepageBtn = document.getElementById("addOrgHomepageBtn");
+
   let organizations = [];
   let departments = [];
   let reports = [];
@@ -25,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (chart) chart.style.display = "none";
     if (legend) legend.style.display = "none";
   }
+
   function hideDeptLoading() {
     const loader = document.getElementById("deptLoading");
     const chart = document.getElementById("departmentChart");
@@ -33,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (chart) chart.style.display = "";
     if (legend) legend.style.display = "";
   }
+
   function showStatusLoading() {
     const loader = document.getElementById("statusLoading");
     const chart = document.getElementById("statusChart");
@@ -41,6 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (chart) chart.style.display = "none";
     if (breakdown) breakdown.style.display = "none";
   }
+
   function hideStatusLoading() {
     const loader = document.getElementById("statusLoading");
     const chart = document.getElementById("statusChart");
@@ -80,6 +85,13 @@ document.addEventListener("DOMContentLoaded", () => {
           )}`;
         }
       }
+    });
+  }
+
+  // Add Org button on homepage -> redirect to orgs with open_add=1
+  if (addOrgHomepageBtn) {
+    addOrgHomepageBtn.addEventListener("click", () => {
+      window.location.href = "/osas/orgs?open_add=1";
     });
   }
 
@@ -152,6 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
       departmentFilter.innerHTML = '<option value="">All Departments</option>';
     }
   }
+
   if (departmentFilter) {
     departmentFilter.addEventListener("change", drawDepartmentChart);
   }
@@ -173,6 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ** STATUS HANDLING (UNIFIED) **
   const STATUS_VALUES = ["Pending Review", "In Review", "Completed"];
+
   function normalizeStatus(status) {
     if (!status) return "";
     const normalized = status.toLowerCase().replace(/[\s\-]/g, "");
@@ -581,6 +595,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // helper for notif time display
+  function formatNotifTime(iso) {
+    return new Date(iso).toLocaleString("en-PH", {
+      timeZone: "Asia/Manila",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  }
+
   // --- Load notifications from OSAS API ---
   async function loadNotifications() {
     if (!notifList) return;
@@ -592,7 +619,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const items = data.notifications || [];
       const hasUnread = data.has_unread;
 
-      // toggle red dot
       if (notifDot) notifDot.style.display = hasUnread ? "block" : "none";
 
       if (!items.length) {
@@ -603,23 +629,38 @@ document.addEventListener("DOMContentLoaded", () => {
       notifList.innerHTML = items
         .map(
           (n) => `
-        <div class="notif-item" data-org-id="${n.org_id}" data-report-id="${
-            n.report_id
-          }">
-          <p class="notif-text"><strong>${n.org_name}</strong> ${n.message}</p>
-          <p class="notif-time">${new Date(n.created_at).toLocaleString()}</p>
-        </div>`
+      <div class="notif-item ${n.is_read ? "read" : "unread"}"
+           data-id="${n.id}"
+           data-org-id="${n.org_id}"
+           data-report-id="${n.report_id}">
+        <p class="notif-text"><strong>${n.org_name}</strong> ${n.message}</p>
+        <p class="notif-time">${formatNotifTime(n.created_at)}</p>
+      </div>`
         )
         .join("");
 
-      // click → punta sa Reports page, open yung org
       notifList.querySelectorAll(".notif-item").forEach((el) => {
-        el.addEventListener("click", () => {
+        el.addEventListener("click", async () => {
+          const notifId = el.dataset.id;
           const orgId = el.dataset.orgId;
           const reportId = el.dataset.reportId;
 
-          // hide red dot once user opens a notification
-          if (notifDot) notifDot.style.display = "none";
+          // visually mark as read
+          el.classList.remove("unread");
+          el.classList.add("read");
+
+          // mark read in backend
+          try {
+            await fetch(`${API_BASE}/admin/notifications/${notifId}/read`, {
+              method: "POST",
+            });
+          } catch (e) {
+            console.error("Failed to mark notification read", e);
+          }
+
+          // kung lahat read na, i-hide red dot
+          const stillUnread = notifList.querySelector(".notif-item.unread");
+          if (!stillUnread && notifDot) notifDot.style.display = "none";
 
           const url = `/osas/reports?org_id=${encodeURIComponent(
             orgId
