@@ -19,11 +19,10 @@
     />
   </head>
   <body
-  data-wallet-img="{{ url_for('pres.static', filename='images/wallet.png') }}"
-  data-history-icon="{{ url_for('pres.static', filename='images/nav_history.png') }}"
-  data-receipts-icon="{{ url_for('pres.static', filename='images/receipts.png') }}"
->
-
+    data-wallet-img="{{ url_for('pres.static', filename='images/wallet.png') }}"
+    data-history-icon="{{ url_for('pres.static', filename='images/nav_history.png') }}"
+    data-receipts-icon="{{ url_for('pres.static', filename='images/receipts.png') }}"
+  >
     <div class="container">
       <!-- Sidebar -->
       <aside class="sidebar">
@@ -80,6 +79,14 @@
         </a>
       </aside>
 
+      <!-- Image Viewer Modal -->
+      <div id="image-viewer-overlay" class="modal-overlay">
+        <div class="modal-content image-viewer">
+          <button id="close-image-viewer" class="modal-close">&times;</button>
+          <img id="image-viewer-img" src="" alt="Receipt" />
+        </div>
+      </div>
+
       <!-- Main Content -->
       <main class="main-content">
         <div class="content-box">
@@ -112,7 +119,10 @@
             <div class="header wallet-detail-header">
               <button class="back-btn" id="back-to-wallets">&#8249;</button>
               <h3 id="wallet-name">Wallet</h3>
-              <button id="wallet-actions-btn" class="primary-btn header-add-btn">
+              <button
+                id="wallet-actions-btn"
+                class="primary-btn header-add-btn"
+              >
                 + Add
               </button>
               <button id="wallet-budget-btn" class="secondary-btn">
@@ -134,6 +144,7 @@
               </button>
               <button class="tab-btn" data-tab="reports">Reports</button>
               <button class="tab-btn" data-tab="receipts">Receipts</button>
+              <button class="tab-btn" data-tab="archives">Archive</button>
             </div>
 
             <!-- Tab Contents -->
@@ -141,7 +152,9 @@
               <div class="filter-tabs">
                 <button class="filter-btn active" data-filter="all">All</button>
                 <button class="filter-btn" data-filter="income">Income</button>
-                <button class="filter-btn" data-filter="expense">Expense</button>
+                <button class="filter-btn" data-filter="expense">
+                  Expense
+                </button>
               </div>
               <div id="transactions-container"></div>
             </div>
@@ -149,47 +162,63 @@
             <div class="tab-content" id="reports-tab">
               <div class="report-section">
                 <div class="report-header">
-  <img
-    src="{{ url_for('pres.static', filename='images/reports.png') }}"
-    alt="Reports"
-    style="width: 50px;"
-  />
-  <div>
-    <h4>Generate Financial Report</h4>
-    <p>Create an Activity Financial Statement for this wallet</p>
-  </div>
-  <div class="report-actions">
-    <button class="action-btn generate-btn" id="generate-report-btn">
-      <img
-        src="{{ url_for('pres.static', filename='images/reports.png') }}"
-        alt="Generate"
-      />
-      Generate report
-    </button>
-    <button class="action-btn preview-btn" id="preview-report-btn" style="display:none;">
-      <img
-        src="{{ url_for('pres.static', filename='images/preview.png') }}"
-        alt="Preview"
-      />
-      Preview
-    </button>
-    <button class="action-btn print-btn" id="print-report-btn" style="display:none;">
-      <img
-        src="{{ url_for('pres.static', filename='images/print.png') }}"
-        alt="Print"
-      />
-      Print
-    </button>
-    <button class="action-btn submit-btn" id="submit-report-btn" style="display:none;">
-      <img
-        src="{{ url_for('pres.static', filename='images/submit.png') }}"
-        alt="Submit"
-      />
-      Submit
-    </button>
-  </div>
-</div>
-
+                  <img
+                    src="{{ url_for('pres.static', filename='images/reports.png') }}"
+                    alt="Reports"
+                    style="width: 50px"
+                  />
+                  <div>
+                    <h4>Generate Financial Report</h4>
+                    <p>
+                      Create an Activity Financial Statement for this wallet
+                    </p>
+                  </div>
+                  <div class="report-actions">
+                    <button
+                      class="action-btn generate-btn"
+                      id="generate-report-btn"
+                    >
+                      <img
+                        src="{{ url_for('pres.static', filename='images/reports.png') }}"
+                        alt="Generate"
+                      />
+                      Generate report
+                    </button>
+                    <button
+                      class="action-btn preview-btn"
+                      id="preview-report-btn"
+                      style="display: none"
+                    >
+                      <img
+                        src="{{ url_for('pres.static', filename='images/preview.png') }}"
+                        alt="Preview"
+                      />
+                      Preview
+                    </button>
+                    <button
+                      class="action-btn print-btn"
+                      id="print-report-btn"
+                      style="display: none"
+                    >
+                      <img
+                        src="{{ url_for('pres.static', filename='images/print.png') }}"
+                        alt="Print"
+                      />
+                      Print
+                    </button>
+                    <button
+                      class="action-btn submit-btn"
+                      id="submit-report-btn"
+                      style="display: none"
+                    >
+                      <img
+                        src="{{ url_for('pres.static', filename='images/submit.png') }}"
+                        alt="Submit"
+                      />
+                      Submit
+                    </button>
+                  </div>
+                </div>
 
                 <div class="report-stats">
                   <div class="stat-card">
@@ -215,6 +244,12 @@
             <div class="tab-content" id="receipts-tab">
               <div class="receipts-grid" id="receipts-container">
                 <!-- populated by JS -->
+              </div>
+            </div>
+
+            <div class="tab-content" id="archives-tab">
+              <div class="receipts-grid" id="archives-container">
+                <!-- populated by JS for archived reports -->
               </div>
             </div>
           </section>
@@ -294,9 +329,7 @@
           <h3>Add Receipt</h3>
           <button class="close-modal" id="close-receipt-modal">&times;</button>
         </div>
-        <p class="modal-subtitle">
-          Upload a receipt image for this wallet.
-        </p>
+        <p class="modal-subtitle">Upload a receipt image for this wallet.</p>
 
         <form id="receipt-form" novalidate>
           <div class="form-group">
@@ -334,14 +367,18 @@
           <h3>Add Budget</h3>
           <button class="close-modal" id="close-budget-modal">&times;</button>
         </div>
-        <p class="modal-subtitle">
-          Set or update the budget for this month.
-        </p>
+        <p class="modal-subtitle">Set or update the budget for this month.</p>
 
         <form id="budget-form" novalidate>
           <div class="form-group">
             <label for="budget-amount">Budget (PHP)</label>
-            <input type="number" id="budget-amount" min="0" step="0.01" required />
+            <input
+              type="number"
+              id="budget-amount"
+              min="0"
+              step="0.01"
+              required
+            />
             <span class="error-msg"></span>
           </div>
 
@@ -356,71 +393,84 @@
     </div>
 
     <!-- Report Details Modal -->
-<div class="modal-overlay" id="report-details-overlay">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>Report Details</h3>
-      <button class="close-modal" id="close-report-details">&times;</button>
+    <div class="modal-overlay" id="report-details-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Report Details</h3>
+          <button class="close-modal" id="close-report-details">&times;</button>
+        </div>
+        <p class="modal-subtitle">
+          Fill in the details for this financial report.
+        </p>
+
+        <form id="report-details-form" novalidate>
+          <div class="form-group">
+            <label for="rep-event-name">Name of the event</label>
+            <input type="text" id="rep-event-name" required />
+            <span class="error-msg"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="rep-date-prepared">Date prepared</label>
+            <input type="date" id="rep-date-prepared" required />
+            <span class="error-msg"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="rep-number">Financial report no.</label>
+            <input type="text" id="rep-number" readonly />
+            <span class="error-msg"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="rep-budget">Budget for the month</label>
+            <input type="number" id="rep-budget" min="0" step="0.01" required />
+            <span class="error-msg"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="rep-total-expense">Total amount of expenses</label>
+            <input
+              type="number"
+              id="rep-total-expense"
+              min="0"
+              step="0.01"
+              required
+            />
+            <span class="error-msg"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="rep-reimb">Reimbursement of expenses</label>
+            <input type="number" id="rep-reimb" min="0" step="0.01" required />
+            <span class="error-msg"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="rep-prev-fund">Previous remaining fund</label>
+            <input
+              type="number"
+              id="rep-prev-fund"
+              min="0"
+              step="0.01"
+              required
+            />
+            <span class="error-msg"></span>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="secondary-btn"
+              id="cancel-report-details"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="primary-btn">Continue</button>
+          </div>
+        </form>
+      </div>
     </div>
-    <p class="modal-subtitle">
-      Fill in the details for this financial report.
-    </p>
-
-    <form id="report-details-form" novalidate>
-      <div class="form-group">
-        <label for="rep-event-name">Name of the event</label>
-        <input type="text" id="rep-event-name" required />
-        <span class="error-msg"></span>
-      </div>
-
-      <div class="form-group">
-        <label for="rep-date-prepared">Date prepared</label>
-        <input type="date" id="rep-date-prepared" required />
-        <span class="error-msg"></span>
-      </div>
-
-      <div class="form-group">
-        <label for="rep-number">Financial report no.</label>
-        <input type="text" id="rep-number" readonly />
-        <span class="error-msg"></span>
-      </div>
-
-      <div class="form-group">
-        <label for="rep-budget">Budget for the month</label>
-        <input type="number" id="rep-budget" min="0" step="0.01" required />
-        <span class="error-msg"></span>
-      </div>
-
-      <div class="form-group">
-        <label for="rep-total-expense">Total amount of expenses</label>
-        <input type="number" id="rep-total-expense" min="0" step="0.01" required />
-        <span class="error-msg"></span>
-      </div>
-
-      <div class="form-group">
-        <label for="rep-reimb">Reimbursement of expenses</label>
-        <input type="number" id="rep-reimb" min="0" step="0.01" required />
-        <span class="error-msg"></span>
-      </div>
-
-      <div class="form-group">
-        <label for="rep-prev-fund">Previous remaining fund</label>
-        <input type="number" id="rep-prev-fund" min="0" step="0.01" required />
-        <span class="error-msg"></span>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="secondary-btn" id="cancel-report-details">
-          Cancel
-        </button>
-        <button type="submit" class="primary-btn">
-          Continue
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
 
     <!-- Confirm Generate Modal -->
     <div class="modal-overlay" id="confirm-generate-overlay">
@@ -451,7 +501,8 @@
           <button class="close-modal" id="close-submit-modal">&times;</button>
         </div>
         <p class="modal-subtitle">
-          Submit this financial report to OSAS? You will not be able to edit it after submission.
+          Submit this financial report to OSAS? You will not be able to edit it
+          after submission.
         </p>
         <div class="modal-footer">
           <button type="button" class="secondary-btn" id="cancel-submit-btn">

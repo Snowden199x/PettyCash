@@ -911,3 +911,112 @@ margin: -15px;
     width: 100%;
   }
 }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.modal-overlay.active {
+  display: flex;
+}
+.image-viewer {
+  background: #f5f1e8;
+  padding: 1rem;
+  border-radius: 8px;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+#image-viewer-img {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+}
+.modal-close {
+  align-self: flex-end;
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* ===== Archive cards ===== */
+#archives-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.archive-card {
+  background: #fff;
+  border: 2px solid #ecddc6;
+  border-radius: 15px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 1px 1px 6px rgba(0,0,0,0.05);
+}
+
+.archive-card h5 {
+  margin: 0 0 4px;
+  font-weight: 600;
+  font-size: 16px;
+  text-align: center;        /* center report number (FR-001) */
+}
+
+.archive-card p {
+  margin: 0;
+  font-size: 13px;
+  color: #333;
+}
+
+.archive-card p strong {
+  font-weight: 600;
+}
+
+/* Remaining balance line: Php + amount in one line but stacked visually */
+.archive-remaining {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.archive-remaining-label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.archive-remaining-value {
+  font-weight: 600;
+}
+
+/* Download button in each box */
+.archive-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.archive-btn.download {
+  padding: 6px 14px;
+  font-size: 12px;
+  border-radius: 8px;
+  border: none;
+  background: #a24a00;
+  color: #fff;
+  cursor: pointer;
+  font-family: "Poppins";
+  transition: background 0.2s ease;
+}
+
+.archive-btn.download:hover {
+  background: #8b3a00;
+}
