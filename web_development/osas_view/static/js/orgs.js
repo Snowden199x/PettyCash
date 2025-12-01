@@ -283,6 +283,16 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify(orgData),
         });
 
+        if (!res.ok) {
+          let msg = "Failed to add organization";
+          try {
+            const err = await res.json();
+            if (err && err.error) msg = err.error;
+          } catch {
+          }
+          showToast(msg, "error");
+          return;
+        }
         const data = await res.json();
 
         if (!res.ok) {

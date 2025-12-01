@@ -131,7 +131,54 @@ def osas_reports():
     if "osas_admin" in session:
         return render_template("osas/reports.html", active_page="reports")
     return redirect(url_for("osas.osas_login"))
+@osas.route("/api/admin/notifications", methods=["GET"])
+def get_admin_notifications():
+    if "osas_admin" not in session:
+        return jsonify({"error": "Not logged in"}), 401
 
+    try:
+        # Kunin latest 20 reports (Pending Review / In Review lang)
+        res = (
+            supabase.table("financial_reports")
+            .select("id, organization_id, status, created_at")
+            .in_("status", ["Pending Review", "In Review"])
+            .order("created_at", desc=True)
+            .limit(20)
+            .execute()
+        )
+
+        notifications = []
+        if res.data:
+            org_ids = list(
+                {r["organization_id"] for r in res.data if r.get("organization_id")}
+            )
+            org_map = {}
+            if org_ids:
+                org_res = (
+                    supabase.table("organizations")
+                    .select("id, org_name")
+                    .in_("id", org_ids)
+                    .execute()
+                )
+                if org_res.data:
+                    org_map = {o["id"]: o["org_name"] for o in org_res.data}
+
+            for row in res.data:
+                org_id = row.get("organization_id")
+                notifications.append(
+                    {
+                        "org_id": org_id,
+                        "report_id": row.get("id"),
+                        "org_name": org_map.get(org_id, "Unknown org"),
+                        "message": f'has a report "{row.get("status", "")}"',
+                        "created_at": row.get("created_at"),
+                    }
+                )
+
+        # has_unread: true kung may at least isang notification
+        return jsonify({"notifications": notifications, "has_unread": bool(notifications)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @osas.route("/settings")
 def osas_settings():
@@ -302,34 +349,49 @@ def add_organization():
     ):
         new_org_id = org_result.data[0]["id"]
 
-    dept_name = "-"
-    if department_id:
-        d = (
-            supabase.table("departments")
-            .select("dept_name")
-            .eq("id", department_id)
-            .execute()
-        )
-        if d.data and isinstance(d.data, list):
-            dept_name = d.data[0]["dept_name"]
+    # --- auto-create initial financial report row ---
+    if new_org_id:
+        initial_report = {
+            "organization_id": new_org_id,
+            "status": "Pending Review",
+            "notes": "",
+            "checklist": {},  # empty months
+            "submission_date": accreditation_date
+            or datetime.utcnow().date().isoformat(),
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat(),
+        }
+        supabase.table("financial_reports").insert(initial_report).execute()
 
-    if admin:
-        log_activity(
-            admin["id"],
-            "organization",
-            f'Added new organization: "{org_name}" in {dept_name}',
-        )
+        dept_name = "-"
 
-    return (
-        jsonify(
-            {
-                "message": "Organization added",
-                "username": username,
-                "password": password,
-            }
-        ),
-        201,
-    )
+        if department_id:
+            d = (
+                supabase.table("departments")
+                .select("dept_name")
+                .eq("id", department_id)
+                .execute()
+            )
+            if d.data and isinstance(d.data, list) and d.data:
+                dept_name = d.data[0].get("dept_name") or "-"
+
+        if admin:
+            log_activity(
+                admin["id"],
+                "organization",
+                f'Added new organization: "{org_name}" in {dept_name}',
+            )
+
+        return (
+            jsonify(
+                {
+                    "message": "Organization added",
+                    "username": username,
+                    "password": password,
+                }
+            ),
+            201,
+        )
 
 
 @osas.route("/api/organizations/<int:org_id>", methods=["PUT"])
@@ -464,29 +526,77 @@ def update_financial_report(report_id):
         return jsonify({"error": "Login required"}), 401
     data = request.get_json()
     update_data = {}
-    if "status" in data:
-        update_data["status"] = data["status"]
+    # load existing report for checklist manipulation
+    res = supabase.table("financial_reports").select("*").eq("id", report_id).execute()
+    if not res.data:
+        return jsonify({"error": "Not found"}), 404
+    report = res.data[0]
+    checklist = report.get("checklist") or {}
+
+    # admin notes
     if "notes" in data:
         update_data["notes"] = data["notes"]
+
+    # explicit checklist overwrite (optional)
     if "checklist" in data:
-        update_data["checklist"] = data["checklist"]
+        checklist = data["checklist"]
+
+    # receive single month from modal
+    receive_month = data.get("receiveMonth")
+    if receive_month:
+        checklist[receive_month] = True
+
+    # mark all months complete from "Mark as Complete" button
+    if data.get("completeAll"):
+        for key in [
+            "august",
+            "september",
+            "october",
+            "november",
+            "december",
+            "january",
+            "february",
+            "march",
+            "april",
+            "may",
+        ]:
+            checklist[key] = True
+
+    update_data["checklist"] = checklist
+
+    # recompute status based on checklist
+    month_keys = [
+        "august",
+        "september",
+        "october",
+        "november",
+        "december",
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+    ]
+    received_count = sum(1 for k in month_keys if checklist.get(k))
+    total_count = len(month_keys)
+    if received_count == 0:
+        update_data["status"] = "Pending Review"
+    elif received_count < total_count:
+        update_data["status"] = "In Review"
+    else:
+        update_data["status"] = "Completed"
+
     update_data["updated_at"] = datetime.utcnow().isoformat()
+
     try:
-        print(f"Updating Financial Report {report_id} with:", update_data)
         result = (
             supabase.table("financial_reports")
             .update(update_data)
             .eq("id", report_id)
             .execute()
         )
-        print(f"Supabase Update Result: {result}")
-
-        if hasattr(result, "error") and result.error:
-            print("Supabase returned error:", result.error)
-            return jsonify({"error": result.error}), 500
         return jsonify({"message": "Financial report updated", "updated": update_data})
     except Exception as e:
-        print("ERROR during financial report update:", e)
         return jsonify({"error": str(e)}), 500
 
 

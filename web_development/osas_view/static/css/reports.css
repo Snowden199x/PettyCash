@@ -666,3 +666,68 @@ background-color: #e0e0e0;
     font-size: 22px;
   }
 }
+.report-card-sub {
+  margin: 2px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.report-card-sub.muted {
+  font-size: 13px;
+  color: #9e9e9e;  /* same feel as "No notes added yet" */
+}
+
+.report-card-top {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.report-org {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.report-meta {
+  font-size: 14px;
+  color: #333;
+}
+
+.report-meta-muted {
+  color: #9e9e9e;
+}
+
+.month-row.received .month-label {
+  color: #2e7d32;
+  font-weight: 600;
+}
+.report-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-inreview {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.status-completed {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}

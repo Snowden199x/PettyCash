@@ -18,38 +18,37 @@ document.addEventListener("DOMContentLoaded", () => {
   let reports = [];
 
   function showDeptLoading() {
-  const loader = document.getElementById("deptLoading");
-  const chart = document.getElementById("departmentChart");
-  const legend = document.getElementById("deptLegend");
-  if (loader) loader.style.display = "flex";
-  if (chart) chart.style.display = "none";
-  if (legend) legend.style.display = "none";
-}
-function hideDeptLoading() {
-  const loader = document.getElementById("deptLoading");
-  const chart = document.getElementById("departmentChart");
-  const legend = document.getElementById("deptLegend");
-  if (loader) loader.style.display = "none";
-  if (chart) chart.style.display = "";
-  if (legend) legend.style.display = "";
-}
-function showStatusLoading() {
-  const loader = document.getElementById("statusLoading");
-  const chart = document.getElementById("statusChart");
-  const breakdown = document.getElementById("statusBreakdown");
-  if (loader) loader.style.display = "flex";
-  if (chart) chart.style.display = "none";
-  if (breakdown) breakdown.style.display = "none";
-}
-function hideStatusLoading() {
-  const loader = document.getElementById("statusLoading");
-  const chart = document.getElementById("statusChart");
-  const breakdown = document.getElementById("statusBreakdown");
-  if (loader) loader.style.display = "none";
-  if (chart) chart.style.display = "";
-  if (breakdown) breakdown.style.display = "";
-}
-
+    const loader = document.getElementById("deptLoading");
+    const chart = document.getElementById("departmentChart");
+    const legend = document.getElementById("deptLegend");
+    if (loader) loader.style.display = "flex";
+    if (chart) chart.style.display = "none";
+    if (legend) legend.style.display = "none";
+  }
+  function hideDeptLoading() {
+    const loader = document.getElementById("deptLoading");
+    const chart = document.getElementById("departmentChart");
+    const legend = document.getElementById("deptLegend");
+    if (loader) loader.style.display = "none";
+    if (chart) chart.style.display = "";
+    if (legend) legend.style.display = "";
+  }
+  function showStatusLoading() {
+    const loader = document.getElementById("statusLoading");
+    const chart = document.getElementById("statusChart");
+    const breakdown = document.getElementById("statusBreakdown");
+    if (loader) loader.style.display = "flex";
+    if (chart) chart.style.display = "none";
+    if (breakdown) breakdown.style.display = "none";
+  }
+  function hideStatusLoading() {
+    const loader = document.getElementById("statusLoading");
+    const chart = document.getElementById("statusChart");
+    const breakdown = document.getElementById("statusBreakdown");
+    if (loader) loader.style.display = "none";
+    if (chart) chart.style.display = "";
+    if (breakdown) breakdown.style.display = "";
+  }
 
   // --- Profile menu logic ---
   if (profileBtn && profileMenu) {
@@ -88,6 +87,7 @@ function hideStatusLoading() {
   async function loadDashboardData() {
     try {
       await loadAdminProfile();
+
       const orgRes = await fetch("/osas/api/organizations");
       if (!orgRes.ok) throw new Error("Failed to load organizations");
       const orgData = await orgRes.json();
@@ -95,7 +95,7 @@ function hideStatusLoading() {
 
       showStatusLoading();
 
-      // Fetch all real reports (replace random generation)
+      // Fetch all real reports, one call per org
       reports = [];
       for (let org of organizations) {
         const res = await fetch(
@@ -104,8 +104,8 @@ function hideStatusLoading() {
         if (res.ok) {
           const data = await res.json();
           if (data.reports && Array.isArray(data.reports)) {
-            // Add orgName/department for display
             data.reports.forEach((report) => {
+              // Attach org info for display
               report.orgName = org.name;
               report.department = org.department;
             });
@@ -113,6 +113,7 @@ function hideStatusLoading() {
           }
         }
       }
+
       hideStatusLoading();
       updateSummaryCards();
       updateCharts();
@@ -151,7 +152,9 @@ function hideStatusLoading() {
       departmentFilter.innerHTML = '<option value="">All Departments</option>';
     }
   }
-  departmentFilter.addEventListener("change", drawDepartmentChart);
+  if (departmentFilter) {
+    departmentFilter.addEventListener("change", drawDepartmentChart);
+  }
 
   async function loadDashboardOrganizations() {
     showDeptLoading();
@@ -168,23 +171,23 @@ function hideStatusLoading() {
     }
   }
 
-  // ** FIXED: STATUS HANDLING **
+  // ** STATUS HANDLING (UNIFIED) **
   const STATUS_VALUES = ["Pending Review", "In Review", "Completed"];
   function normalizeStatus(status) {
     if (!status) return "";
-    status = status.toLowerCase().replace(/[\s\-]/g, "");
-    if (status === "pendingreview") return "Pending Review";
-    if (status === "inreview") return "In Review";
-    if (status === "completed") return "Completed";
+    const normalized = status.toLowerCase().replace(/[\s\-]/g, "");
+    if (normalized === "pendingreview") return "Pending Review";
+    if (normalized === "inreview") return "In Review";
+    if (normalized === "completed") return "Completed";
     return status;
   }
 
+  // Kept for reference; hindi na ginagamit for real data
   function generateReportsFromOrgs(orgs) {
     return orgs.map((org) => ({
       id: org.id,
       orgId: org.id,
       orgName: org.name,
-      // Random valid status, exact DB allowed!
       status: STATUS_VALUES[Math.floor(Math.random() * STATUS_VALUES.length)],
       submissionDate: new Date(
         Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000
@@ -211,9 +214,10 @@ function hideStatusLoading() {
     return checklist;
   }
 
-  // ** CARD COUNTS (EXACT MATCH) **
+  // ** CARD COUNTS **
   function updateSummaryCards() {
     if (totalOrgs) totalOrgs.textContent = organizations.length;
+
     const pending = reports.filter(
       (r) => normalizeStatus(r.status) === "Pending Review"
     ).length;
@@ -223,6 +227,7 @@ function hideStatusLoading() {
     const inReview = reports.filter(
       (r) => normalizeStatus(r.status) === "In Review"
     ).length;
+
     if (pendingReports) pendingReports.textContent = pending;
     if (approvedReports) approvedReports.textContent = approved;
     if (inReviewReports) inReviewReports.textContent = inReview;
@@ -241,21 +246,10 @@ function hideStatusLoading() {
     const ctx = canvas.getContext("2d");
 
     let orgList = organizations;
-    const selectedDept = departmentFilter.value;
-    if (selectedDept) {
-      orgList = orgList.filter((org) => org.department === selectedDept);
-    }
+    const selectedDept = departmentFilter ? departmentFilter.value : "";
 
-    let deptNames = departments.map((d) => d.name);
-    let deptCounts = deptNames.map(
-      (name) => orgList.filter((org) => org.department === name).length
-    );
-    if (selectedDept) {
-      deptNames = [selectedDept];
-      deptCounts = [orgList.length];
-    }
-
-    const colors = [
+    const deptNamesAll = departments.map((d) => d.name);
+    const colorsAll = [
       "#3f2166ff",
       "#66b8eeff",
       "#f083d5ff",
@@ -269,6 +263,40 @@ function hideStatusLoading() {
       "#0097e6",
       "#b2bec3",
     ];
+
+    let deptNames;
+    let deptCounts;
+    let colors;
+
+    if (selectedDept) {
+      orgList = orgList.filter((org) => org.department === selectedDept);
+      const idx = deptNamesAll.indexOf(selectedDept);
+      const colorForDept = colorsAll[idx >= 0 ? idx % colorsAll.length : 0];
+
+      deptNames = [selectedDept];
+      deptCounts = [orgList.length];
+      colors = [colorForDept];
+    } else {
+      deptNames = deptNamesAll;
+      deptCounts = deptNames.map(
+        (name) => orgList.filter((org) => org.department === name).length
+      );
+      colors = colorsAll;
+    }
+
+    const total = deptCounts.reduce((s, v) => s + v, 0);
+
+    if (total === 0) {
+      drawEmptyPie(ctx);
+      if (selectedDept) {
+        updateLegend("deptLegend", [selectedDept], [colorsAll[0]], [0]);
+      } else {
+        const legend = document.getElementById("deptLegend");
+        if (legend) legend.innerHTML = "";
+      }
+      return;
+    }
+
     drawPieChart(ctx, deptCounts, colors);
     updateLegend("deptLegend", deptNames, colors, deptCounts);
   }
@@ -320,11 +348,30 @@ function hideStatusLoading() {
       .join("");
   }
 
-  // -- STATUS CHART --
+  function drawEmptyPie(ctx) {
+    const canvas = ctx.canvas;
+    const width = canvas.width || 300;
+    const height = canvas.height || 300;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = Math.min(width, height) / 2.5;
+
+    ctx.clearRect(0, 0, width, height);
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+    ctx.strokeStyle = "#e0e0e0";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // -- STATUS CHART (DONUT) --
   function drawStatusChart() {
     const canvas = document.getElementById("statusChart");
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
+
     const statusCounts = {
       pending: reports.filter(
         (r) => normalizeStatus(r.status) === "Pending Review"
@@ -335,6 +382,7 @@ function hideStatusLoading() {
         (r) => normalizeStatus(r.status) === "Completed"
       ).length,
     };
+
     const colors = ["#F39C12", "#3498DB", "#2ECC71"];
     const labels = ["Pending Review", "In Review", "Completed"];
     const data = [
@@ -342,6 +390,7 @@ function hideStatusLoading() {
       statusCounts.inReview,
       statusCounts.completed,
     ];
+
     drawDonutChart(ctx, data, colors);
     updateStatusBreakdown(labels, colors, data);
   }
@@ -354,64 +403,91 @@ function hideStatusLoading() {
     const centerY = height / 2;
     const outerRadius = Math.min(width, height) / 2.5;
     const innerRadius = outerRadius * 0.6;
-    const total = data.reduce((sum, val) => sum + val, 0) || 1;
+
+    const total = data.reduce((sum, val) => sum + val, 0);
+    const safeTotal = total === 0 ? 0 : total;
+    const denom = total === 0 ? 1 : total;
+
     let currentAngle = -Math.PI / 2;
     ctx.clearRect(0, 0, width, height);
 
-    data.forEach((value, index) => {
-      const sliceAngle = (value / total) * 2 * Math.PI;
+    if (total === 0) {
       ctx.beginPath();
-      ctx.arc(
-        centerX,
-        centerY,
-        outerRadius,
-        currentAngle,
-        currentAngle + sliceAngle
-      );
-      ctx.arc(
-        centerX,
-        centerY,
-        innerRadius,
-        currentAngle + sliceAngle,
-        currentAngle,
-        true
-      );
+      ctx.arc(centerX, centerY, outerRadius, 0, 2 * Math.PI);
+      ctx.arc(centerX, centerY, innerRadius, 2 * Math.PI, 0, true);
       ctx.closePath();
-      ctx.fillStyle = colors[index % colors.length];
+      ctx.fillStyle = "#f4f4f4";
       ctx.fill();
-      currentAngle += sliceAngle;
-    });
+    } else {
+      data.forEach((value, index) => {
+        const sliceAngle = (value / denom) * 2 * Math.PI;
+        ctx.beginPath();
+        ctx.arc(
+          centerX,
+          centerY,
+          outerRadius,
+          currentAngle,
+          currentAngle + sliceAngle
+        );
+        ctx.arc(
+          centerX,
+          centerY,
+          innerRadius,
+          currentAngle + sliceAngle,
+          currentAngle,
+          true
+        );
+        ctx.closePath();
+        ctx.fillStyle = colors[index % colors.length];
+        ctx.fill();
+        currentAngle += sliceAngle;
+      });
+    }
+
+    // inner white circle
     ctx.beginPath();
     ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI);
     ctx.fillStyle = "#FFFFFF";
     ctx.fill();
+
+    // center text (total reports)
     ctx.fillStyle = "#333";
     ctx.font = "bold 24px Poppins, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(total, centerX, centerY);
+    ctx.fillText(String(safeTotal), centerX, centerY);
   }
 
+  // Status breakdown: update existing cards only
   function updateStatusBreakdown(labels, colors, data) {
-  const breakdown = document.getElementById("statusBreakdown");
-  if (!breakdown) return;
-  const total = data.reduce((sum, val) => sum + val, 0) || 1;
-  breakdown.innerHTML = labels
-    .map((label, index) => {
-      const percentage = Math.round((data[index] / total) * 100);
-      return `
-        <div class="status-row">
-          <span class="status-label">${label}</span>
-          <div class="status-bar-horizontal">
-            <div class="status-fill" style="width: ${percentage}%; background: ${colors[index % colors.length]}"></div>
-          </div>
-          <span class="status-count">${data[index]}</span>
-        </div>
-      `;
-    })
-    .join("");
-}
+    const breakdown = document.getElementById("statusBreakdown");
+    if (!breakdown) return;
 
+    const total = data.reduce((sum, val) => sum + val, 0) || 1;
+
+    const statusMap = {
+      "Pending Review": "pending",
+      "In Review": "review",
+      Completed: "completed",
+    };
+
+    labels.forEach((label, index) => {
+      const key = statusMap[label];
+      if (!key) return;
+
+      const item = breakdown.querySelector(`[data-status="${key}"]`);
+      if (!item) return;
+
+      const count = data[index] ?? 0;
+      const percentage = Math.round((count / total) * 100);
+
+      const countEl = item.querySelector(".status-count");
+      if (countEl) countEl.textContent = count;
+
+      const percentEl = item.querySelector(".status-percent");
+      if (percentEl) percentEl.textContent = `${percentage}%`;
+    });
+  }
 
   // --- Activity Feed ---
   async function updateActivityFeed() {
@@ -482,8 +558,86 @@ function hideStatusLoading() {
     }, 3000);
   }
 
+  const API_BASE = "/osas/api";
+
+  // NOTIFICATION ELEMENTS
+  const notifBtn = document.getElementById("notifBtn");
+  const notifMenu = document.getElementById("notifMenu");
+  const notifList = document.getElementById("notifList");
+  const notifDot = document.getElementById("notifDot");
+
+  // --- Notification toggle (clickable bell) ---
+  if (notifBtn && notifMenu) {
+    notifBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      notifMenu.style.display =
+        notifMenu.style.display === "block" ? "none" : "block";
+    });
+
+    window.addEventListener("click", (e) => {
+      if (!notifMenu.contains(e.target) && e.target !== notifBtn) {
+        notifMenu.style.display = "none";
+      }
+    });
+  }
+
+  // --- Load notifications from OSAS API ---
+  async function loadNotifications() {
+    if (!notifList) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/admin/notifications`);
+      if (!res.ok) throw new Error("Failed to load notifications");
+      const data = await res.json();
+      const items = data.notifications || [];
+      const hasUnread = data.has_unread;
+
+      // toggle red dot
+      if (notifDot) notifDot.style.display = hasUnread ? "block" : "none";
+
+      if (!items.length) {
+        notifList.innerHTML = '<p class="notif-empty">Nothing here yet</p>';
+        return;
+      }
+
+      notifList.innerHTML = items
+        .map(
+          (n) => `
+        <div class="notif-item" data-org-id="${n.org_id}" data-report-id="${
+            n.report_id
+          }">
+          <p class="notif-text"><strong>${n.org_name}</strong> ${n.message}</p>
+          <p class="notif-time">${new Date(n.created_at).toLocaleString()}</p>
+        </div>`
+        )
+        .join("");
+
+      // click → punta sa Reports page, open yung org
+      notifList.querySelectorAll(".notif-item").forEach((el) => {
+        el.addEventListener("click", () => {
+          const orgId = el.dataset.orgId;
+          const reportId = el.dataset.reportId;
+
+          // hide red dot once user opens a notification
+          if (notifDot) notifDot.style.display = "none";
+
+          const url = `/osas/reports?org_id=${encodeURIComponent(
+            orgId
+          )}&report_id=${encodeURIComponent(reportId)}`;
+          window.location.href = url;
+        });
+      });
+    } catch (err) {
+      notifList.innerHTML =
+        '<p class="notif-empty">There`s nothing here yet</p>';
+      if (notifDot) notifDot.style.display = "none";
+    }
+  }
+
   // INITIAL LOAD
   loadDashboardDepartments().then(loadDashboardOrganizations);
   loadDashboardData();
+  loadNotifications();
+  setInterval(loadNotifications, 60000);
   setInterval(loadDashboardData, 300000);
 });

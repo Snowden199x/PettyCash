@@ -732,9 +732,7 @@ def generate_report():
             supabase.table("financial_reports")
             .select("id")
             .eq("organization_id", org_id)
-            .eq("wallet_id", wallet_id)
-            .eq("budget_id", budget_id)
-            .eq("status", "Pending report")
+            .eq("status", "Pending Review")
             .limit(1)
             .execute()
         )
@@ -743,7 +741,7 @@ def generate_report():
             "organization_id": org_id,
             "wallet_id": wallet_id,
             "budget_id": budget_id,
-            "status": "Pending report",
+            "status": "Pending Review",
             "notes": None,
             "checklist": {},
             "event_name": data.get("event_name"),
@@ -1019,9 +1017,7 @@ def preview_report_for_budget(wallet_id, budget_id):
         for r in receipts:
             file_path = r["file_url"]
             try:
-                file_bytes = supabase.storage.from_(BUCKET_RECEIPTS).download(
-                    file_path
-                )
+                file_bytes = supabase.storage.from_(BUCKET_RECEIPTS).download(file_path)
             except Exception:
                 continue
 
@@ -1160,6 +1156,75 @@ def print_report_for_budget(wallet_id, budget_id):
 # -----------------------
 # Submit report -> archive + reset
 # -----------------------
+from datetime import datetime as dt  # siguraduhin na nasa taas na ito
+
+
+def update_osas_financial_report(org_id, budget_id):
+    """
+    Update OSAS financial_reports row for this org based on submitted month.
+    Marks the month as received in checklist and recomputes status.
+    """
+    # Kunin month name mula sa wallet_budgets + months table
+    wb_res = (
+        supabase.table("wallet_budgets")
+        .select("months (month_name)")
+        .eq("id", budget_id)
+        .single()
+        .execute()
+    )
+    if not wb_res.data:
+        return
+
+    month_name = (wb_res.data["months"]["month_name"] or "").lower()
+    month_key = month_name  # e.g. "january", "february", ...
+
+    # Hanapin OSAS financial_reports row ng org
+    fr_res = (
+        supabase.table("financial_reports")
+        .select("*")
+        .eq("organization_id", org_id)
+        .limit(1)
+        .execute()
+    )
+    if not fr_res.data:
+        return
+
+    report = fr_res.data[0]
+    checklist = report.get("checklist") or {}
+
+    month_keys = [
+        "august",
+        "september",
+        "october",
+        "november",
+        "december",
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+    ]
+
+    if month_key in month_keys:
+        checklist[month_key] = True
+
+    received_count = sum(1 for k in month_keys if checklist.get(k))
+    total_count = len(month_keys)
+
+    if received_count == 0:
+        status = "Pending Review"
+    elif received_count < total_count:
+        status = "In Review"
+    else:
+        status = "Completed"
+
+    supabase.table("financial_reports").update(
+        {
+            "checklist": checklist,
+            "status": status,
+            "updated_at": dt.utcnow().isoformat(),
+        }
+    ).eq("id", report["id"]).execute()
 
 
 @pres.route("/reports/<int:wallet_id>/submit", methods=["POST"])
@@ -1180,7 +1245,7 @@ def submitreportwalletid(wallet_id):
             .select("*")
             .eq("organization_id", org_id)
             .eq("wallet_id", wallet_id)
-            .eq("status", "Pending report")
+            .eq("status", "Pending Review")
             .order("created_at", desc=True)
             .limit(1)
             .execute()
@@ -1192,6 +1257,7 @@ def submitreportwalletid(wallet_id):
         rep_id = rep["id"]
         budget_id = rep["budget_id"]
 
+        # Mark report as submitted
         supabase.table("financial_reports").update(
             {
                 "status": "Submitted",
@@ -1200,12 +1266,14 @@ def submitreportwalletid(wallet_id):
             }
         ).eq("id", rep_id).execute()
 
+        # Compute remaining balance
         budget_val = float(rep.get("budget") or 0)
         total_expense = float(rep.get("total_expense") or 0)
         reimb = float(rep.get("reimbursement") or 0)
         prev_fund = float(rep.get("previous_fund") or 0)
         remaining = budget_val - total_expense - reimb + prev_fund
 
+        # Insert archive summary
         arch_ins = (
             supabase.table("financial_report_archives")
             .insert(
@@ -1229,6 +1297,7 @@ def submitreportwalletid(wallet_id):
         )
         archive_id = arch_ins.data[0]["id"]
 
+        # Archive transactions
         txres = (
             supabase.table("wallet_transactions")
             .select("date_issued, quantity, particulars, description, price, kind")
@@ -1254,6 +1323,7 @@ def submitreportwalletid(wallet_id):
                 tx_rows
             ).execute()
 
+        # Archive receipts
         rcres = (
             supabase.table("wallet_receipts")
             .select("description, receipt_date, file_url")
@@ -1276,17 +1346,21 @@ def submitreportwalletid(wallet_id):
                 rc_rows
             ).execute()
 
-        supabase.table("wallet_transactions").delete().eq(
-            "wallet_id", wallet_id
-        ).eq("budget_id", budget_id).execute()
+        # Clear current month data
+        supabase.table("wallet_transactions").delete().eq("wallet_id", wallet_id).eq(
+            "budget_id", budget_id
+        ).execute()
 
-        supabase.table("wallet_receipts").delete().eq(
-            "wallet_id", wallet_id
-        ).eq("budget_id", budget_id).execute()
+        supabase.table("wallet_receipts").delete().eq("wallet_id", wallet_id).eq(
+            "budget_id", budget_id
+        ).execute()
 
         supabase.table("wallet_budgets").update({"amount": 0}).eq(
             "id", budget_id
         ).execute()
+
+        # Update OSAS-side financial_reports checklist/status
+        update_osas_financial_report(org_id, budget_id)
 
         return jsonify({"success": True, "archive_id": archive_id})
     except Exception as e:
@@ -1329,10 +1403,12 @@ def get_wallet_archives(folder_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 from io import BytesIO
 from docx import Document
 from docx.shared import Inches
 from datetime import datetime as _dt
+
 
 @pres.route("/api/archives/<int:archive_id>/download", methods=["GET"])
 def download_archive(archive_id):
@@ -1592,9 +1668,7 @@ def get_all_transactions():
                     "type": tx["kind"],
                     "date": tx["date_issued"],
                     "description": tx["description"],
-                    "amount": total_amount
-                    if tx["kind"] == "income"
-                    else -total_amount,
+                    "amount": total_amount if tx["kind"] == "income" else -total_amount,
                 }
             )
 
@@ -1658,9 +1732,7 @@ def update_profile():
             if "org_name" in update_data:
                 session["org_name"] = update_data["org_name"]
 
-            return jsonify(
-                {"success": True, "message": "Profile updated successfully"}
-            )
+            return jsonify({"success": True, "message": "Profile updated successfully"})
         else:
             return jsonify({"error": "No valid fields to update"}), 400
     except Exception as e:
