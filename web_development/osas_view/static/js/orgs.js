@@ -418,6 +418,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (initialSearch) {
     searchInput.value = initialSearch;
   }
+  if (params.get("open_add") === "1") {
+    setTimeout(() => {
+      openAddModal();
+    }, 0);
+  }
 
   // INITIAL LOAD
   loadDepartmentFilter();

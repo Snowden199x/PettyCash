@@ -17,6 +17,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const toast = document.getElementById("toast");
   const paginationEl = document.getElementById("pagination");
   const API_BASE = "/osas/api";
+  const params = new URLSearchParams(window.location.search);
+  const orgIdParam = params.get("org_id");
+  const reportIdParam = params.get("report_id");
 
   // notification elements (galing sa homepage layout)
   const notifBtn = document.getElementById("notifBtn");
@@ -31,7 +34,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const pageSize = 6;
   let departments = [];
   let notifications = [];
-
+  
+  if (orgIdParam || reportIdParam) {
+    openFromNotification(Number(orgIdParam), Number(reportIdParam));
+  }
   // ===== HELPERS =====
   function statusBadgeClass(status) {
     switch (status) {

@@ -831,6 +831,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ].forEach(clearFieldError);
 
     reportDetailsOverlay.classList.add("active");
+    await prefillReportFields(currentWallet);
   });
 
   function hideReportDetailsModal() {
@@ -995,6 +996,10 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.removeItem(draftKeyFor(currentWallet));
       showToast("Report submitted successfully.");
       hideReportButtons();
+
+      // clear report detail fields
+      repReimb.value = "";
+      repPrevFund.value = "";
 
       // reset local state for this folder
       currentWallet.beginningCash = 0;
