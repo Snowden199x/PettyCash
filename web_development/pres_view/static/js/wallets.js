@@ -4,8 +4,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const receiptsIconUrl = document.body.dataset.receiptsIcon;
   const optionsIconUrl = document.body.dataset.optionsIcon;
 
-
-
   // ===== Report details modal =====
   const reportDetailsOverlay = document.getElementById(
     "report-details-overlay"
@@ -105,7 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const repTotalIncome = document.getElementById("rep-total-income");
   const repBudgetBank = document.getElementById("rep-budget-bank");
 
-
   const toastContainer = document.getElementById("toast-container");
 
   // ===== Helpers =====
@@ -139,6 +136,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const res = await fetch(url, { credentials: "include" });
     if (!res.ok) throw new Error("Request failed");
     return res.json();
+  }
+  // helper na nadagdag na kanina
+  async function checkSubmissionStatus() {
+    if (!currentWallet) return false;
+
+    try {
+      const res = await apiGet(
+        `/pres/api/wallets/${currentWallet.walletId}/budgets/${currentWallet.id}/submitted`
+      );
+      return res.submitted || false;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   }
 
   async function apiPost(url, body) {
@@ -203,23 +214,18 @@ document.addEventListener("DOMContentLoaded", () => {
         endingCash: Number(w.beginning_cash || 0),
       }));
 
-        // build year options
-    const years = Array.from(
-      new Set(
-        wallets
-          .map((w) => (w.month || "").slice(0, 4))
-          .filter((y) => y)
-      )
-    ).sort();
-    const yearSelect = document.getElementById("wallet-year-filter");
-    if (yearSelect && years.length) {
-      yearSelect.innerHTML =
-        '<option value="">All years</option>' +
-        years
-          .map((y) => `<option value="${y}">${y}</option>`)
-          .join("");
-    }
-
+      // build year options
+      const years = Array.from(
+        new Set(
+          wallets.map((w) => (w.month || "").slice(0, 4)).filter((y) => y)
+        )
+      ).sort();
+      const yearSelect = document.getElementById("wallet-year-filter");
+      if (yearSelect && years.length) {
+        yearSelect.innerHTML =
+          '<option value="">All years</option>' +
+          years.map((y) => `<option value="${y}">${y}</option>`).join("");
+      }
 
       walletsFiltered = [...wallets];
       renderWalletsList();
@@ -280,26 +286,25 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function applyWalletFilters() {
-  const q = walletSearchInput.value.toLowerCase();
-  const yearVal = walletYearFilter.value; // "2025", etc.
+    const q = walletSearchInput.value.toLowerCase();
+    const yearVal = walletYearFilter.value; // "2025", etc.
 
-  walletsFiltered = wallets.filter((w) => {
-    const matchesText =
-      w.name.toLowerCase().includes(q) ||
-      (w.month || "").toLowerCase().includes(q);
+    walletsFiltered = wallets.filter((w) => {
+      const matchesText =
+        w.name.toLowerCase().includes(q) ||
+        (w.month || "").toLowerCase().includes(q);
 
-    const walletYear = (w.month || "").slice(0, 4); // "yyyy"
-    const matchesYear = yearVal ? walletYear === yearVal : true;
+      const walletYear = (w.month || "").slice(0, 4); // "yyyy"
+      const matchesYear = yearVal ? walletYear === yearVal : true;
 
-    return matchesText && matchesYear;
-  });
+      return matchesText && matchesYear;
+    });
 
-  renderWalletsList();
-}
+    renderWalletsList();
+  }
 
   walletSearchInput.addEventListener("input", applyWalletFilters);
   walletYearFilter.addEventListener("change", applyWalletFilters);
-
 
   // ===== Navigation / tabs / filters =====
 
@@ -522,69 +527,68 @@ document.addEventListener("DOMContentLoaded", () => {
       price: price,
     };
 
-const editingId = txForm.dataset.editingId || null;
+    const editingId = txForm.dataset.editingId || null;
 
-try {
-  let res;
-  if (editingId) {
-    // update existing
-    res = await apiPost(
-      `/pres/api/wallets/${currentWallet.id}/transactions/${editingId}`,
-      payload
-    );
-  } else {
-    // create new (existing code)
-    res = await apiPost(
-      `/pres/api/wallets/${currentWallet.id}/transactions`,
-      payload
-    );
-  }
-  const saved = res.transaction;
+    try {
+      let res;
+      if (editingId) {
+        // update existing
+        res = await apiPost(
+          `/pres/api/wallets/${currentWallet.id}/transactions/${editingId}`,
+          payload
+        );
+      } else {
+        // create new (existing code)
+        res = await apiPost(
+          `/pres/api/wallets/${currentWallet.id}/transactions`,
+          payload
+        );
+      }
+      const saved = res.transaction;
 
-  const tx = {
-    id: saved.id,
-    event: currentWallet.name,
-    quantity: qty,
-    price: price,
-    income_type: saved.income_type,
-    particulars: saved.particulars,
-    raw_description: saved.description,
-    amount:
-      saved.kind === "expense" ? -saved.total_amount : saved.total_amount,
-    date: saved.date_issued,
-    type: saved.kind,
-  };
+      const tx = {
+        id: saved.id,
+        event: currentWallet.name,
+        quantity: qty,
+        price: price,
+        income_type: saved.income_type,
+        particulars: saved.particulars,
+        raw_description: saved.description,
+        amount:
+          saved.kind === "expense" ? -saved.total_amount : saved.total_amount,
+        date: saved.date_issued,
+        type: saved.kind,
+      };
 
-  if (!walletTransactions[currentWallet.id]) {
-    walletTransactions[currentWallet.id] = [];
-  }
+      if (!walletTransactions[currentWallet.id]) {
+        walletTransactions[currentWallet.id] = [];
+      }
 
-  if (editingId) {
-    walletTransactions[currentWallet.id] = walletTransactions[
-      currentWallet.id
-    ].map((t) => (String(t.id) === String(editingId) ? tx : t));
-  } else {
-    walletTransactions[currentWallet.id].push(tx);
-  }
+      if (editingId) {
+        walletTransactions[currentWallet.id] = walletTransactions[
+          currentWallet.id
+        ].map((t) => (String(t.id) === String(editingId) ? tx : t));
+      } else {
+        walletTransactions[currentWallet.id].push(tx);
+      }
 
-  recomputeTotalsForFolder(currentWallet.id);
-  updateStatsUI();
-  renderWalletTransactions();
-  hideTxModal();
-  delete txForm.dataset.editingId;
+      recomputeTotalsForFolder(currentWallet.id);
+      updateStatsUI();
+      renderWalletTransactions();
+      hideTxModal();
+      delete txForm.dataset.editingId;
 
-  showToast(
-    editingId
-      ? "Transaction updated."
-      : currentTxType === "income"
-      ? "Income transaction added."
-      : "Expense transaction added."
-  );
-} catch (err) {
-  console.error(err);
-  showToast("Failed to save transaction.", true);
-}
-
+      showToast(
+        editingId
+          ? "Transaction updated."
+          : currentTxType === "income"
+          ? "Income transaction added."
+          : "Expense transaction added."
+      );
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to save transaction.", true);
+    }
   });
 
   function recomputeTotalsForFolder(folderId) {
@@ -614,22 +618,21 @@ try {
   }
 
   function updateStatsUI() {
-  if (!currentWallet) return;
-  document.getElementById("stat-budget").textContent = `Php ${(
-    currentWallet.beginningCash || 0
-  ).toFixed(2)}`;
-  document.getElementById("stat-income").textContent = `Php ${(
-    currentWallet.totalIncome || 0
-  ).toFixed(2)}`;
-  document.getElementById("stat-expense").textContent = `Php ${(
-    currentWallet.totalExpenses || 0
-  ).toFixed(2)}`;
-  document.getElementById("stat-ending").textContent = `Php ${(
-    currentWallet.endingCash || 0
-  ).toFixed(2)}`;
-  // stat-budget-bank can be set from currentReportDetails if you want
-}
-
+    if (!currentWallet) return;
+    document.getElementById("stat-budget").textContent = `Php ${(
+      currentWallet.beginningCash || 0
+    ).toFixed(2)}`;
+    document.getElementById("stat-income").textContent = `Php ${(
+      currentWallet.totalIncome || 0
+    ).toFixed(2)}`;
+    document.getElementById("stat-expense").textContent = `Php ${(
+      currentWallet.totalExpenses || 0
+    ).toFixed(2)}`;
+    document.getElementById("stat-ending").textContent = `Php ${(
+      currentWallet.endingCash || 0
+    ).toFixed(2)}`;
+    // stat-budget-bank can be set from currentReportDetails if you want
+  }
 
   // ===== Receipts =====
 
@@ -651,28 +654,24 @@ try {
 
   const MAX_RECEIPT_BYTES = 5 * 1024 * 1024; // 5 MB
 
-receiptForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
+  receiptForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  let valid = true;
+    let valid = true;
 
-  if (!receiptFile.files.length) {
-    showFieldError(receiptFile, "Image is required.");
-    valid = false;
-  } else {
-    const file = receiptFile.files[0];
-    if (file.size > MAX_RECEIPT_BYTES) {
-      showFieldError(
-        receiptFile,
-        "File is too large. Maximum size is 5 MB."
-      );
-      showToast("Receipt must be 5 MB or smaller.", true);
+    if (!receiptFile.files.length) {
+      showFieldError(receiptFile, "Image is required.");
       valid = false;
     } else {
-      clearFieldError(receiptFile);
+      const file = receiptFile.files[0];
+      if (file.size > MAX_RECEIPT_BYTES) {
+        showFieldError(receiptFile, "File is too large. Maximum size is 5 MB.");
+        showToast("Receipt must be 5 MB or smaller.", true);
+        valid = false;
+      } else {
+        clearFieldError(receiptFile);
+      }
     }
-  }
-
 
     if (!receiptDesc.value.trim()) {
       showFieldError(receiptDesc, "Description is required.");
@@ -772,9 +771,9 @@ receiptForm.addEventListener("submit", async (e) => {
           <h5>${receipt.name}</h5>
           <p>${receipt.date}</p>
           <div class="receipt-actions">
-            <button class="receipt-action-btn view">👁 View</button>
-            <button class="receipt-action-btn download">⬇ Download</button>
-            <button class="receipt-action-btn delete">🗑 Delete</button>
+            <button class="receipt-action-btn view">View</button>
+            <button class="receipt-action-btn download">Download</button>
+            <button class="receipt-action-btn delete">Delete</button>
           </div>
         </div>
       `
@@ -833,6 +832,29 @@ receiptForm.addEventListener("submit", async (e) => {
 
   // ===== Reports (financial_reports) =====
 
+  function reportMonthKey(dateStr) {
+    // assume YYYY-MM-DD sa datePrepared
+    const [y, m] = dateStr.split("-");
+    return `${y}-${m}`;
+  }
+
+  // gumawa ng monthKey mula sa currentReportDetails (or datePrepared)
+  function monthKeyForReport(details) {
+    return reportMonthKey(details.datePrepared);
+  }
+
+  function generatedKeyFor(wallet, monthKey) {
+    // per wallet + per month
+    return `report_generated_${wallet.walletId}_${wallet.id}_${monthKey}`;
+  }
+
+  function draftKeyFor(wallet) {
+    // draft key pa rin per wallet+month, gamit datePrepared kung meron
+    const date = repDatePrepared.value || new Date().toISOString().slice(0, 10);
+    const month = reportMonthKey(date);
+    return `report_draft_${wallet.walletId}_${wallet.id}_${month}`;
+  }
+
   function showReportButtons() {
     previewReportBtn.style.display = "inline-flex";
     printReportBtn.style.display = "inline-flex";
@@ -851,6 +873,10 @@ receiptForm.addEventListener("submit", async (e) => {
       return;
     }
 
+    const today = new Date().toISOString().slice(0, 10);
+    const currentMonthKey = reportMonthKey(today);
+    const genKey = generatedKeyFor(currentWallet, currentMonthKey);
+
     try {
       const draftRaw = localStorage.getItem(draftKeyFor(currentWallet));
       if (draftRaw) {
@@ -860,6 +886,7 @@ receiptForm.addEventListener("submit", async (e) => {
       currentReportDetails = null;
     }
 
+    // kunin next report number sa backend
     try {
       const data = await apiGet(
         `/pres/api/wallets/${currentWallet.walletId}/budgets/${currentWallet.id}/reports/next-number`
@@ -869,8 +896,7 @@ receiptForm.addEventListener("submit", async (e) => {
       nextReportNumber = 1;
     }
 
-    const today = new Date().toISOString().slice(0, 10);
-
+    // prefill fields (pangalan dapat tugma sa doc)
     repEventName.value =
       currentReportDetails?.eventName || currentWallet.name || "";
     repDatePrepared.value = currentReportDetails?.datePrepared || today;
@@ -887,16 +913,12 @@ receiptForm.addEventListener("submit", async (e) => {
       currentWallet.totalExpenses ??
       0
     ).toFixed(2);
-
     repTotalIncome.value = (
-  currentReportDetails?.totalIncome ??
-  currentWallet.totalIncome ??
-  0
-).toFixed(2);
-
-repBudgetBank.value = (
-  currentReportDetails?.budgetBank ?? 0
-).toFixed(2);
+      currentReportDetails?.totalIncome ??
+      currentWallet.totalIncome ??
+      0
+    ).toFixed(2);
+    repBudgetBank.value = (currentReportDetails?.budgetBank ?? 0).toFixed(2);
 
     repReimb.value = currentReportDetails?.reimb ?? "";
     repPrevFund.value = currentReportDetails?.prevFund ?? "";
@@ -929,16 +951,15 @@ repBudgetBank.value = (
 
     let valid = true;
     const fields = [
-  [repEventName, "Name of the event is required."],
-  [repDatePrepared, "Date prepared is required."],
-  [repBudget, "Budget is required."],
-  [repTotalIncome, "Total income is required."],
-  [repTotalExpense, "Total expenses is required."],
-  [repReimb, "Reimbursement is required."],
-  [repPrevFund, "Previous remaining fund is required."],
-  [repBudgetBank, "Budget in bank is required."],
-];
-
+      [repEventName, "Name of the event is required."],
+      [repDatePrepared, "Date prepared is required."],
+      [repBudget, "Budget is required."],
+      [repTotalIncome, "Total income is required."],
+      [repTotalExpense, "Total expenses is required."],
+      [repReimb, "Reimbursement is required."],
+      [repPrevFund, "Previous remaining fund is required."],
+      [repBudgetBank, "Budget in bank is required."],
+    ];
 
     fields.forEach(([field, msg]) => {
       if (!field.value.trim()) {
@@ -965,18 +986,18 @@ repBudgetBank.value = (
       return;
     }
 
+    // names aligned sa placeholders sa doc
     currentReportDetails = {
-  eventName: repEventName.value.trim(),
-  datePrepared: repDatePrepared.value,
-  number: repNumber.value,
-  budget: Number(repBudget.value),
-  totalIncome: Number(repTotalIncome.value),
-  totalExpense: Number(repTotalExpense.value),
-  reimb: Number(repReimb.value),
-  prevFund: Number(repPrevFund.value),
-  budgetBank: Number(repBudgetBank.value),
-};
-
+      eventName: repEventName.value.trim(), // {{EVENT_NAME}}
+      datePrepared: repDatePrepared.value, // {{DATE_PREPARED}}
+      number: repNumber.value, // {{REPORT_NO}}
+      budget: Number(repBudget.value), // {{BUDGET}}
+      totalIncome: Number(repTotalIncome.value), // {{TOTAL_INCOME}}
+      totalExpense: Number(repTotalExpense.value), // {{TOTAL_EXPENSE}}
+      reimb: Number(repReimb.value), // {{REIMBURSEMENT}}
+      prevFund: Number(repPrevFund.value), // {{PREVIOUS_FUND}}
+      budgetBank: Number(repBudgetBank.value), // {{BUDGET_IN_THE_BANK}}
+    };
 
     if (currentWallet) {
       localStorage.setItem(
@@ -1006,26 +1027,34 @@ repBudgetBank.value = (
       return;
     }
 
+    const monthKey = reportMonthKey(currentReportDetails.datePrepared);
+    const genKey = `report_generated_${currentWallet.walletId}_${currentWallet.id}_${monthKey}`;
+
     showToast("Generating report...", false);
     try {
       const payload = {
-  wallet_id: currentWallet.walletId,
-  budget_id: currentWallet.id,
-  event_name: currentReportDetails.eventName,
-  date_prepared: currentReportDetails.datePrepared,
-  report_no: currentReportDetails.number,
-  budget: currentReportDetails.budget,
-  total_income: currentReportDetails.totalIncome,    // for {{TOTAL_INCOME}}
-  total_expense: currentReportDetails.totalExpense,
-  reimbursement: currentReportDetails.reimb,
-  previous_fund: currentReportDetails.prevFund,
-  budget_in_the_bank: currentReportDetails.budgetBank, // for {{BUDGET_IN_THE_BANK}}
-};
+        wallet_id: currentWallet.walletId,
+        budget_id: currentWallet.id,
+        event_name: currentReportDetails.eventName,
+        date_prepared: currentReportDetails.datePrepared,
+        report_no: currentReportDetails.number,
+        budget: currentReportDetails.budget,
+        total_income: currentReportDetails.totalIncome,
+        total_expense: currentReportDetails.totalExpense,
+        reimbursement: currentReportDetails.reimb,
+        previous_fund: currentReportDetails.prevFund,
+        budget_in_the_bank: currentReportDetails.budgetBank,
+      };
 
       await apiPost(`/pres/api/reports/generate`, payload);
 
+      // mark as generated for this wallet+month
+      localStorage.setItem(genKey, "1");
       reportGeneratedForFolderId = currentWallet.id;
+      reportGeneratedForMonthKey = monthKey;
+
       showReportButtons();
+      generateReportBtn.textContent = "Edit report";
       showToast("Report generated successfully.");
       nextReportNumber += 1;
     } catch (err) {
@@ -1056,17 +1085,23 @@ repBudgetBank.value = (
     );
   });
 
-  submitReportBtn.addEventListener("click", () => {
+  function hideSubmitModal() {
+    confirmSubmitOverlay.classList.remove("active");
+  }
+  submitReportBtn.addEventListener("click", async () => {
     if (!currentWallet || reportGeneratedForFolderId !== currentWallet.id) {
       showToast("Generate the report first for this month.", true);
       return;
     }
+
+    const alreadySubmitted = await checkSubmissionStatus();
+    if (alreadySubmitted) {
+      showToast("You already submitted this month.", true);
+      return;
+    }
+
     confirmSubmitOverlay.classList.add("active");
   });
-
-  function hideSubmitModal() {
-    confirmSubmitOverlay.classList.remove("active");
-  }
 
   closeSubmitModal.addEventListener("click", hideSubmitModal);
   cancelSubmitBtn.addEventListener("click", hideSubmitModal);
@@ -1076,19 +1111,42 @@ repBudgetBank.value = (
 
   confirmSubmitBtn.addEventListener("click", async () => {
     hideSubmitModal();
-    if (!currentWallet) return;
+    if (!currentWallet || !currentReportDetails) return;
+
+    const monthKey = reportMonthKey(currentReportDetails.datePrepared);
+    const genKey = `report_generated_${currentWallet.walletId}_${currentWallet.id}_${monthKey}`;
+    const draftKey = draftKeyFor(currentWallet);
 
     showToast("Submitting report to OSAS...", false);
     try {
       await apiPost(`/pres/reports/${currentWallet.walletId}/submit`, {});
 
-      localStorage.removeItem(draftKeyFor(currentWallet));
+      // tanggalin draft at mark ng generated para malinis na yung month na yun
+      localStorage.removeItem(draftKey);
+      localStorage.removeItem(genKey);
+
       showToast("Report submitted successfully.");
       hideReportButtons();
+      generateReportBtn.textContent = "Generate report"; // dagdag
+      // optional pero recommended: linisin in-memory state
+      currentReportDetails = null;
+      reportGeneratedForFolderId = null;
+      reportGeneratedForMonthKey = null;
 
       // clear report detail fields
+      repEventName.value = "";
+      repDatePrepared.value = "";
+      repNumber.value = "";
+      repBudget.value = "";
+      repTotalIncome.value = "";
+      repTotalExpense.value = "";
       repReimb.value = "";
       repPrevFund.value = "";
+      repBudgetBank.value = "";
+
+      currentReportDetails = null;
+      reportGeneratedForFolderId = null;
+      reportGeneratedForMonthKey = null;
 
       // reset local state for this folder
       currentWallet.beginningCash = 0;
@@ -1117,6 +1175,24 @@ repBudgetBank.value = (
 
   async function showWalletDetail(folderId) {
     currentWallet = wallets.find((w) => w.id === folderId);
+
+    const today = new Date().toISOString().slice(0, 10);
+    const monthKey = reportMonthKey(today);
+    const genKey = generatedKeyFor(currentWallet, monthKey);
+
+    if (localStorage.getItem(genKey)) {
+      // may pending generated report for this wallet+month
+      reportGeneratedForFolderId = currentWallet.id;
+      reportGeneratedForMonthKey = monthKey;
+      showReportButtons();
+      generateReportBtn.textContent = "Edit report";
+    } else {
+      reportGeneratedForFolderId = null;
+      reportGeneratedForMonthKey = null;
+      hideReportButtons();
+      generateReportBtn.textContent = "Generate report";
+    }
+
     if (!currentWallet) return;
 
     document.getElementById("wallet-name").textContent = currentWallet.name;
@@ -1255,18 +1331,16 @@ repBudgetBank.value = (
     const transactions = walletTransactions[currentWallet.id] || [];
 
     // sort by date descending
-  const sorted = [...transactions].sort((a, b) => {
-    // a.date and b.date are "yyyy-mm-dd"
-    if (a.date < b.date) return 1;
-    if (a.date > b.date) return -1;
-    return 0;
-  });
+    const sorted = [...transactions].sort((a, b) => {
+      // a.date and b.date are "yyyy-mm-dd"
+      if (a.date < b.date) return 1;
+      if (a.date > b.date) return -1;
+      return 0;
+    });
 
     let filteredTransactions = sorted;
     if (currentFilter !== "all") {
-      filteredTransactions = sorted.filter(
-        (tx) => tx.type === currentFilter
-      );
+      filteredTransactions = sorted.filter((tx) => tx.type === currentFilter);
     }
 
     if (filteredTransactions.length === 0) {
@@ -1292,57 +1366,57 @@ repBudgetBank.value = (
     container.innerHTML = html;
 
     container.querySelectorAll(".transaction-item").forEach((item) => {
-  const txId = item.dataset.txId;
-  const toggle = item.querySelector(".tx-menu-toggle");
-  const menu = item.querySelector(".tx-menu");
-  const editBtn = item.querySelector(".tx-menu-item.edit");
-  const deleteBtn = item.querySelector(".tx-menu-item.delete");
+      const txId = item.dataset.txId;
+      const toggle = item.querySelector(".tx-menu-toggle");
+      const menu = item.querySelector(".tx-menu");
+      const editBtn = item.querySelector(".tx-menu-item.edit");
+      const deleteBtn = item.querySelector(".tx-menu-item.delete");
 
-  toggle.addEventListener("click", (e) => {
-    e.stopPropagation();
-    document
-      .querySelectorAll(".tx-menu.open")
-      .forEach((m) => m !== menu && m.classList.remove("open"));
-    menu.classList.toggle("open");
-  });
+      toggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        document
+          .querySelectorAll(".tx-menu.open")
+          .forEach((m) => m !== menu && m.classList.remove("open"));
+        menu.classList.toggle("open");
+      });
 
-  editBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    menu.classList.remove("open");
-    openEditTx(txId);
-  });
+      editBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menu.classList.remove("open");
+        openEditTx(txId);
+      });
 
-  deleteBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    menu.classList.remove("open");
-    deleteTx(txId);
-  });
-});
+      deleteBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menu.classList.remove("open");
+        deleteTx(txId);
+      });
+    });
 
-document.addEventListener("click", () => {
-  document
-    .querySelectorAll(".tx-menu.open")
-    .forEach((m) => m.classList.remove("open"));
-});
+    document.addEventListener("click", () => {
+      document
+        .querySelectorAll(".tx-menu.open")
+        .forEach((m) => m.classList.remove("open"));
+    });
   }
 
   function createTransactionItem(tx) {
-  const qty = Number(tx.quantity || 0);
-  const price = Number(tx.price || 0);
-  const total = qty * price;
+    const qty = Number(tx.quantity || 0);
+    const price = Number(tx.price || 0);
+    const total = qty * price;
 
-  let labelCore;
-  if (tx.type === "income") {
-    labelCore = `${price} x ${qty} (${total}) - ${tx.income_type || ""}`;
-  } else {
-    labelCore = `${price} x ${qty} (${total}) - ${tx.particulars || ""}`;
-  }
+    let labelCore;
+    if (tx.type === "income") {
+      labelCore = `${price} x ${qty} (${total}) - ${tx.income_type || ""}`;
+    } else {
+      labelCore = `${price} x ${qty} (${total}) - ${tx.particulars || ""}`;
+    }
 
-  const mainLabel = `${labelCore} - ${tx.raw_description || ""}`;
-  const amountDisplay =
-    tx.amount < 0 ? `-PHP ${Math.abs(tx.amount)}` : `PHP ${tx.amount}`;
+    const mainLabel = `${labelCore} - ${tx.raw_description || ""}`;
+    const amountDisplay =
+      tx.amount < 0 ? `-PHP ${Math.abs(tx.amount)}` : `PHP ${tx.amount}`;
 
-  return `
+    return `
     <div class="transaction-item" data-tx-id="${tx.id}">
       <div class="transaction-left">
         <h5>${tx.event}</h5>
@@ -1365,80 +1439,78 @@ document.addEventListener("click", () => {
       </div>
     </div>
   `;
-}
-
-
-function findTxById(id) {
-  const list = walletTransactions[currentWallet.id] || [];
-  return list.find((tx) => String(tx.id) === String(id));
-}
-
-function openEditTx(txId) {
-  const tx = findTxById(txId);
-  if (!tx) return;
-
-  currentTxType = tx.type;
-  txForm.reset();
-  [txDate, txQty, txIncomeType, txParticulars, txDesc, txPrice].forEach(
-    clearFieldError
-  );
-
-  if (tx.type === "income") {
-    txModalTitle.textContent = "Edit Income Transaction";
-    txModalSubtitle.textContent =
-      "Update this income transaction for this wallet.";
-    txTypeWrapper.style.display = "block";
-    txIncomeType.required = true;
-    txParticularsWrapper.style.display = "none";
-    txParticulars.required = false;
-    txIncomeType.value = tx.income_type || "";
-  } else {
-    txModalTitle.textContent = "Edit Expense Transaction";
-    txModalSubtitle.textContent =
-      "Update this expense transaction for this wallet.";
-    txTypeWrapper.style.display = "none";
-    txIncomeType.required = false;
-    txParticularsWrapper.style.display = "block";
-    txParticulars.required = true;
-    txParticulars.value = tx.particulars || "";
   }
 
-  txDate.value = tx.date;
-  txQty.value = tx.quantity;
-  txDesc.value = tx.raw_description;
-  txPrice.value = tx.price;
+  function findTxById(id) {
+    const list = walletTransactions[currentWallet.id] || [];
+    return list.find((tx) => String(tx.id) === String(id));
+  }
 
-  txForm.dataset.editingId = txId;
-  txModalOverlay.classList.add("active");
-}
+  function openEditTx(txId) {
+    const tx = findTxById(txId);
+    if (!tx) return;
 
-async function deleteTx(txId) {
-  if (!currentWallet) return;
-  if (!confirm("Delete this transaction?")) return;
-
-  try {
-    await fetch(
-      `/pres/api/wallets/${currentWallet.id}/transactions/${txId}`,
-      {
-        method: "DELETE",
-        credentials: "include",
-      }
+    currentTxType = tx.type;
+    txForm.reset();
+    [txDate, txQty, txIncomeType, txParticulars, txDesc, txPrice].forEach(
+      clearFieldError
     );
 
-    walletTransactions[currentWallet.id] = (
-      walletTransactions[currentWallet.id] || []
-    ).filter((t) => String(t.id) !== String(txId));
+    if (tx.type === "income") {
+      txModalTitle.textContent = "Edit Income Transaction";
+      txModalSubtitle.textContent =
+        "Update this income transaction for this wallet.";
+      txTypeWrapper.style.display = "block";
+      txIncomeType.required = true;
+      txParticularsWrapper.style.display = "none";
+      txParticulars.required = false;
+      txIncomeType.value = tx.income_type || "";
+    } else {
+      txModalTitle.textContent = "Edit Expense Transaction";
+      txModalSubtitle.textContent =
+        "Update this expense transaction for this wallet.";
+      txTypeWrapper.style.display = "none";
+      txIncomeType.required = false;
+      txParticularsWrapper.style.display = "block";
+      txParticulars.required = true;
+      txParticulars.value = tx.particulars || "";
+    }
 
-    recomputeTotalsForFolder(currentWallet.id);
-    updateStatsUI();
-    renderWalletTransactions();
-    showToast("Transaction deleted.");
-  } catch (err) {
-    console.error(err);
-    showToast("Failed to delete transaction.", true);
+    txDate.value = tx.date;
+    txQty.value = tx.quantity;
+    txDesc.value = tx.raw_description;
+    txPrice.value = tx.price;
+
+    txForm.dataset.editingId = txId;
+    txModalOverlay.classList.add("active");
   }
-}
 
+  async function deleteTx(txId) {
+    if (!currentWallet) return;
+    if (!confirm("Delete this transaction?")) return;
+
+    try {
+      await fetch(
+        `/pres/api/wallets/${currentWallet.id}/transactions/${txId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      walletTransactions[currentWallet.id] = (
+        walletTransactions[currentWallet.id] || []
+      ).filter((t) => String(t.id) !== String(txId));
+
+      recomputeTotalsForFolder(currentWallet.id);
+      updateStatsUI();
+      renderWalletTransactions();
+      showToast("Transaction deleted.");
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to delete transaction.", true);
+    }
+  }
 
   // ===== Archives tab =====
 
@@ -1475,7 +1547,7 @@ async function deleteTx(txId) {
             <span class="archive-remaining-value">Php ${remainingFormatted}</span>
           </p>
           <div class="archive-actions">
-            <button class="archive-btn download">⬇ Download</button>
+            <button class="archive-btn download">Download</button>
           </div>
         </div>
       `;

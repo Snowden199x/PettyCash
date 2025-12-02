@@ -256,16 +256,16 @@ html {
 }
 
 .wallet-card-item {
- border-radius: 10px;
-padding: 20px;
-cursor: pointer;
-transition: all 0.3s ease;
-position: relative;
-min-height: 150px;
-box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
-display: flex;
-align-items: flex-end;
-justify-content: flex-start;
+  border-radius: 10px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  min-height: 150px;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
 }
 
 .wallet-card-item:hover {
@@ -275,14 +275,14 @@ justify-content: flex-start;
 
 .wallet-card-item h5 {
   position: left;
-margin: -15px;
- font-weight: 600;
- font-size: 16px;
- color: #000;
- justify-content: left; 
- background: rgba(255, 255, 255, 0.85);
+  margin: -15px;
+  font-weight: 600;
+  font-size: 16px;
+  color: #000;
+  justify-content: left;
+  background: rgba(255, 255, 255, 0.85);
   padding: 4px 10px;
-   border-radius: 8px;
+  border-radius: 8px;
 }
 
 /* Tab Navigation */
@@ -395,11 +395,9 @@ margin: -15px;
   cursor: pointer;
 }
 
-
 .tx-menu-wrapper {
   position: relative;
 }
-
 
 .tx-menu-toggle {
   border: none;
@@ -719,18 +717,26 @@ margin: -15px;
   z-index: 2000;
 }
 
+/* active state same as now */
 .modal-overlay.active {
   display: flex;
 }
 
+/* make modal fit viewport and scroll inside */
 .modal {
   background: #fff;
   border-radius: 20px;
   padding: 24px 28px 20px;
-  max-width: 450px;
   width: 100%;
-  max-height: 900px;
+  max-width: 480px; /* bahagyang mas wide para sa fields */
+  max-height: 80vh; /* sakto sa normal screen height */
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  overflow-y: auto; /* scroll sa loob ng modal */
+}
+
+/* optional: body no scroll when modal open (sa CSS or JS) */
+body.modal-open {
+  overflow: hidden;
 }
 
 .modal-header {
@@ -786,7 +792,6 @@ margin: -15px;
   margin-top: 4px;
 }
 
-
 .modal-footer {
   margin-top: 16px;
   display: flex;
@@ -817,7 +822,7 @@ margin: -15px;
   top: 80px;
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   display: none;
   flex-direction: column;
   min-width: 220px;
@@ -833,7 +838,7 @@ margin: -15px;
   border: none;
   background: transparent;
   text-align: left;
-  font-family: 'Poppins';
+  font-family: "Poppins";
   font-size: 14px;
   cursor: pointer;
 }
@@ -863,11 +868,21 @@ margin: -15px;
 }
 
 @keyframes shake {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  50% { transform: translateX(4px); }
-  75% { transform: translateX(-4px); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+  75% {
+    transform: translateX(-4px);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }
 
 /* toast top-right */
@@ -886,7 +901,7 @@ margin: -15px;
   padding: 10px 14px;
   border-radius: 10px;
   background: #2e7d32; /* success bg */
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   font-size: 13px;
   color: #ffffff;
   opacity: 0;
@@ -999,7 +1014,7 @@ margin: -15px;
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   display: none;
   align-items: center;
   justify-content: center;
@@ -1046,14 +1061,14 @@ margin: -15px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  box-shadow: 1px 1px 6px rgba(0,0,0,0.05);
+  box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.05);
 }
 
 .archive-card h5 {
   margin: 0 0 4px;
   font-weight: 600;
   font-size: 16px;
-  text-align: center;        /* center report number (FR-001) */
+  text-align: center; /* center report number (FR-001) */
 }
 
 .archive-card p {

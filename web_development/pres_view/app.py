@@ -91,7 +91,7 @@ def create_osas_notification(org_id, report_id, message=None):
 
 def get_real_wallet_id(folder_id: int):
     """
-    folder_id = wallet_budgets.id → return wallet_id or None.
+    folder_id = wallet_budgets.id â†’ return wallet_id or None.
     """
     res = (
         supabase.table("wallet_budgets")
@@ -203,13 +203,11 @@ def pres_login():
 @pres.route("/api/auth_status", methods=["GET"])
 def pres_auth_status():
     login_state = session.get("pres_user") is True
-    return jsonify(
-        {
-            "logged_in": login_state,
-            "org_id": session.get("org_id") if login_state else None,
-            "org_name": session.get("org_name") if login_state else None,
-        }
-    )
+    return jsonify({
+        "loggedin": login_state,              # ← camelCase!
+        "orgid": session.get("org_id") if login_state else None,  # ← camelCase!
+        "org_name": session.get("org_name") if login_state else None
+    })
 
 
 # -----------------------
@@ -345,65 +343,62 @@ def get_dashboard_summary():
 # API: wallets -> month folders
 # -----------------------
 
-
 @pres.route("/api/wallets", methods=["GET"])
 def get_wallets():
+    """Return wallets with exact field names matching JS"""
     if not session.get("pres_user"):
         return jsonify({"error": "Unauthorized"}), 401
 
     org_id = session.get("org_id")
 
     try:
-        w_res = (
+        # Get all wallets for org
+        wallets_res = (
             supabase.table("wallets")
             .select("id, name")
             .eq("organization_id", org_id)
             .execute()
         )
-        if not w_res.data:
+
+        if not wallets_res.data:
             return jsonify([])
 
-        folders = []
-
-        for w in w_res.data:
+        result = []
+        for w in wallets_res.data:
             wallet_id = w["id"]
-
-            b_res = (
+            
+            # Get budgets for this wallet (with year + month info)
+            budgets_res = (
                 supabase.table("wallet_budgets")
-                .select(
-                    "id, amount, year, month_id, months ( month_name, month_order )"
-                )
+                .select("id, amount, year, month_id, months(month_name, month_order)")
                 .eq("wallet_id", wallet_id)
                 .order("year")
                 .order("month_id")
                 .execute()
             )
 
-            for row in b_res.data:
+            for row in budgets_res.data or []:
                 m = row["months"]
                 year = row["year"]
                 month_order = m["month_order"]
                 month_code = f"{year}-{month_order:02d}"
 
-                folders.append(
-                    {
-                        "id": row["id"],  # folder_id
-                        "wallet_id": wallet_id,
-                        "name": m["month_name"],
-                        "month": month_code,
-                        "beginning_cash": float(row["amount"] or 0),
-                        "total_income": 0,
-                        "total_expenses": 0,
-                        "ending_cash": 0,
-                    }
-                )
+                # ✅ EXACT field names the JS expects!
+                result.append({
+                    "id": row["id"],
+                    "wallet_id": wallet_id,
+                    "name": m["month_name"],
+                    "month": month_code,
+                    "beginning_cash": float(row["amount"] or 0),
+                })
 
-        return jsonify(folders)
+        return jsonify(result)
     except Exception as e:
+        print(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 
-# -----------------------
+# ----------------------
 # Budget endpoints (per folder)
 # -----------------------
 
@@ -451,50 +446,60 @@ def set_budget(folder_id):
 
 @pres.route("/api/wallets/<int:folder_id>/transactions", methods=["GET"])
 def get_wallet_transactions(folder_id):
+    """Get transactions for wallet"""
     if not session.get("pres_user"):
         return jsonify({"error": "Unauthorized"}), 401
 
-    wallet_id = get_real_wallet_id(folder_id)
-    if wallet_id is None:
-        return jsonify({"error": "Wallet folder not found"}), 404
-
     try:
+        # Get folder to find wallet_id
+        folder_res = (
+            supabase.table("wallet_budgets")
+            .select("wallet_id")
+            .eq("id", folder_id)
+            .execute()
+        )
+        
+        if not folder_res.data:
+            return jsonify([])
+        
+        wallet_id = folder_res.data[0]["wallet_id"]
+
         res = (
             supabase.table("wallet_transactions")
             .select(
-                "id, wallet_id, kind, date_issued, description, quantity, price, "
+                "id, kind, date_issued, description, quantity, price, "
                 "income_type, particulars"
             )
             .eq("wallet_id", wallet_id)
-            .eq("budget_id", folder_id)
             .order("date_issued")
             .execute()
         )
 
         txs = []
-        for tx in res.data:
-            total_amount = float(tx["price"]) * int(tx["quantity"])
-            txs.append(
-                {
-                    "id": tx["id"],
-                    "wallet_id": tx["wallet_id"],
-                    "kind": tx["kind"],
-                    "date_issued": tx["date_issued"],
-                    "description": tx["description"],
-                    "quantity": tx["quantity"],
-                    "price": float(tx["price"]),
-                    "total_amount": total_amount,
-                    "income_type": tx.get("income_type"),
-                    "particulars": tx.get("particulars"),
-                }
-            )
+        for tx in res.data or []:
+            qty = int(tx.get("quantity", 0))
+            price = float(tx.get("price", 0))
+            total_amount = qty * price
+            
+            txs.append({
+                "id": tx["id"],
+                "quantity": qty,
+                "price": price,
+                "incometype": tx.get("income_type"),
+                "particulars": tx.get("particulars"),
+                "description": tx["description"],
+                "total_amount": total_amount,
+                "date_issued": tx["date_issued"],
+                "kind": tx["kind"],
+            })
         return jsonify(txs)
     except Exception as e:
+        print(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
-
 
 @pres.route("/api/wallets/<int:folder_id>/transactions", methods=["POST"])
 def add_wallet_transaction(folder_id):
+    """Create new transaction"""
     if not session.get("pres_user"):
         return jsonify({"error": "Unauthorized"}), 401
 
@@ -534,6 +539,7 @@ def add_wallet_transaction(folder_id):
         )
         row = ins.data[0]
         total_amount = float(row["price"]) * int(row["quantity"])
+
         return jsonify(
             {
                 "transaction": {
@@ -554,13 +560,9 @@ def add_wallet_transaction(folder_id):
         return jsonify({"error": str(e)}), 500
 
 
-# -----------------------
-# Wallet receipts + Storage (per folder)
-# -----------------------
-
-
-@pres.route("/api/wallets/<int:folder_id>/receipts", methods=["GET"])
-def get_wallet_receipts(folder_id):
+@pres.route("/api/wallets/<int:folder_id>/transactions/<int:tx_id>", methods=["POST"])
+def update_wallet_transaction(folder_id, tx_id):
+    """Update existing transaction"""
     if not session.get("pres_user"):
         return jsonify({"error": "Unauthorized"}), 401
 
@@ -568,12 +570,95 @@ def get_wallet_receipts(folder_id):
     if wallet_id is None:
         return jsonify({"error": "Wallet folder not found"}), 404
 
+    data = request.get_json() or {}
+    kind = data.get("kind")
+    date_issued = data.get("date_issued")
+    quantity = data.get("quantity")
+    income_type = data.get("income_type")
+    particulars = data.get("particulars")
+    description = data.get("description")
+    price = data.get("price")
+
+    if kind not in ("income", "expense"):
+        return jsonify({"error": "Invalid kind"}), 400
+
     try:
+        upd = (
+            supabase.table("wallet_transactions")
+            .update({
+                "kind": kind,
+                "date_issued": date_issued,
+                "quantity": quantity,
+                "income_type": income_type,
+                "particulars": particulars,
+                "description": description,
+                "price": price,
+            })
+            .eq("id", tx_id)
+            .execute()
+        )
+        row = upd.data[0]
+        total_amount = float(row["price"]) * int(row["quantity"])
+
+        return jsonify({
+            "transaction": {
+                "id": row["id"],
+                "wallet_id": row["wallet_id"],
+                "kind": row["kind"],
+                "date_issued": row["date_issued"],
+                "description": row["description"],
+                "quantity": row["quantity"],
+                "price": float(row["price"]),
+                "total_amount": total_amount,
+                "income_type": row.get("income_type"),
+                "particulars": row.get("particulars"),
+            }
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@pres.route("/api/wallets/<int:folder_id>/transactions/<int:tx_id>", methods=["DELETE"])
+def delete_wallet_transaction(folder_id, tx_id):
+    """Delete transaction"""
+    if not session.get("pres_user"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        supabase.table("wallet_transactions").delete().eq("id", tx_id).execute()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# -----------------------
+# Wallet receipts + Storage (per folder)
+# -----------------------
+
+
+@pres.route("/api/wallets/<int:folder_id>/receipts", methods=["GET"])
+def get_wallet_receipts(folder_id):
+    """Get receipts for wallet"""
+    if not session.get("pres_user"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        # Get folder to find wallet_id
+        folder_res = (
+            supabase.table("wallet_budgets")
+            .select("wallet_id")
+            .eq("id", folder_id)
+            .execute()
+        )
+        
+        if not folder_res.data:
+            return jsonify([])
+        
+        wallet_id = folder_res.data[0]["wallet_id"]
+
         res = (
             supabase.table("wallet_receipts")
             .select("id, description, receipt_date, file_url")
             .eq("wallet_id", wallet_id)
-            .eq("budget_id", folder_id)
             .order("receipt_date", desc=True)
             .execute()
         )
@@ -585,11 +670,13 @@ def get_wallet_receipts(folder_id):
                 "receipt_date": r["receipt_date"],
                 "file_url": r["file_url"],
             }
-            for r in res.data
+            for r in (res.data or [])
         ]
         return jsonify(receipts)
     except Exception as e:
+        print(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 
 @pres.route("/api/wallets/<int:folder_id>/receipts", methods=["POST"])
@@ -762,6 +849,7 @@ def delete_receipt(receipt_id):
 def generate_report():
     """
     Create or update a single Pending report per wallet+budget.
+    Called from PRES (user) side when they click Generate.
     """
     if not session.get("pres_user"):
         return jsonify({"error": "Unauthorized"}), 401
@@ -772,6 +860,7 @@ def generate_report():
     budget_id = data.get("budget_id")
 
     try:
+        # Hanapin kung may existing Pending Review report para sa wallet+budget na ito
         existing = (
             supabase.table("financial_reports")
             .select("id")
@@ -783,6 +872,21 @@ def generate_report():
             .execute()
         )
 
+        # NEW: compute report_month galing sa wallet_budgets + months
+        wb_res = (
+            supabase.table("wallet_budgets")
+            .select("year, month_id, months (month_name)")
+            .eq("id", budget_id)
+            .single()
+            .execute()
+        )
+        report_month_value = None
+        if wb_res.data:
+            report_month_value = (
+                wb_res.data["months"]["month_name"] or ""
+            ).lower()
+
+        # Fields dapat tugma sa JS payload at sa DOCX placeholders
         payload = {
             "organization_id": org_id,
             "wallet_id": wallet_id,
@@ -792,11 +896,14 @@ def generate_report():
             "checklist": {},
             "event_name": data.get("event_name"),
             "date_prepared": data.get("date_prepared"),
+            "report_no": data.get("report_no"),
             "budget": data.get("budget"),
+            "total_income": data.get("total_income"),          # {{TOTAL_INCOME}}
             "total_expense": data.get("total_expense"),
             "reimbursement": data.get("reimbursement"),
             "previous_fund": data.get("previous_fund"),
-            "report_no": data.get("report_no"),
+            "budget_in_the_bank": data.get("budget_in_the_bank"),  # {{BUDGET_IN_THE_BANK}}
+            "report_month": report_month_value,
         }
 
         if existing.data:
@@ -812,6 +919,8 @@ def generate_report():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+        
 
 @pres.route(
     "/api/wallets/<int:wallet_id>/budgets/<int:budget_id>/reports/next-number",
@@ -883,7 +992,6 @@ def get_latest_report_for_budget(wallet_id, budget_id):
 # Preview / Print (DOCX & HTML)
 # -----------------------
 
-
 @pres.route("/reports/<int:wallet_id>/budgets/<int:budget_id>/preview", methods=["GET"])
 def preview_report_for_budget(wallet_id, budget_id):
     if not session.get("pres_user"):
@@ -906,6 +1014,7 @@ def preview_report_for_budget(wallet_id, budget_id):
 
     rep = rep_res.data[0]
 
+    # org + college
     org_res = (
         supabase.table("organizations")
         .select("org_name, department_id")
@@ -929,6 +1038,7 @@ def preview_report_for_budget(wallet_id, budget_id):
         if dept_res.data:
             college_name = dept_res.data["dept_name"].upper()
 
+    # month text
     wb_res = (
         supabase.table("wallet_budgets")
         .select("year, month_id, months (month_name)")
@@ -942,6 +1052,7 @@ def preview_report_for_budget(wallet_id, budget_id):
         mname = wb_res.data["months"]["month_name"]
         report_month_text = f"{mname} {y}".upper()
 
+    # load template
     template_path = os.path.join(
         os.path.dirname(__file__),
         "templates",
@@ -965,12 +1076,18 @@ def preview_report_for_budget(wallet_id, budget_id):
                             for run in p.runs:
                                 run.text = run.text.replace(old, new)
 
+    # numeric fields
     budget_val = float(rep.get("budget") or 0)
     total_expense = float(rep.get("total_expense") or 0)
     reimb = float(rep.get("reimbursement") or 0)
     prev_fund = float(rep.get("previous_fund") or 0)
     remaining = budget_val - total_expense - reimb + prev_fund
+    total_income = float(rep.get("total_income") or 0)
+    budget_in_the_bank = float(rep.get("budget_in_the_bank") or 0)
 
+    # header placeholders
+    replace_all("{{TOTAL_INCOME}}", f"PHP {total_income:,.2f}")
+    replace_all("{{BUDGET_IN_THE_BANK}}", f"PHP {budget_in_the_bank:,.2f}")
     replace_all("{{COLLEGE_NAME}}", college_name)
     replace_all("{{ORG_NAME}}", org_name)
     replace_all("{{EVENT_NAME}}", rep.get("event_name") or "")
@@ -983,6 +1100,29 @@ def preview_report_for_budget(wallet_id, budget_id):
     replace_all("{{PREVIOUS_FUND}}", f"PHP {prev_fund:,.2f}")
     replace_all("{{TOTAL_REMAINING}}", f"PHP {remaining:,.2f}")
 
+    # INCOME rows
+    income_res = (
+        supabase.table("wallet_transactions")
+        .select("date_issued, quantity, income_type, description, price, kind")
+        .eq("wallet_id", wallet_id)
+        .eq("budget_id", budget_id)
+        .eq("kind", "income")
+        .order("date_issued")
+        .execute()
+    )
+    incomes = income_res.data or []
+
+    income_table = None
+    for table in doc.tables:
+        if len(table.rows) < 2:
+            continue
+        header_row = table.rows[1]
+        header_text = " ".join(cell.text for cell in header_row.cells).upper()
+        if "TYPE OF INCOME" in header_text and "DATE ISSUED" in header_text:
+            income_table = table
+            break
+
+    # EXPENSE rows
     tx_res = (
         supabase.table("wallet_transactions")
         .select("date_issued, quantity, particulars, description, price, kind")
@@ -1004,6 +1144,7 @@ def preview_report_for_budget(wallet_id, budget_id):
             expenses_table = table
             break
 
+    # fill EXPENSES table
     if expenses_table:
         while len(expenses_table.rows) > 3:
             expenses_table._tbl.remove(expenses_table.rows[2]._tr)
@@ -1045,6 +1186,45 @@ def preview_report_for_budget(wallet_id, budget_id):
 
         summary_row.cells[-1].text = f"PHP {total_expense:,.2f}"
 
+    # fill INCOME table
+    if income_table:
+        while len(income_table.rows) > 3:
+            income_table._tbl.remove(income_table.rows[2]._tr)
+
+        from datetime import datetime as _dt_local
+
+        def fmt_date_income(d):
+            try:
+                return _dt_local.fromisoformat(d).strftime("%Y-%m-%d")
+            except Exception:
+                return d or ""
+
+        last_date_inc = None
+        summary_row_inc = income_table.rows[-1]
+
+        for tx in incomes:
+            new_row = income_table.add_row()
+            income_table._tbl.remove(new_row._tr)
+            summary_row_inc._tr.addprevious(new_row._tr)
+
+            date_cell, qty_cell, type_cell, desc_cell, price_cell = new_row.cells
+
+            date_str = tx.get("date_issued")
+            show_date = fmt_date_income(date_str)
+            if date_str == last_date_inc:
+                date_cell.text = ""
+            else:
+                date_cell.text = show_date
+                last_date_inc = date_str
+
+            qty_cell.text = str(tx.get("quantity") or "")
+            type_cell.text = tx.get("income_type") or ""
+            desc_cell.text = tx.get("description") or ""
+
+            price = float(tx.get("price") or 0)
+            price_cell.text = f"PHP {price:,.2f}"
+
+    # receipts -> pictures
     rc_res = (
         supabase.table("wallet_receipts")
         .select("description, file_url, receipt_date")
@@ -1056,11 +1236,7 @@ def preview_report_for_budget(wallet_id, budget_id):
     receipts = rc_res.data or []
 
     if receipts:
-        doc.add_page_break()
-        title_p = doc.add_paragraph()
-        title_run = title_p.add_run("APPENDIX: RECEIPTS")
-        title_run.bold = True
-
+        # walang page break, diretso lang sa current page
         for r in receipts:
             file_path = r["file_url"]
             try:
@@ -1068,12 +1244,20 @@ def preview_report_for_budget(wallet_id, budget_id):
             except Exception:
                 continue
 
+            # caption paragraph (center)
             cap_p = doc.add_paragraph()
+            cap_p.alignment = 1  # 0=left, 1=center, 2=right
             cap_p.add_run(f"{r['receipt_date']} - {r['description']}")
 
+            # image paragraph (center)
             img_stream = BytesIO(file_bytes)
-            doc.add_picture(img_stream, width=Inches(4))
-            doc.add_paragraph()
+            doc.add_picture(img_stream, width=Inches(3))
+            last_par = doc.paragraphs[-1]
+            last_par.alignment = 1
+
+            # maliit na spacer sa ilalim ng bawat picture
+            spacer = doc.add_paragraph()
+            spacer.alignment = 1
 
     buf = BytesIO()
     doc.save(buf)
@@ -1085,7 +1269,6 @@ def preview_report_for_budget(wallet_id, budget_id):
         mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         download_name="financial_report_preview.docx",
     )
-
 
 @pres.route("/reports/<int:wallet_id>/budgets/<int:budget_id>/print", methods=["GET"])
 def print_report_for_budget(wallet_id, budget_id):
@@ -1106,8 +1289,10 @@ def print_report_for_budget(wallet_id, budget_id):
     )
     if not rep_res.data:
         return "No report", 404
+
     rep = rep_res.data[0]
 
+    # org + college
     org_res = (
         supabase.table("organizations")
         .select("org_name, department_id")
@@ -1131,6 +1316,7 @@ def print_report_for_budget(wallet_id, budget_id):
         if dept_res.data:
             college_name = dept_res.data["dept_name"].upper()
 
+    # month text
     wb_res = (
         supabase.table("wallet_budgets")
         .select("year, month_id, months (month_name)")
@@ -1144,12 +1330,16 @@ def print_report_for_budget(wallet_id, budget_id):
         mname = wb_res.data["months"]["month_name"]
         report_month_text = f"{mname} {y}".upper()
 
+    # numeric fields
     budget_val = float(rep.get("budget") or 0)
     total_expense = float(rep.get("total_expense") or 0)
     reimb = float(rep.get("reimbursement") or 0)
     prev_fund = float(rep.get("previous_fund") or 0)
     remaining = budget_val - total_expense - reimb + prev_fund
+    total_income = float(rep.get("total_income") or 0)
+    budget_in_the_bank = float(rep.get("budget_in_the_bank") or 0)
 
+    # expenses for table sa print_report.html
     tx_res = (
         supabase.table("wallet_transactions")
         .select("date_issued, quantity, particulars, description, price, kind")
@@ -1161,6 +1351,16 @@ def print_report_for_budget(wallet_id, budget_id):
     )
     txs = tx_res.data or []
 
+    # Income transactions
+    inc_res = supabase.table("wallet_transactions") \
+        .select("date_issued, quantity, income_type, description, price, kind") \
+        .eq("wallet_id", wallet_id) \
+        .eq("budget_id", budget_id) \
+        .eq("kind", "income") \
+        .order("date_issued") \
+        .execute()
+    incomes = inc_res.data or []
+    # receipts with public URL
     rc_res = (
         supabase.table("wallet_receipts")
         .select("description, file_url, receipt_date")
@@ -1185,19 +1385,23 @@ def print_report_for_budget(wallet_id, budget_id):
             r["file_url"] = ""
 
     return render_template(
-        "print_report.html",
-        report=rep,
-        budget=budget_val,
-        total_expense=total_expense,
-        reimbursement=reimb,
-        previous_fund=prev_fund,
-        remaining=remaining,
-        transactions=txs,
-        org_name=org_name,
-        college_name=college_name,
-        report_month_text=report_month_text,
-        receipts=receipts,
-    )
+    "print_report.html",
+    report=rep,
+    budget=budget_val,
+    totalexpense=total_expense,
+    reimbursement=reimb,
+    previous_fund=prev_fund,
+    remaining=remaining,
+    total_income=total_income,
+    budget_in_the_bank=budget_in_the_bank,
+    transactions=txs,
+    incomes=incomes,
+    org_name=org_name,
+    college_name=college_name,
+    report_month_text=report_month_text,
+    receipts=receipts,
+)
+
 
 
 # -----------------------
@@ -1422,10 +1626,6 @@ def submitreportwalletid(wallet_id):
 
 @pres.route("/api/wallets/<int:folder_id>/archives", methods=["GET"])
 def get_wallet_archives(folder_id):
-    """
-    List of archived (submitted) reports for this wallet+budget (folder).
-    JS: GET /pres/api/wallets/<folderId>/archives
-    """
     if not session.get("pres_user"):
         return jsonify({"error": "Unauthorized"}), 401
 
@@ -1447,9 +1647,29 @@ def get_wallet_archives(folder_id):
             .order("created_at")
             .execute()
         )
-        return jsonify(res.data or [])
+
+        # ✅ EXACT field names matching JS!
+        archives = [
+            {
+                "id": a["id"],
+                "reportid": a["report_id"],                       # ← lowercase reportid
+                "reportno": a["report_no"],                       # ← lowercase reportno
+                "eventname": a["event_name"],                     # ← lowercase eventname
+                "dateprepared": a["date_prepared"],              # ← lowercase dateprepared
+                "budget": float(a["budget"] or 0),
+                "totalexpense": float(a["total_expense"] or 0),  # ← lowercase totalexpense
+                "reimbursement": float(a["reimbursement"] or 0),
+                "previousfund": float(a["previous_fund"] or 0),  # ← lowercase previousfund
+                "remaining": float(a["remaining"] or 0),
+                "fileurl": a["file_url"],                        # ← lowercase fileurl
+            }
+            for a in (res.data or [])
+        ]
+        return jsonify(archives)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
 
 
 from io import BytesIO
@@ -1627,7 +1847,7 @@ def download_archive(archive_id):
                 total_cell.text = f"PHP {line_total:,.2f}"
 
             summary_row.cells[-1].text = f"PHP {total_expense:,.2f}"
-
+        
         # 8) receipts appendix galing sa financial_report_archive_receipts
         rc_res = (
             supabase.table("financial_report_archive_receipts")

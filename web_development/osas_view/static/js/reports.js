@@ -491,10 +491,12 @@ document.addEventListener("DOMContentLoaded", () => {
         openReportModal(report.id);
         renderReports();
       }
-    } else {
-      // direct download ng archive para sa month na ito
-      window.location.href = `/osas/api/financial_reports/${report.id}/months/${monthKey}/download`;
-    }
+      } else {
+    // direct download ng report para sa org + month na ito
+    const orgId = report.organization_id || report.org_id || report.id;
+    window.location.href = `/osas/api/financial_reports/${orgId}/months/${monthKey}/download`;
+  }
+
   }
 
   function closeReportModal() {

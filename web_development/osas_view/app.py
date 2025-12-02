@@ -600,6 +600,72 @@ def get_single_financial_report(report_id):
         return jsonify({"error": "Not found"}), 404
     return jsonify(result.data[0])
 
+from flask import send_file
+
+@osas.route(
+    "/api/financial_reports/<int:org_id>/months/<string:month_key>/download",
+    methods=["GET"],
+)
+def download_monthly_report(org_id, month_key):
+    if "osas_admin" not in session:
+        return "Not authorized", 401
+
+    try:
+        # hanapin OSAS master row para sa org
+        master_res = (
+            supabase.table("financial_reports")
+            .select("id, checklist")
+            .eq("organization_id", org_id)
+            .is_("wallet_id", None)
+            .is_("budget_id", None)
+            .limit(1)
+            .execute()
+        )
+        if not master_res.data:
+            return "Not found", 404
+
+        # hanapin pres_view row (may wallet_id + budget_id) para sa month_key
+        pres_res = (
+            supabase.table("financial_reports")
+            .select("*")
+            .eq("organization_id", org_id)
+            .eq("report_month", month_key)
+            .not_.is_("wallet_id", None)
+            .not_.is_("budget_id", None)
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+        if not pres_res.data:
+            return "Report not found", 404
+
+        row = pres_res.data[0]
+        wallet_id = row["wallet_id"]
+        budget_id = row["budget_id"]
+
+        # TODO: palitan itong dummy generator ng actual DOCX generator
+        from io import BytesIO
+        from docx import Document
+
+        doc = Document()
+        doc.add_paragraph("Financial report")  # hook to real template here
+        buf = BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+
+        filename = f"financial_report_{month_key}.docx"
+        return send_file(
+            buf,
+            as_attachment=True,
+            download_name=filename,
+            mimetype=(
+                "application/vnd.openxmlformats-officedocument."
+                "wordprocessingml.document"
+            ),
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 # ========== ADMIN/SETTINGS ===========
 @osas.route("/api/admin/profile", methods=["GET"])
