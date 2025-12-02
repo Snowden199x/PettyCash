@@ -56,6 +56,7 @@ def validate_password(pw: str):
         errors.append("Password must contain a special character.")
     return errors
 
+
 def create_osas_notification(org_id, report_id, message=None):
     """
     Insert a row into osas_notifications so OSAS bell sees a new item.
@@ -86,6 +87,7 @@ def create_osas_notification(org_id, report_id, message=None):
     except Exception:
         # huwag pabagsakin ang submit kahit mag-fail ang notif
         pass
+
 
 def get_real_wallet_id(folder_id: int):
     """
@@ -142,10 +144,22 @@ def pres_login():
 
         if result.data:
             org = result.data[0]
+
+            # block Archived orgs
+            if org.get("status") == "Archived":
+                error_msg = (
+                    "This organization account is archived. Please contact OSAS."
+                )
+                if request.accept_mimetypes.best == "application/json":
+                    return jsonify({"success": False, "error": error_msg}), 403
+                flash(error_msg, "danger")
+                return redirect(url_for("pres.pres_login"))
+
             if check_password_hash(org["password"], password):
                 session["pres_user"] = True
                 session["org_id"] = org["id"]
                 session["org_name"] = org["org_name"]
+                ...
 
                 if request.accept_mimetypes.best == "application/json":
                     if org.get("must_change_password", False):
@@ -835,7 +849,10 @@ def get_next_report_number(wallet_id, budget_id):
         return jsonify({"error": str(e)}), 500
 
 
-@pres.route("/api/wallets/<int:wallet_id>/budgets/<int:budget_id>/reports/latest", methods=["GET"])
+@pres.route(
+    "/api/wallets/<int:wallet_id>/budgets/<int:budget_id>/reports/latest",
+    methods=["GET"],
+)
 def get_latest_report_for_budget(wallet_id, budget_id):
     if not session.get("pres_user"):
         return jsonify({"error": "Unauthorized"}), 401
@@ -860,7 +877,6 @@ def get_latest_report_for_budget(wallet_id, budget_id):
         return jsonify({"exists": True, "report": res.data[0]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 
 # -----------------------
@@ -1211,15 +1227,14 @@ def update_osas_financial_report(org_id, budget_id):
 
     # Hanapin OSAS financial_reports row ng org
     fr_res = (
-    supabase.table("financial_reports")
-    .select("*")
-    .eq("organization_id", org_id)
-    .is_("wallet_id", None)     # master row lang
-    .is_("budget_id", None)
-    .limit(1)
-    .execute()
-)
-
+        supabase.table("financial_reports")
+        .select("*")
+        .eq("organization_id", org_id)
+        .is_("wallet_id", None)  # master row lang
+        .is_("budget_id", None)
+        .limit(1)
+        .execute()
+    )
 
     report = fr_res.data[0]
     checklist = report.get("checklist") or {}
