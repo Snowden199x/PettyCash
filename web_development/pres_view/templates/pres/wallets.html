@@ -19,10 +19,13 @@
     />
   </head>
   <body
-    data-wallet-img="{{ url_for('pres.static', filename='images/wallet.png') }}"
-    data-history-icon="{{ url_for('pres.static', filename='images/nav_history.png') }}"
-    data-receipts-icon="{{ url_for('pres.static', filename='images/receipts.png') }}"
-  >
+  data-wallet-img="{{ url_for('pres.static', filename='images/wallet.png') }}"
+  data-history-icon="{{ url_for('pres.static', filename='images/nav_history.png') }}"
+  data-receipts-icon="{{ url_for('pres.static', filename='images/receipts.png') }}"
+  data-options-icon="{{ url_for('pres.static', filename='images/option.png') }}"
+>
+
+
     <div class="container">
       <!-- Sidebar -->
       <aside class="sidebar">
@@ -100,11 +103,10 @@
                   id="wallet-search"
                   placeholder="Search wallet..."
                 />
-                <input
-                  type="month"
-                  id="wallet-month-filter"
-                  class="month-filter"
-                />
+                <select id="wallet-year-filter" class="year-filter">
+                  <option value="">All years</option>
+                  <!-- you can also render specific years from backend with Jinja -->
+                </select>
               </div>
             </div>
 
@@ -221,23 +223,28 @@
                 </div>
 
                 <div class="report-stats">
-                  <div class="stat-card">
-                    <p>Budget</p>
-                    <h4 id="stat-budget">Php 0.00</h4>
-                  </div>
-                  <div class="stat-card">
-                    <p>Total amount of expenses</p>
-                    <h4 id="stat-expense">Php 0.00</h4>
-                  </div>
-                  <div class="stat-card">
-                    <p>Total amount of income</p>
-                    <h4 id="stat-income">Php 0.00</h4>
-                  </div>
-                  <div class="stat-card">
-                    <p>Ending Cash</p>
-                    <h4 id="stat-ending">Php 0.00</h4>
-                  </div>
-                </div>
+  <div class="stat-card">
+    <p>Budget</p>
+    <h4 id="stat-budget">Php 0.00</h4>
+  </div>
+  <div class="stat-card">
+    <p>Total amount of income</p>
+    <h4 id="stat-income">Php 0.00</h4>
+  </div>
+  <div class="stat-card">
+    <p>Total amount of expenses</p>
+    <h4 id="stat-expense">Php 0.00</h4>
+  </div>
+  <div class="stat-card">
+    <p>Budget in bank</p>
+    <h4 id="stat-budget-bank">Php 0.00</h4>
+  </div>
+  <div class="stat-card">
+    <p>Ending Cash</p>
+    <h4 id="stat-ending">Php 0.00</h4>
+  </div>
+</div>
+
               </div>
             </div>
 
@@ -333,10 +340,12 @@
 
         <form id="receipt-form" novalidate>
           <div class="form-group">
-            <label for="receipt-file">Receipt image</label>
-            <input type="file" id="receipt-file" accept="image/*" required />
-            <span class="error-msg"></span>
-          </div>
+  <label for="receipt-file">Receipt image</label>
+  <input type="file" id="receipt-file" accept="image/*" required />
+  <small class="field-hint">Maximum file size: 5 MB</small>
+  <span class="error-msg"></span>
+</div>
+
 
           <div class="form-group">
             <label for="receipt-desc">Description</label>
@@ -429,6 +438,18 @@
           </div>
 
           <div class="form-group">
+  <label for="rep-total-income">Total amount of income ({{TOTAL_INCOME}})</label>
+  <input
+    type="number"
+    id="rep-total-income"
+    min="0"
+    step="0.01"
+    required
+  />
+  <span class="error-msg"></span>
+</div>
+
+          <div class="form-group">
             <label for="rep-total-expense">Total amount of expenses</label>
             <input
               type="number"
@@ -457,6 +478,18 @@
             />
             <span class="error-msg"></span>
           </div>
+
+          <div class="form-group">
+  <label for="rep-budget-bank">Budget in bank ({{BUDGET_IN_THE_BANK}})</label>
+  <input
+    type="number"
+    id="rep-budget-bank"
+    min="0"
+    step="0.01"
+    required
+  />
+  <span class="error-msg"></span>
+</div>
 
           <div class="modal-footer">
             <button
