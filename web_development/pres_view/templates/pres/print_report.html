@@ -4,7 +4,6 @@
     <meta charset="utf-8" />
     <title>Activity Financial Statement</title>
     <style>
-
       .header-university {
         font-weight: normal;
         font-family: "Old English Text MT", "Times New Roman", serif;
@@ -85,12 +84,12 @@
 
       .org-title .dept-name {
         font-weight: bold;
-        color: #000; /* black */
+        color: #000;
       }
 
       .org-title .org-name {
         font-weight: bold;
-        color: var(--blue-text); /* blue */
+        color: var(--blue-text);
       }
 
       .org-title span {
@@ -131,7 +130,7 @@
 
       .section-value-cell {
         width: 70%;
-        text-align: center; /* center ng value sa cell */
+        text-align: center;
       }
 
       .section-heading {
@@ -150,7 +149,7 @@
 
       .summary-table td:last-child {
         width: 45%;
-        text-align: right;
+        text-align: center;
       }
 
       .summary-highlight td {
@@ -183,8 +182,19 @@
         margin-bottom: 12pt;
       }
 
+      /* Appendix receipts grid: 2 columns */
+      .appendix-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: auto;
+        gap: 12pt;
+        margin-top: 8pt;
+      }
+
       .receipt-item {
-        margin-bottom: 18pt;
+        break-inside: avoid;
+        page-break-inside: avoid;
+        margin-bottom: 0;
       }
 
       .receipt-caption {
@@ -193,8 +203,10 @@
       }
 
       .receipt-image {
-        max-width: 100%;
-        max-height: 400px;
+        width: 100%;
+        height: auto;
+        max-height: 260px;
+        object-fit: contain;
         border: 1px solid #000;
       }
 
@@ -234,43 +246,42 @@
         </div>
       </div>
 
-      <!-- College + Org name (blue, bold) -->
+      <!-- College + Org name -->
       <div class="org-title">
-        <span class="dept-name">{{ college_name }}</span>
-        <span class="org-name">{{ org_name }}</span>
+        <span class="dept-name">{{college_name}}</span>
+        <span class="org-name">{{org_name}}</span>
       </div>
 
       <div class="statement-title">ACTIVITY FINANCIAL STATEMENT</div>
 
       <!-- HEADER INFO TABLES -->
       <table style="margin-top: 4pt">
+              <!-- HEADER INFO TABLES -->
+      <table style="margin-top: 4pt">
         <tr>
           <td class="section-label-cell">Name of Organization:</td>
-          <td class="section-value-cell">{{ org_name }}</td>
+          <td class="section-value-cell">{{ org_name or '' }}</td>
         </tr>
         <tr>
           <td class="section-label-cell">Name of the Event:</td>
-          <td class="section-value-cell">{{ report.event_name }}</td>
+          <td class="section-value-cell">{{ report.event_name or '' }}</td>
         </tr>
         <tr>
           <td class="section-label-cell">Report for the Month of:</td>
-          <td class="section-value-cell">{{ report_month_text }}</td>
+          <td class="section-value-cell">{{ report_month_text or '' }}</td>
         </tr>
         <tr>
           <td class="section-label-cell">Date Prepared:</td>
-          <td class="section-value-cell">{{ report.date_prepared }}</td>
+          <td class="section-value-cell">{{ report.date_prepared or '' }}</td>
         </tr>
       </table>
 
       <table style="margin-top: 2pt; margin-bottom: 6pt">
         <tr>
           <td class="section-label-cell">Financial Report No:</td>
-          <td class="section-value-cell">{{ report.report_no }}</td>
+          <td class="section-value-cell">{{ report.report_no or '' }}</td>
         </tr>
-        <tr>
-          <td class="section-label-cell">Budget for the Moth:</td>
-          <td class="section-value-cell">PHP {{ "%.2f"|format(budget) }}</td>
-        </tr>
+
       </table>
 
       <!-- EXPENSES TABLE -->
@@ -301,45 +312,75 @@
             <strong>Total Amount of Expenses</strong>
           </td>
           <td class="text-right">
-            <strong>PHP {{ "%.2f"|format(total_expense) }}</strong>
+            <strong>PHP {{ "%.2f"|format(totalexpense) }}</strong>
           </td>
         </tr>
       </table>
 
-      <!-- SUMMARY TABLES (BUDGET / TOTAL / REMAINING) -->
+      <!-- INCOME TABLE - SEPARATE AND AFTER EXPENSES -->
+      <table style="margin-top: 6pt">
+        <tr>
+          <td colspan="5" class="section-heading">INCOME</td>
+        </tr>
+        <tr>
+          <th>Date Issued</th>
+          <th>Quantity</th>
+          <th>Type of Income</th>
+          <th>Description</th>
+          <th>Price</th>
+        </tr>
+        {% for income in incomes %}
+        <tr>
+          <td class="text-center">{{ income.date_issued }}</td>
+          <td class="text-center">{{ income.quantity }}</td>
+          <td class="text-center">{{ income.income_type }}</td>
+          <td class="text-center">{{ income.description }}</td>
+          <td class="text-right">PHP {{ "%.2f"|format(income.price or 0) }}</td>
+        </tr>
+        {% endfor %}
+
+        <tr>
+          <td colspan="4" class="text-right">
+            <strong>Total Amount of Income</strong>
+          </td>
+          <td class="text-right">
+            <strong>PHP {{ "%.2f"|format(total_income) }}</strong>
+          </td>
+        </tr>
+      </table>
+
+      <!-- SUMMARY TABLES -->
       <table class="summary-table" style="margin-top: 6pt">
         <tr style="background: var(--gray-header); font-weight: bold">
           <td>Budget:</td>
-          <td style="text-align: center">PHP {{ "%.2f"|format(budget) }}</td>
+          <td>PHP {{ "%.2f"|format(budget) }}</td>
         </tr>
         <tr>
           <td>Total Amount of Expenses:</td>
-          <td style="text-align: center">
-            PHP {{ "%.2f"|format(total_expense) }}
-          </td>
+          <td>PHP {{ "%.2f"|format(totalexpense) }}</td>
+        </tr>
+        <tr>
+          <td>Total Amount of Income:</td>
+          <td>PHP {{ "%.2f"|format(total_income) }}</td>
         </tr>
         <tr>
           <td>Reimbursement of Expenses:</td>
-          <td style="text-align: center">
-            PHP {{ "%.2f"|format(reimbursement) }}
-          </td>
+          <td>PHP {{ "%.2f"|format(reimbursement) }}</td>
         </tr>
         <tr>
           <td>Previous Remaining Fund:</td>
-          <td style="text-align: center">
-            PHP {{ "%.2f"|format(previous_fund) }}
-          </td>
+          <td>PHP {{ "%.2f"|format(previous_fund) }}</td>
         </tr>
       </table>
 
       <table class="summary-table">
         <tr style="background: var(--gray-header); font-weight: bold">
           <td>Total Remaining Balance:</td>
-          <td style="text-align: center">PHP {{ "%.2f"|format(remaining) }}</td>
+          <td>PHP {{ "%.2f"|format(remaining) }}</td>
         </tr>
         <tr>
           <td>Budget in Bank:</td>
-          <td style="text-align: center">PHP 0.00</td>
+          <td>PHP {{ "%.2f"|format(report.get("budget_in_the_bank", 0)) }}</td>
         </tr>
       </table>
 
@@ -348,7 +389,6 @@
       <!-- PAGE 2: APPENDIX A - RECEIPTS -->
       {% if receipts %}
       <div class="page-break"></div>
-
       <div class="header-row">
         <div class="header-cell left">
           <img
@@ -375,16 +415,19 @@
 
       <div class="appendix-title">APPENDIX A - RECEIPTS</div>
 
-      {% for r in receipts %}
-      <div class="receipt-item">
-        <div class="receipt-caption">
-          {{ r.receipt_date }} - {{ r.description }}
+      <div class="appendix-grid">
+        {% for r in receipts %}
+        <div class="receipt-item">
+          <div class="receipt-caption">
+            {{ r.receipt_date or '' }} - {{ r.description or '' }}
+          </div>
+          {% if r.file_url %}
+          <img src="{{ r.file_url }}" alt="Receipt" class="receipt-image" />
+          {% endif %}
         </div>
-        {% if r.file_url %}
-        <img src="{{ r.file_url }}" alt="Receipt" class="receipt-image" />
-        {% endif %}
+        {% endfor %}
       </div>
-      {% endfor %} {% endif %}
+      {% endif %}
     </div>
   </body>
 </html>
