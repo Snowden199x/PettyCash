@@ -39,7 +39,7 @@ flutter:
     - assets/Icons/dropdown.png
     - assets/Fonts/
 
-    
+
 
   fonts:
     - family: Poppins
