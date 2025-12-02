@@ -191,7 +191,7 @@ html {
   font-size: 14px;
 }
 
-.month-filter {
+.year-filter {
   padding: 8px 12px;
   border-radius: 20px;
   border: 1px solid #ecdcc6;
@@ -364,7 +364,7 @@ margin: -15px;
   margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: stretch;
   box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
@@ -372,6 +372,81 @@ margin: -15px;
 .transaction-item:hover {
   transform: translateX(5px);
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.transaction-right {
+  display: flex;
+  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.transaction-options {
+  display: flex;
+  gap: 4px;
+}
+
+.tx-option-btn {
+  border: none;
+  background: transparent;
+  color: #555;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+
+.tx-menu-wrapper {
+  position: relative;
+}
+
+
+.tx-menu-toggle {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tx-menu-toggle img {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+/* hidden by default */
+.tx-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #fffbe8;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  padding: 4px 0;
+  display: none;
+  z-index: 20;
+}
+
+.tx-menu.open {
+  display: block;
+}
+
+.tx-menu-item {
+  display: block;
+  width: 100%;
+  padding: 3px 10px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.tx-menu-item:hover {
+  background: #ffe5b8;
 }
 
 .transaction-left {
@@ -654,6 +729,7 @@ margin: -15px;
   padding: 24px 28px 20px;
   max-width: 450px;
   width: 100%;
+  max-height: 900px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
@@ -703,6 +779,14 @@ margin: -15px;
   outline: none;
 }
 
+.field-hint {
+  display: block;
+  font-size: 0.8rem;
+  color: #777;
+  margin-top: 4px;
+}
+
+
 .modal-footer {
   margin-top: 16px;
   display: flex;
@@ -713,7 +797,7 @@ margin: -15px;
 .wallet-detail-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
 }
 
 .header-add-btn {
