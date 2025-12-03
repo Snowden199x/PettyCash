@@ -19,16 +19,46 @@
     />
   </head>
   <body>
+    <div class="top-bar">
+  <div class="top-bar-left">
+    <a href="{{ url_for('pres.homepage') }}" class="logo">
+  <img
+    src="{{ url_for('pres.static', filename='images/pocki_logo.png') }}"
+    alt="PockiTrack Logo"
+  />
+  <span class="logo_name">PockiTrack</span>
+</a>
+  </div>
+
+  <div class="top-bar-right">
+    <div class="search-bar">
+      <input
+        type="text"
+        id="header-search"
+        placeholder="Search wallets or transactions..."
+      />
+    </div>
+
+    <div class="profile-dropdown">
+      <button class="profile-btn" id="profile-dropdown-toggle">
+  <img
+    src="{{ profile_picture or url_for('pres.static', filename='images/default_profile.png') }}"
+    alt="Profile"
+    class="profile-avatar"
+  />
+  <span class="profile-name">{{ session['org_name'] }}</span>
+  <span class="profile-caret">▼</span>
+</button>
+      <div class="profile-menu" id="profile-menu">
+        <a href="{{ url_for('pres.profile') }}">Profile</a>
+        <a href="{{ url_for('pres.pres_logout') }}">Logout</a>
+      </div>
+    </div>
+  </div>
+</div>
     <div class="container">
       <!-- Sidebar -->
       <aside class="sidebar">
-        <a href="{{ url_for('pres.homepage') }}" class="logo">
-          <img
-            src="{{ url_for('pres.static', filename='images/pocki_logo.png') }}"
-            alt="PockiTrack Logo"
-          />
-          <span class="logo_name">PockiTrack</span>
-        </a>
 
         <!-- Sidebar content below logo -->
         <div class="sidebar-content">
@@ -69,14 +99,6 @@
           </nav>
         </div>
 
-        <!-- Logout Button -->
-        <a href="{{ url_for('pres.pres_logout') }}" class="logout-btn">
-          <img
-            src="{{ url_for('pres.static', filename='images/logout_icon.png') }}"
-            alt="Logout Icon"
-          />
-          Logout
-        </a>
       </aside>
 
       <!-- Main Content -->
@@ -94,8 +116,8 @@
                 </div>
 
                 <div class="card">
-                  <p>Total no. of events</p>
-                  <h2 id="total-events">0</h2>
+                  <p>Reports Submitted</p>
+                  <h2 id="reports-submitted">0</h2>
                 </div>
 
                 <div class="card">

@@ -64,44 +64,103 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---- Data loading from backend ----
-  function loadTransactions() {
-    fetch("/pres/api/transactions")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load transactions");
+async function loadTransactions() {
+  loaded = false;
+  const container = document.getElementById("transactions-list");
+  container.innerHTML = `
+    <div class="empty-state">
+      <img src="/pres/static/images/nav_history.png" alt="Loading" />
+      <h4>Loading transactions...</h4>
+      <p>Please wait a moment.</p>
+    </div>
+  `;
+
+  try {
+    // 1) Get all wallet folders (same endpoint used by wallets.js)
+    const walletsRes = await fetch("/pres/api/wallets");
+    if (!walletsRes.ok) throw new Error("Failed to load wallets");
+    const walletsData = await walletsRes.json();
+    // walletsData: [{ id (folderId), walletid, name, month, beginningcash }]
+
+    const folderIds = (walletsData || []).map((w) => w.id);
+
+    if (!folderIds.length) {
+      allTransactions = [];
+      loaded = true;
+      renderTransactions();
+      return;
+    }
+
+    // 2) For each folder, get its transactions
+    const txPromises = folderIds.map((folderId) =>
+      fetch(`/pres/api/wallets/${folderId}/transactions`).then((res) => {
+        if (!res.ok) return [];
         return res.json();
-      })
-      .then((data) => {
-        // data is an array of {id, walletid, type, date, description, amount}
-        // Convert date string to Date object
-        allTransactions = (data || []).map((tx) => {
-          const txDate = tx.date ? new Date(tx.date) : null;
-          return {
-            ...tx,
-            _dateObj: txDate,
-          };
-        });
+      }).catch(() => [])
+    );
 
-        // Sort newest first (in case backend order changes)
-        allTransactions.sort((a, b) => {
-          if (!a._dateObj || !b._dateObj) return 0;
-          return b._dateObj - a._dateObj;
-        });
+    const allByFolder = await Promise.all(txPromises);
 
-        loaded = true;
-        renderTransactions();
-      })
-      .catch((err) => {
-        console.error(err);
-        const container = document.getElementById("transactions-list");
-        container.innerHTML = `
-          <div class="empty-state">
-            <img src="/static/images/nav_history.png" alt="No transactions" />
-            <h4>Error loading transactions</h4>
-            <p>Please try again later.</p>
-          </div>
-        `;
+    // 3) Flatten + map to common shape
+    // Endpoint returns: id, quantity, price, incometype, particulars,
+    // description, totalamount, dateissued, kind. [file:2]
+    const flat = [];
+
+    allByFolder.forEach((folderTxs, idx) => {
+      const folderId = folderIds[idx];
+      const walletMeta = walletsData.find((w) => w.id === folderId);
+      const walletName = walletMeta ? walletMeta.name : `Wallet ${folderId}`;
+
+      (folderTxs || []).forEach((tx) => {
+        const qty = Number(tx.quantity || 0);
+        const price = Number(tx.price || 0);
+        const total = Number(tx.totalamount || qty * price);
+        const kind = tx.kind; // "income" or "expense"
+        const amount =
+          kind === "expense" ? -Number(total || 0) : Number(total || 0);
+
+        const dateStr = tx.dateissued; // ISO string
+        const txDate = dateStr ? new Date(dateStr) : null;
+
+        flat.push({
+          id: tx.id,
+          folderId,
+          walletId: walletMeta ? walletMeta.walletid : null,
+          walletName,
+          quantity: qty,
+          price: price,
+          incometype: tx.incometype || "",
+          particulars: tx.particulars || "",
+          rawdescription: tx.description || "",
+          type: kind,
+          amount,
+          date: dateStr,
+          _dateObj: txDate,
+        });
       });
+    });
+
+    // Sort newest first
+    flat.sort((a, b) => {
+      if (!a._dateObj || !b._dateObj) return 0;
+      return b._dateObj - a._dateObj;
+    });
+
+    allTransactions = flat;
+    loaded = true;
+    renderTransactions();
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = `
+      <div class="empty-state">
+        <img src="/pres/static/images/nav_history.png" alt="No transactions" />
+        <h4>Error loading transactions</h4>
+        <p>Please try again later.</p>
+      </div>
+    `;
   }
+}
+
 
   function updateMonthDisplay() {
     const months = [
@@ -128,7 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!loaded) {
       container.innerHTML = `
         <div class="empty-state">
-          <img src="/static/images/nav_history.png" alt="Loading" />
+          <img src="/pres/static/images/nav_history.png" alt="Loading" />
           <h4>Loading transactions...</h4>
           <p>Please wait a moment.</p>
         </div>
@@ -163,7 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (filtered.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <img src="/static/images/nav_history.png" alt="No transactions" />
+          <img src="/pres/static/images/nav_history.png" alt="No transactions" />
           <h4>No transactions found</h4>
           <p>There are no transactions for the selected month and filter.</p>
         </div>
@@ -180,34 +239,54 @@ document.addEventListener("DOMContentLoaded", () => {
     container.innerHTML = html;
   }
 
-  function createTransactionCard(tx) {
-    const isIncome = tx.type === "income";
-    const absAmount = Math.abs(Number(tx.amount || 0));
-    const amountDisplay = `${isIncome ? "PHP" : "-PHP"} ${absAmount}`;
+function createTransactionCard(tx) {
+  const qty = Number(tx.quantity || 0);
+  const price = Number(tx.price || 0);
+  const total = qty * price;
 
-    let dateText = "";
-    if (tx._dateObj && !isNaN(tx._dateObj)) {
-      const opts = { year: "numeric", month: "long", day: "numeric" };
-      dateText = tx._dateObj.toLocaleDateString(undefined, opts);
-    } else if (tx.date) {
-      dateText = tx.date;
-    }
+  let labelCore;
+  if (tx.type === "income") {
+    // price x qty (total) - incometype
+    labelCore = `${price} x ${qty} (${total}) - ${tx.incometype || ""}`;
+  } else {
+    // qty x price (total) - particulars
+    labelCore = `${qty} x ${price} (${total}) - ${tx.particulars || ""}`;
+  }
 
-    return `
-      <div class="transaction-card">
-        <div class="transaction-left">
-          <h5 class="transaction-event">Transaction #${tx.id}</h5>
-          <p class="transaction-description">${tx.description || ""}</p>
-          <span class="transaction-date">${dateText}</span>
-        </div>
-        <div class="transaction-right">
-          <div class="transaction-amount ${isIncome ? "income" : "expense"}">
-            ${amountDisplay}
-          </div>
+  const mainLabel = tx.rawdescription
+    ? `${labelCore} - ${tx.rawdescription}`
+    : labelCore;
+
+  const amountNum = Number(tx.amount || 0);
+  const isIncome = tx.type === "income";
+  const amountDisplay =
+    amountNum < 0 ? `-PHP ${Math.abs(amountNum)}` : `PHP ${amountNum}`;
+
+  let dateText = "";
+  if (tx._dateObj && !isNaN(tx._dateObj)) {
+    dateText = tx._dateObj.toISOString().slice(0, 10); // yyyy-mm-dd
+  } else if (tx.date) {
+    dateText = tx.date;
+  }
+
+  const title = isIncome ? "INCOME TRANSACTION" : "EXPENSE TRANSACTION";
+
+  return `
+    <div class="transaction-card">
+      <div class="transaction-left">
+        <h5>${title}</h5>
+        <p>${mainLabel}</p>
+        <span class="transaction-date">${dateText}</span>
+      </div>
+      <div class="transaction-right">
+        <div class="transaction-amount ${isIncome ? "income" : "expense"}">
+          ${amountDisplay}
         </div>
       </div>
-    `;
-  }
+    </div>
+  `;
+}
+
 
   // Sidebar navigation handling
   const navItems = document.querySelectorAll(".nav-item");
