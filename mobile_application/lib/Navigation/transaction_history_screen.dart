@@ -85,7 +85,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       fieldHintText: "Month/Year",
       builder: (context, child) => Theme(
         data: ThemeData.light().copyWith(
-          colorScheme: ColorScheme.light(
+          colorScheme: const ColorScheme.light(
             primary: Color(0xFF8B3B08),
             onPrimary: Colors.white,
             onSurface: Colors.black,
@@ -128,7 +128,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // Month Selector with fixed-size clickable month box, no drop-down icon
+                // Month Selector
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -139,8 +139,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                     GestureDetector(
                       onTap: () => _selectMonth(context),
                       child: Container(
-                        width: 160, // Fixed width
-                        height: 36, // Fixed height
+                        width: 160,
+                        height: 36,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.black),
@@ -206,62 +206,47 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 150),
 
-                // Transaction List
-                Column(
-                  children: isIncomeSelected
-                      ? [
-                          _buildTransactionCard(
-                            title: "FEB FAIR",
-                            desc: "(24) Number of Customers",
-                            amount: "PHP 852",
-                            date: "February 14, 2026",
-                          ),
-                          _buildTransactionCard(
-                            title: "FEB FAIR",
-                            desc: "(24) Number of Customers",
-                            amount: "PHP 515",
-                            date: "February 12, 2025",
-                          ),
-                        ]
-                      : [
-                          _buildTransactionCard(
-                            title: "FEB FAIR",
-                            desc: "(1 set) Bracelet Locks",
-                            amount: "-PHP 73",
-                            date: "February 9, 2025",
-                          ),
-                          _buildTransactionCard(
-                            title: "FEB FAIR",
-                            desc: "(1 roll) Kwad",
-                            amount: "-PHP 100",
-                            date: "February 9, 2025",
-                          ),
-                          _buildTransactionCard(
-                            title: "FEB FAIR",
-                            desc: "(N/A) Print",
-                            amount: "-PHP 65",
-                            date: "February 9, 2025",
-                          ),
-                        ],
+                // Empty state with custom asset icon
+                Center(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 8),
+                      Image.asset(
+                        'assets/Icons/navigation_icons/nav_history.png',
+                        height: 61,
+                        width: 61,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'No transactions found',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Your transaction history will appear here once you add entries',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w400,
+                          fontSize: 12,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: const Color(0xFF2F4366),
-        shape: const CircleBorder(),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 28,
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      // No FAB
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
@@ -316,68 +301,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         ),
       ),
       label: label,
-    );
-  }
-
-  Widget _buildTransactionCard({
-    required String title,
-    required String desc,
-    required String amount,
-    required String date,
-  }) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 5),
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Left Column
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  desc,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-
-            // Right Column
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  amount,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: amount.startsWith('-')
-                        ? Colors.red
-                        : const Color(0xFF7A4F22),
-                  ),
-                ),
-                Text(
-                  date,
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
