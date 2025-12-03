@@ -16,6 +16,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Load dashboard data
   loadDashboardData();
+
+  setupProfileDropdown();
+  setupHeaderSearch();
 });
 
 async function loadDashboardData() {
@@ -59,10 +62,14 @@ async function loadDashboardData() {
 }
 
 function updateSummaryCards(summary) {
-  document.getElementById("total-balance").textContent = `Php ${summary.total_balance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
-  document.getElementById("total-events").textContent = summary.total_events;
-  document.getElementById("income-month").textContent = `Php ${summary.income_month.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
-  document.getElementById("expenses-month").textContent = `Php ${summary.expenses_month.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+  document.getElementById("total-balance").textContent =
+    `Php ${summary.total_balance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+  document.getElementById("reports-submitted").textContent =
+    summary.reports_submitted;
+  document.getElementById("income-month").textContent =
+    `Php ${summary.income_month.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+  document.getElementById("expenses-month").textContent =
+    `Php ${summary.expenses_month.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 }
 
 function loadWallets(wallets) {
@@ -141,4 +148,43 @@ function showEmptyTransactions() {
 function showEmptyState() {
   showEmptyWallets();
   showEmptyTransactions();
+}
+
+function setupProfileDropdown() {
+  const toggle = document.getElementById("profile-dropdown-toggle");
+  const menu = document.getElementById("profile-menu");
+  if (!toggle || !menu) return;
+
+  toggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isVisible = menu.style.display === "block";
+    menu.style.display = isVisible ? "none" : "block";
+  });
+
+  document.addEventListener("click", () => {
+    if (menu.style.display === "block") {
+      menu.style.display = "none";
+    }
+  });
+}
+
+function setupHeaderSearch() {
+  const input = document.getElementById("header-search");
+  const walletsContainer = document.getElementById("wallets-container");
+  const transactionsContainer = document.getElementById("transactions-container");
+  if (!input || !walletsContainer || !transactionsContainer) return;
+
+  input.addEventListener("input", () => {
+    const term = input.value.toLowerCase().trim();
+
+    walletsContainer.querySelectorAll(".wallet-card").forEach(card => {
+      const text = card.textContent.toLowerCase();
+      card.style.display = text.includes(term) ? "" : "none";
+    });
+
+    transactionsContainer.querySelectorAll(".transaction-item").forEach(item => {
+      const text = item.textContent.toLowerCase();
+      item.style.display = text.includes(term) ? "" : "none";
+    });
+  });
 }

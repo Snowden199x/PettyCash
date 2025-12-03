@@ -9,6 +9,134 @@ html {
   scroll-behavior: smooth;
 }
 
+.top-header {
+  position: fixed;
+  left: clamp(230px, 17vw, 250px); /* start after sidebar width */
+  right: 0;
+  height: 60px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 40px;
+  background-color: #F5F1E8;
+  z-index: 5;
+}
+
+.top-bar .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+
+.top-header-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 40px;
+  background-color: #f5f1e8;
+}
+
+/* reuse your existing logo styles */
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+/* search & profile from previous answer */
+.search-bar input {
+  padding: 10px 40px 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  font-size: 14px;
+  font-family: "Poppins", sans-serif;
+  transition: all 0.3s ease;
+}
+.search-bar input:hover {
+  border-color: #e59e2c;
+}
+.search-bar input:focus {
+  outline: none;
+  border-color: #8b3b08;
+  box-shadow: 0 0 0 3px rgba(139, 59, 8, 0.1);
+}
+
+.profile-dropdown {
+  position: relative;
+}
+.profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #ecdcc6;
+  background: #ffffff;
+  cursor: pointer;
+  font-family: 'Poppins';
+  font-size: 14px;
+}
+
+.profile-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-btn:hover {
+  background-color: #fff7ec;
+  border-color: #e59e2c;
+}
+
+.profile-caret {
+  font-size: 11px;
+  color: #828282;
+  transition: transform 0.3s ease;
+}
+
+.profile-btn:hover .profile-caret {
+  transform: rotate(180deg);
+}
+
+.profile-menu {
+  position: absolute;
+  right: 0;
+  top: 110%;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  display: none;
+  min-width: 200px;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 50;
+}
+
+
+.profile-menu a {
+  display: block;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: #000;
+  font-size: 14px;
+}
+
+.profile-menu a:hover {
+  background-color: #f5f1e8;
+}
+
+
 .container {
   display: flex;
   height: 100vh;
@@ -17,7 +145,7 @@ html {
 /* Sidebar */
 .sidebar {
   width: clamp(230px, 17vw, 250px);
-  padding: 50px 40px 40px 40px;
+  padding: 0px 40px 40px 40px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -53,7 +181,7 @@ html {
 .sidebar-content {
   display: flex;
   flex-direction: column;
-  margin-top: 90px;
+  margin-top: 71px;
   gap: 30px;
   width: 100%;
 }
