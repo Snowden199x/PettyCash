@@ -174,10 +174,17 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ],
                   ),
-                  Image.asset(
-                    'assets/Icons/notification.png',
-                    height: 31.5,
-                    width: 27.02,
+                  // Replaced notification icon with circular profile avatar
+                  GestureDetector(
+                    onTap: () {
+                      _onItemTapped(3); // Go to Profile tab when tapped
+                    },
+                    child: const CircleAvatar(
+                      radius: 18,
+                      backgroundImage: AssetImage(
+                        'assets/profile_pictures/bank.jpg',
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -223,7 +230,6 @@ class _HomeScreenState extends State<HomeScreen>
                           childAspectRatio: 2.1,
                           physics: const NeverScrollableScrollPhysics(),
                           children: const [
-                            // remove `const` here if this still errors, or make _OverviewCard const
                             _OverviewCard(
                               title: 'Balance:',
                               subtitle: '',
@@ -281,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text( 
+                    const Text(
                       'Your transaction history will appear here once you add entries',
                       textAlign: TextAlign.center,
                       style: TextStyle(
