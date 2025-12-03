@@ -103,6 +103,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const repTotalIncome = document.getElementById("rep-total-income");
   const repBudgetBank = document.getElementById("rep-budget-bank");
 
+  const confirmDeleteOverlay = document.getElementById("confirm-delete-overlay");
+  const closeDeleteModal = document.getElementById("close-delete-modal");
+  const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
+  const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
+  const confirmDeleteTitle = document.getElementById("confirm-delete-title");
+  const confirmDeleteMessage = document.getElementById("confirm-delete-message");
+
+  let deleteAction = null; // function to run on confirm
+
+
   const toastContainer = document.getElementById("toast-container");
 
   // ===== Helpers =====
@@ -151,6 +161,33 @@ document.addEventListener("DOMContentLoaded", () => {
       return false;
     }
   }
+
+  function showDeleteModal({ title, message, onConfirm }) {
+  confirmDeleteTitle.textContent = title || "Delete";
+  confirmDeleteMessage.textContent =
+    message || "Are you sure you want to delete this item?";
+  deleteAction = typeof onConfirm === "function" ? onConfirm : null;
+  confirmDeleteOverlay.classList.add("active");
+}
+
+function hideDeleteModal() {
+  confirmDeleteOverlay.classList.remove("active");
+  deleteAction = null;
+}
+
+closeDeleteModal.addEventListener("click", hideDeleteModal);
+cancelDeleteBtn.addEventListener("click", hideDeleteModal);
+confirmDeleteOverlay.addEventListener("click", (e) => {
+  if (e.target === confirmDeleteOverlay) hideDeleteModal();
+});
+
+confirmDeleteBtn.addEventListener("click", async () => {
+  if (deleteAction) {
+    await deleteAction();
+  }
+  hideDeleteModal();
+});
+
 
   async function apiPost(url, body) {
     const res = await fetch(url, {
@@ -215,19 +252,45 @@ document.addEventListener("DOMContentLoaded", () => {
       }));
 
       // build year options
-      const years = Array.from(
-        new Set(
-          wallets.map((w) => (w.month || "").slice(0, 4)).filter((y) => y)
-        )
-      ).sort();
-      const yearSelect = document.getElementById("wallet-year-filter");
-      if (yearSelect && years.length) {
-        yearSelect.innerHTML =
-          '<option value="">All years</option>' +
-          years.map((y) => `<option value="${y}">${y}</option>`).join("");
-      }
+      // build years, newest first
+const years = Array.from(
+  new Set(wallets.map((w) => w.month.slice(0, 4))) // yyyy
+)
+  .filter((y) => y)
+  .sort((a, b) => Number(b) - Number(a));
 
-      walletsFiltered = [...wallets];
+const yearSelect = document.getElementById("wallet-year-filter");
+if (yearSelect && years.length) {
+  // most recent year from data (should be 2025 once backend is right)
+  const latestYear = years[0];
+
+  const monthOrder = ["08", "09", "10", "11", "12", "01", "02", "03", "04", "05"];
+
+  const latestYearWallets = wallets.filter((w) => {
+    const y = w.month.slice(0, 4);
+    const m = w.month.slice(5, 7);
+    return y === latestYear && monthOrder.includes(m);
+  });
+
+  latestYearWallets.sort((a, b) => {
+    const ma = a.month.slice(5, 7);
+    const mb = b.month.slice(5, 7);
+    return monthOrder.indexOf(ma) - monthOrder.indexOf(mb);
+  });
+
+  walletsFiltered = latestYearWallets.length ? [...latestYearWallets] : [...wallets];
+
+  // build year options ONLY (no "All years")
+  yearSelect.innerHTML = years
+    .map((y) => `<option value="${y}">${y}</option>`)
+    .join("");
+
+  // default select latest year
+  yearSelect.value = latestYear;
+} else {
+  walletsFiltered = [...wallets];
+}
+
       renderWalletsList();
 
       const state = getViewState();
@@ -286,22 +349,37 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function applyWalletFilters() {
-    const q = walletSearchInput.value.toLowerCase();
-    const yearVal = walletYearFilter.value; // "2025", etc.
+  const q = walletSearchInput.value.toLowerCase();
+  const yearVal = walletYearFilter.value; // "2025", "2029", "2030", etc.
 
-    walletsFiltered = wallets.filter((w) => {
-      const matchesText =
-        w.name.toLowerCase().includes(q) ||
-        (w.month || "").toLowerCase().includes(q);
+  const monthOrder = ["08", "09", "10", "11", "12", "01", "02", "03", "04", "05"]; // Aug–May
 
-      const walletYear = (w.month || "").slice(0, 4); // "yyyy"
-      const matchesYear = yearVal ? walletYear === yearVal : true;
+  // Filter from all wallets, then apply year + Aug–May rule
+  let result = wallets.filter((w) => {
+    const matchesText =
+      w.name.toLowerCase().includes(q) ||
+      (w.month || "").toLowerCase().includes(q);
 
-      return matchesText && matchesYear;
-    });
+    const walletYear = (w.month || "").slice(0, 4);
+    const walletMonth = (w.month || "").slice(5, 7);
 
-    renderWalletsList();
-  }
+    const matchesYear = yearVal ? walletYear === yearVal : true;
+    const matchesAcademicMonth = monthOrder.includes(walletMonth);
+
+    return matchesText && matchesYear && matchesAcademicMonth;
+  });
+
+  // Sort months Aug–May
+  result.sort((a, b) => {
+    const ma = (a.month || "").slice(5, 7);
+    const mb = (b.month || "").slice(5, 7);
+    return monthOrder.indexOf(ma) - monthOrder.indexOf(mb);
+  });
+
+  walletsFiltered = result;
+  renderWalletsList();
+}
+
 
   walletSearchInput.addEventListener("input", applyWalletFilters);
   walletYearFilter.addEventListener("change", applyWalletFilters);
@@ -418,20 +496,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const num = Number(amount);
       currentWallet.beginningCash = num;
-      currentWallet.endingCash =
-        num +
-        (currentWallet.totalIncome || 0) -
-        (currentWallet.totalExpenses || 0);
+currentWallet.endingCash =
+  (currentWallet.totalIncome || 0) -
+  (currentWallet.totalExpenses || 0) +
+  currentWallet.beginningCash;
 
-      document.getElementById(
-        "stat-budget"
-      ).textContent = `Php ${currentWallet.beginningCash.toFixed(2)}`;
-      document.getElementById(
-        "stat-ending"
-      ).textContent = `Php ${currentWallet.endingCash.toFixed(2)}`;
+document.getElementById("stat-budget").textContent =
+  `Php ${currentWallet.beginningCash.toFixed(2)}`;
+document.getElementById("stat-ending").textContent =
+  `Php ${currentWallet.endingCash.toFixed(2)}`;
 
-      hideBudgetModal();
-      showToast("Budget saved successfully.");
+// change button text to show the budget instead of "Add budget..."
+walletBudgetBtn.textContent = `Budget: Php ${currentWallet.beginningCash.toFixed(2)}`;
+
+hideBudgetModal();
+showToast("Budget saved successfully.");
     } catch (err) {
       console.error(err);
       showToast("Failed to save budget.", true);
@@ -809,24 +888,31 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      deleteBtn.addEventListener("click", async () => {
-        if (!confirm("Delete this receipt?")) return;
-        try {
-          await fetch(`/pres/api/receipts/${id}`, {
-            method: "DELETE",
-            credentials: "include",
-          });
+      deleteBtn.addEventListener("click", () => {
+  showDeleteModal({
+    title: "Delete receipt",
+    message: "Are you sure you want to delete this receipt?",
+    onConfirm: async () => {
+      try {
+        await fetch(`/pres/api/receipts/${id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        walletReceipts[currentWallet.id] =
+          (walletReceipts[currentWallet.id] || []).filter(
+            (r) => String(r.id) !== String(id)
+          );
+        renderReceipts();
+        showToast("Receipt deleted.");
+      } catch (err) {
+        console.error(err);
+        showToast("Failed to delete receipt.", true);
+      }
+    },
+  });
+});
 
-          walletReceipts[currentWallet.id] = (
-            walletReceipts[currentWallet.id] || []
-          ).filter((r) => String(r.id) !== String(id));
-          renderReceipts();
-          showToast("Receipt deleted.");
-        } catch (err) {
-          console.error(err);
-          showToast("Failed to delete receipt.", true);
-        }
-      });
+
     });
   }
 
@@ -1201,6 +1287,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateStatsUI();
 
+    // update budget button label based on currentWallet.beginningCash
+if (currentWallet && typeof currentWallet.beginningCash === "number" && currentWallet.beginningCash > 0) {
+  walletBudgetBtn.textContent = `Budget: Php ${currentWallet.beginningCash.toFixed(2)}`;
+} else {
+  walletBudgetBtn.textContent = "Add budget for this month";
+}
+
+
     if (reportGeneratedForFolderId === folderId) {
       showReportButtons();
     } else {
@@ -1486,31 +1580,37 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function deleteTx(txId) {
-    if (!currentWallet) return;
-    if (!confirm("Delete this transaction?")) return;
+  if (!currentWallet) return;
 
-    try {
-      await fetch(
-        `/pres/api/wallets/${currentWallet.id}/transactions/${txId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+  showDeleteModal({
+    title: "Delete transaction",
+    message: "Are you sure you want to delete this transaction?",
+    onConfirm: async () => {
+      try {
+        await fetch(
+          `/pres/api/wallets/${currentWallet.id}/transactions/${txId}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          }
+        );
+        walletTransactions[currentWallet.id] =
+          (walletTransactions[currentWallet.id] || []).filter(
+            (t) => String(t.id) !== String(txId)
+          );
+        recomputeTotalsForFolder(currentWallet.id);
+        updateStatsUI();
+        renderWalletTransactions();
+        showToast("Transaction deleted.");
+      } catch (err) {
+        console.error(err);
+        showToast("Failed to delete transaction.", true);
+      }
+    },
+  });
+}
 
-      walletTransactions[currentWallet.id] = (
-        walletTransactions[currentWallet.id] || []
-      ).filter((t) => String(t.id) !== String(txId));
 
-      recomputeTotalsForFolder(currentWallet.id);
-      updateStatsUI();
-      renderWalletTransactions();
-      showToast("Transaction deleted.");
-    } catch (err) {
-      console.error(err);
-      showToast("Failed to delete transaction.", true);
-    }
-  }
 
   // ===== Archives tab =====
 

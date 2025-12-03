@@ -1,139 +1,207 @@
 document.addEventListener("DOMContentLoaded", () => {
   let currentMonth = new Date();
-  let currentFilter = 'all';
-
-  // Sample transaction data
-  const allTransactions = [
-    {
-      event: "FEB FAIR",
-      description: "(24) Number of Customers",
-      amount: 852,
-      date: "February 14, 2025",
-      type: "income"
-    },
-    {
-      event: "FEB FAIR",
-      description: "(24) Number of Customers",
-      amount: 515,
-      date: "February 13, 2025",
-      type: "income"
-    },
-    {
-      event: "FEB FAIR",
-      description: "(1 set) Bracelet Locks",
-      amount: -73,
-      date: "February 9, 2025",
-      type: "expense"
-    },
-    {
-      event: "FEB FAIR",
-      description: "(1 roll) Kawad",
-      amount: -100,
-      date: "February 1, 2025",
-      type: "expense"
-    },
-    {
-      event: "FEB FAIR",
-      description: "(N/A) Print Documents",
-      amount: -65,
-      date: "February 10, 2025",
-      type: "expense"
-    }
-  ];
+  let currentFilter = "all";
+  let allTransactions = [];
+  let loaded = false;
 
   // Initialize
   updateMonthDisplay();
-  renderTransactions();
+  loadTransactions();
 
-  // Month navigation
-  document.getElementById('prev-month').addEventListener('click', () => {
+  // Month navigation buttons
+  document.getElementById("prev-month").addEventListener("click", () => {
     currentMonth.setMonth(currentMonth.getMonth() - 1);
     updateMonthDisplay();
     renderTransactions();
   });
 
-  document.getElementById('next-month').addEventListener('click', () => {
+  document.getElementById("next-month").addEventListener("click", () => {
     currentMonth.setMonth(currentMonth.getMonth() + 1);
     updateMonthDisplay();
     renderTransactions();
   });
 
+  // Make month/year clickable via input[type="month"]
+  const monthDisplayEl = document.getElementById("current-month");
+  monthDisplayEl.style.cursor = "pointer";
+  monthDisplayEl.title = "Click to change month";
+
+  monthDisplayEl.addEventListener("click", () => {
+    const picker = document.createElement("input");
+    picker.type = "month";
+    picker.style.position = "absolute";
+    picker.style.opacity = "0";
+    picker.style.pointerEvents = "none";
+
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth() + 1;
+    picker.value = `${year}-${String(month).padStart(2, "0")}`;
+
+    document.body.appendChild(picker);
+    picker.addEventListener("change", () => {
+      if (picker.value) {
+        const [yy, mm] = picker.value.split("-");
+        currentMonth = new Date(parseInt(yy, 10), parseInt(mm, 10) - 1, 1);
+        updateMonthDisplay();
+        renderTransactions();
+      }
+      document.body.removeChild(picker);
+    });
+
+    picker.click();
+  });
+
   // Filter tabs
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
+  document.querySelectorAll(".filter-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      document
+        .querySelectorAll(".filter-btn")
+        .forEach((b) => b.classList.remove("active"));
+      e.target.classList.add("active");
       currentFilter = e.target.dataset.filter;
       renderTransactions();
     });
   });
 
+  // ---- Data loading from backend ----
+  function loadTransactions() {
+    fetch("/pres/api/transactions")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load transactions");
+        return res.json();
+      })
+      .then((data) => {
+        // data is an array of {id, walletid, type, date, description, amount}
+        // Convert date string to Date object
+        allTransactions = (data || []).map((tx) => {
+          const txDate = tx.date ? new Date(tx.date) : null;
+          return {
+            ...tx,
+            _dateObj: txDate,
+          };
+        });
+
+        // Sort newest first (in case backend order changes)
+        allTransactions.sort((a, b) => {
+          if (!a._dateObj || !b._dateObj) return 0;
+          return b._dateObj - a._dateObj;
+        });
+
+        loaded = true;
+        renderTransactions();
+      })
+      .catch((err) => {
+        console.error(err);
+        const container = document.getElementById("transactions-list");
+        container.innerHTML = `
+          <div class="empty-state">
+            <img src="/static/images/nav_history.png" alt="No transactions" />
+            <h4>Error loading transactions</h4>
+            <p>Please try again later.</p>
+          </div>
+        `;
+      });
+  }
+
   function updateMonthDisplay() {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                    'July', 'August', 'September', 'October', 'November', 'December'];
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
     const monthDisplay = `${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
-    document.getElementById('current-month').textContent = monthDisplay;
+    document.getElementById("current-month").textContent = monthDisplay;
   }
 
   function renderTransactions() {
-    const container = document.getElementById('transactions-list');
-    
-    // Filter transactions
-    let filteredTransactions = allTransactions;
-    if (currentFilter !== 'all') {
-      filteredTransactions = allTransactions.filter(tx => tx.type === currentFilter);
-    }
+    const container = document.getElementById("transactions-list");
 
-    // Check if there are transactions
-    if (filteredTransactions.length === 0) {
+    if (!loaded) {
       container.innerHTML = `
         <div class="empty-state">
-          <img src="/static/images/nav_history.png" alt="No transactions" />
-          <h4>No transactions found</h4>
-          <p>There are no transactions for the selected filter</p>
+          <img src="/static/images/nav_history.png" alt="Loading" />
+          <h4>Loading transactions...</h4>
+          <p>Please wait a moment.</p>
         </div>
       `;
       return;
     }
 
-    // Separate income and expenses
-    const incomeTransactions = filteredTransactions.filter(tx => tx.type === 'income');
-    const expenseTransactions = filteredTransactions.filter(tx => tx.type === 'expense');
+    // Filter by month/year first
+    const targetMonth = currentMonth.getMonth();
+    const targetYear = currentMonth.getFullYear();
 
-    let html = '';
+    let filtered = allTransactions.filter((tx) => {
+      if (!tx._dateObj) return false;
+      return (
+        tx._dateObj.getMonth() === targetMonth &&
+        tx._dateObj.getFullYear() === targetYear
+      );
+    });
 
-    // Render Income section
-    if (incomeTransactions.length > 0 && (currentFilter === 'all' || currentFilter === 'income')) {
-      html += '<h4 class="section-title" style="margin: 20px 0 15px; font-weight: 600; color: #2E7D32;">Income</h4>';
-      incomeTransactions.forEach(tx => {
-        html += createTransactionCard(tx);
-      });
+    // Filter by type
+    if (currentFilter !== "all") {
+      filtered = filtered.filter((tx) => tx.type === currentFilter);
     }
 
-    // Render Expense section
-    if (expenseTransactions.length > 0 && (currentFilter === 'all' || currentFilter === 'expense')) {
-      html += '<h4 class="section-title" style="margin: 20px 0 15px; font-weight: 600; color: #C62828;">Expenses</h4>';
-      expenseTransactions.forEach(tx => {
-        html += createTransactionCard(tx);
-      });
+    // Sort newest first (by date)
+    filtered.sort((a, b) => {
+      if (!a._dateObj || !b._dateObj) return 0;
+      return b._dateObj - a._dateObj;
+    });
+
+    // Show empty-state if nothing
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <img src="/static/images/nav_history.png" alt="No transactions" />
+          <h4>No transactions found</h4>
+          <p>There are no transactions for the selected month and filter.</p>
+        </div>
+      `;
+      return;
     }
+
+    // Single mixed list (no Income/Expense headings)
+    let html = "";
+    filtered.forEach((tx) => {
+      html += createTransactionCard(tx);
+    });
 
     container.innerHTML = html;
   }
 
   function createTransactionCard(tx) {
-    const amountPrefix = tx.amount < 0 ? '' : '';
-    const amountDisplay = tx.amount < 0 ? `-PHP ${Math.abs(tx.amount)}` : `PHP ${tx.amount}`;
-    
+    const isIncome = tx.type === "income";
+    const absAmount = Math.abs(Number(tx.amount || 0));
+    const amountDisplay = `${isIncome ? "PHP" : "-PHP"} ${absAmount}`;
+
+    let dateText = "";
+    if (tx._dateObj && !isNaN(tx._dateObj)) {
+      const opts = { year: "numeric", month: "long", day: "numeric" };
+      dateText = tx._dateObj.toLocaleDateString(undefined, opts);
+    } else if (tx.date) {
+      dateText = tx.date;
+    }
+
     return `
       <div class="transaction-card">
         <div class="transaction-left">
-          <h5 class="transaction-event">${tx.event}</h5>
-          <p class="transaction-description">${tx.description}</p>
-          <span class="transaction-date">${tx.date}</span>
+          <h5 class="transaction-event">Transaction #${tx.id}</h5>
+          <p class="transaction-description">${tx.description || ""}</p>
+          <span class="transaction-date">${dateText}</span>
         </div>
         <div class="transaction-right">
-          <div class="transaction-amount ${tx.type}">
+          <div class="transaction-amount ${isIncome ? "income" : "expense"}">
             ${amountDisplay}
           </div>
         </div>
@@ -142,11 +210,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Sidebar navigation handling
-  const navItems = document.querySelectorAll('.nav-item');
-  navItems.forEach(item => {
-    item.addEventListener('click', () => {
-      navItems.forEach(i => i.classList.remove('active'));
-      item.classList.add('active');
+  const navItems = document.querySelectorAll(".nav-item");
+  navItems.forEach((item) => {
+    item.addEventListener("click", () => {
+      navItems.forEach((i) => i.classList.remove("active"));
+      item.classList.add("active");
     });
   });
 });
