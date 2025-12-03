@@ -977,7 +977,7 @@ class _AddMenuButton extends StatelessWidget {
           label,
           style: const TextStyle(
             fontFamily: 'Poppins',
-            fontSize: 14,
+            fontSize: 13,
             color: Colors.black,
           ),
         ),
