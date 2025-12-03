@@ -246,14 +246,14 @@ html {
 
 .transaction-card {
   background: #fff;
-  border: 1px solid #ECDDC6;
-  border-radius: 15px;
-  padding: 20px;
-  margin-bottom: 15px;
+  border: 1px solid #ecddc6;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  box-shadow: 2px 2px 6px rgba(0,0,0,0.05);
+  align-items: stretch;
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
 
@@ -266,21 +266,20 @@ html {
   flex: 1;
 }
 
-.transaction-event {
-  font-weight: 600;
-  font-size: 16px;
+.transaction-left h5 {
   margin: 0 0 5px;
-  color: #000;
+  font-weight: 600;
+  font-size: 14px;
 }
 
-.transaction-description {
-  font-size: 13px;
-  color: #616161;
+.transaction-left p {
   margin: 0 0 5px;
+  font-size: 12px;
+  color: #616161;
 }
 
 .transaction-date {
-  font-size: 12px;
+  font-size: 11px;
   color: #999;
 }
 
@@ -290,7 +289,7 @@ html {
 
 .transaction-amount {
   font-weight: 600;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .transaction-amount.income {

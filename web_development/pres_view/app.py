@@ -332,13 +332,111 @@ def get_dashboard_summary():
     if not session.get("pres_user"):
         return jsonify({"error": "Unauthorized"}), 401
 
-    summary = {
-        "total_balance": 30000,
-        "total_events": 5,
-        "income_month": 3000,
-        "expenses_month": 5000,
-    }
-    return jsonify(summary)
+    org_id = session.get("org_id")
+
+    from datetime import datetime
+
+    try:
+        # 1) get all wallets for this org
+        wallets_res = (
+            supabase.table("wallets")
+            .select("id")
+            .eq("organization_id", org_id)
+            .execute()
+        )
+        wallet_ids = [w["id"] for w in (wallets_res.data or [])]
+        if not wallet_ids:
+            return jsonify(
+                {
+                    "total_balance": 0,
+                    "reports_submitted": 0,
+                    "income_month": 0,
+                    "expenses_month": 0,
+                }
+            )
+
+        # 2) get all transactions for those wallets
+        tx_res = (
+            supabase.table("wallet_transactions")
+            .select("kind, date_issued, quantity, price")
+            .in_("wallet_id", wallet_ids)
+            .execute()
+        )
+
+        now = datetime.now()
+        this_year = now.year
+        this_month = now.month
+
+        income_month = 0.0
+        expenses_month = 0.0
+        total_income_all = 0.0
+        total_expenses_all = 0.0
+
+        for tx in (tx_res.data or []):
+            qty = int(tx.get("quantity") or 0)
+            price = float(tx.get("price") or 0)
+            amt = qty * price
+
+            # total across all time for balance
+            if tx.get("kind") == "income":
+                total_income_all += amt
+            elif tx.get("kind") == "expense":
+                total_expenses_all += amt
+
+            # filter by current month/year for monthly cards
+            d_str = tx.get("date_issued")
+            try:
+                d = datetime.fromisoformat(d_str.replace("Z", "+00:00"))
+            except Exception:
+                continue
+
+            if d.year == this_year and d.month == this_month:
+                if tx.get("kind") == "income":
+                    income_month += amt
+                elif tx.get("kind") == "expense":
+                    expenses_month += amt
+
+        # 3) budgets (beginning cash) to compute total balance
+        budgets_res = (
+            supabase.table("wallet_budgets")
+            .select("amount, wallet_id")
+            .in_("wallet_id", wallet_ids)
+            .execute()
+        )
+        beginning_total = sum(
+            float(b.get("amount") or 0) for b in (budgets_res.data or [])
+        )
+
+        total_balance = beginning_total + total_income_all - total_expenses_all
+
+        # 4) reports submitted (any financial_reports for this org)
+        reports_res = (
+            supabase.table("financial_reports")
+            .select("id", count="exact")
+            .eq("organization_id", org_id)
+            .execute()
+        )
+        reports_submitted = reports_res.count or 0
+
+        return jsonify(
+            {
+                "total_balance": total_balance,
+                "reports_submitted": reports_submitted,
+                "income_month": income_month,
+                "expenses_month": expenses_month,
+            }
+        )
+    except Exception as e:
+        print("Error get_dashboard_summary:", e)
+        return jsonify(
+            {
+                "total_balance": 0,
+                "reports_submitted": 0,
+                "income_month": 0,
+                "expenses_month": 0,
+                "error": str(e),
+            }
+        ), 500
 
 
 # -----------------------
@@ -401,6 +499,103 @@ def get_wallets():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
+    
+@pres.route("/api/wallets/overview", methods=["GET"])
+def get_wallets_overview():
+    if not session.get("pres_user"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    org_id = session.get("org_id")
+
+    try:
+        # 1) all wallets for this org
+        wallets_res = (
+            supabase.table("wallets")
+            .select("id, name")
+            .eq("organization_id", org_id)
+            .execute()
+        )
+        wallets = {w["id"]: w["name"] for w in (wallets_res.data or [])}
+        if not wallets:
+            return jsonify([])
+
+        # 2) all budget folders for those wallets
+        budgets_res = (
+            supabase.table("wallet_budgets")
+            .select("id, wallet_id, amount, year, month_id, months (month_name)")
+            .in_("wallet_id", list(wallets.keys()))
+            .execute()
+        )
+        budget_ids = [b["id"] for b in (budgets_res.data or [])]
+        if not budget_ids:
+            return jsonify([])
+
+        # 3) all transactions for those folders
+        tx_res = (
+            supabase.table("wallet_transactions")
+            .select("budget_id, kind, quantity, price, date_issued")
+            .in_("budget_id", budget_ids)
+            .execute()
+        )
+
+        from datetime import datetime
+
+        # init per-folder aggregates
+        by_folder = {}
+        for b in budgets_res.data or []:
+            fid = b["id"]
+            by_folder[fid] = {
+                "id": fid,
+                "wallet_id": b["wallet_id"],
+                "name": b["months"]["month_name"],          # title, e.g. DECEMBER
+                "budget": float(b.get("amount") or 0),      # budget for that month
+                "total_income": 0.0,
+                "total_expenses": 0.0,
+                "last_activity": None,
+            }
+
+        # aggregate income/expenses by folder
+        for tx in tx_res.data or []:
+            fid = tx["budget_id"]
+            if fid not in by_folder:
+                continue
+            qty = int(tx.get("quantity") or 0)
+            price = float(tx.get("price") or 0)
+            amt = qty * price
+            if tx.get("kind") == "income":
+                by_folder[fid]["total_income"] += amt
+            elif tx.get("kind") == "expense":
+                by_folder[fid]["total_expenses"] += amt
+
+            ts = tx.get("date_issued")
+            if ts:
+                try:
+                    dt_val = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                except Exception:
+                    dt_val = None
+                if dt_val:
+                    cur = by_folder[fid]["last_activity"]
+                    if not cur or dt_val > cur:
+                        by_folder[fid]["last_activity"] = dt_val
+
+        # keep only folders that have any transaction
+        items = [
+            v for v in by_folder.values()
+            if v["total_income"] > 0 or v["total_expenses"] > 0
+        ]
+
+        # sort so recently edited/added are on top
+        items.sort(
+            key=lambda x: x["last_activity"] or datetime.min,
+            reverse=True,
+        )
+
+        return jsonify(items)
+    except Exception as e:
+        print("Error get_wallets_overview:", e)
+        return jsonify({"error": str(e)}), 500
+
+
 
 
 # ----------------------
@@ -642,6 +837,58 @@ def delete_wallet_transaction(folder_id, tx_id):
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@pres.route("/api/transactions/recent", methods=["GET"])
+def get_recent_transactions():
+    if not session.get("pres_user"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    org_id = session.get("org_id")
+
+    try:
+        # get all wallets of this org
+        wallets_res = (
+            supabase.table("wallets")
+            .select("id")
+            .eq("organization_id", org_id)
+            .execute()
+        )
+        wallet_ids = [w["id"] for w in (wallets_res.data or [])]
+        if not wallet_ids:
+            return jsonify([])
+
+        res = (
+            supabase.table("wallet_transactions")
+            .select("id, kind, date_issued, description, quantity, price, particulars")
+            .in_("wallet_id", wallet_ids)
+            .order("date_issued", desc=True)
+            .limit(50)
+            .execute()
+        )
+
+        txs = []
+        for tx in res.data or []:
+            qty = int(tx.get("quantity") or 0)
+            price = float(tx.get("price") or 0)
+            total_amount = qty * price
+
+            txs.append(
+                {
+                    "id": tx["id"],
+                    "type": "income" if tx.get("kind") == "income" else "expense",
+                    "date": tx["date_issued"],
+                    "event": tx.get("particulars") or "Transaction",
+                    "description": tx.get("description") or "",
+                    "amount": total_amount if tx.get("kind") == "income" else -total_amount,
+                }
+            )
+
+        return jsonify(txs)
+    except Exception as e:
+        print("Error get_recent_transactions:", e)
+        return jsonify({"error": str(e)}), 500
+
+
 
 
 # -----------------------
@@ -1953,41 +2200,71 @@ def get_all_transactions():
     org_id = session.get("org_id")
 
     try:
+        # wallets for this org
         wallets_res = (
             supabase.table("wallets")
             .select("id")
             .eq("organization_id", org_id)
             .execute()
         )
-        wallet_ids = [w["id"] for w in wallets_res.data]
+        wallet_ids = [w["id"] for w in (wallets_res.data or [])]
         if not wallet_ids:
             return jsonify([])
 
+        # folders (budgets) for those wallets → folder/month name, e.g. AUGUST
+        budgets_res = (
+            supabase.table("wallet_budgets")
+            .select("id, months (month_name)")
+            .in_("wallet_id", wallet_ids)
+            .execute()
+        )
+        folder_names = {
+            b["id"]: b["months"]["month_name"]
+            for b in (budgets_res.data or [])
+        }
+
+        # transactions with budget_id so we can map to folder
         res = (
             supabase.table("wallet_transactions")
-            .select("id, wallet_id, kind, date_issued, description, quantity, price")
+            .select(
+                "id, wallet_id, budget_id, kind, date_issued, description, "
+                "quantity, price, income_type, particulars"
+            )
             .in_("wallet_id", wallet_ids)
             .order("date_issued", desc=True)
             .execute()
         )
 
         transactions = []
-        for tx in res.data:
-            total_amount = float(tx["price"]) * int(tx["quantity"])
+        for tx in (res.data or []):
+            qty = int(tx.get("quantity") or 0)
+            price = float(tx.get("price") or 0)
+            total_amount = qty * price
+
+            folder_id = tx.get("budget_id")
+            wallet_name = folder_names.get(folder_id, "Wallet")
+
             transactions.append(
                 {
                     "id": tx["id"],
-                    "wallet_id": tx["wallet_id"],
-                    "type": tx["kind"],
-                    "date": tx["date_issued"],
-                    "description": tx["description"],
-                    "amount": total_amount if tx["kind"] == "income" else -total_amount,
+                    "wallet_name": wallet_name,  # e.g. AUGUST
+                    "type": tx.get("kind"),
+                    "date": tx.get("date_issued"),
+                    "description": tx.get("description") or "",
+                    "quantity": qty,
+                    "price": price,
+                    "income_type": tx.get("income_type") or "",
+                    "particulars": tx.get("particulars") or "",
+                    "total_amount": total_amount,
                 }
             )
 
         return jsonify(transactions)
     except Exception as e:
+        print("Error get_all_transactions:", e)
         return jsonify({"error": str(e)}), 500
+
+
 
 
 # -----------------------
