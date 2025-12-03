@@ -236,10 +236,6 @@
     <h4 id="stat-expense">Php 0.00</h4>
   </div>
   <div class="stat-card">
-    <p>Budget in bank</p>
-    <h4 id="stat-budget-bank">Php 0.00</h4>
-  </div>
-  <div class="stat-card">
     <p>Ending Cash</p>
     <h4 id="stat-ending">Php 0.00</h4>
   </div>
@@ -547,6 +543,28 @@
         </div>
       </div>
     </div>
+
+    <!-- Confirm Delete Modal -->
+<div class="modal-overlay" id="confirm-delete-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="confirm-delete-title">Delete</h3>
+      <button class="close-modal" id="close-delete-modal">&times;</button>
+    </div>
+    <p class="modal-subtitle" id="confirm-delete-message">
+      Are you sure you want to delete this item?
+    </p>
+    <div class="modal-footer">
+      <button type="button" class="secondary-btn" id="cancel-delete-btn">
+        Cancel
+      </button>
+      <button type="button" class="primary-btn" id="confirm-delete-btn">
+        Yes, delete
+      </button>
+    </div>
+  </div>
+</div>
+
 
     <!-- Toast container -->
     <div id="toast-container"></div>
