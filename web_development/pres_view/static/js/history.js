@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentFilter = "all";
   let allTransactions = [];
   let loaded = false;
+  let allWalletsMeta = [];
 
   // Initialize
   updateMonthDisplay();
@@ -80,6 +81,7 @@ async function loadTransactions() {
     const walletsRes = await fetch("/pres/api/wallets");
     if (!walletsRes.ok) throw new Error("Failed to load wallets");
     const walletsData = await walletsRes.json();
+    allWalletsMeta = walletsData || [];
     // walletsData: [{ id (folderId), walletid, name, month, beginningcash }]
 
     const folderIds = (walletsData || []).map((w) => w.id);
@@ -114,12 +116,12 @@ async function loadTransactions() {
       (folderTxs || []).forEach((tx) => {
         const qty = Number(tx.quantity || 0);
         const price = Number(tx.price || 0);
-        const total = Number(tx.totalamount || qty * price);
+        const total = Number(tx.total_amount || qty * price);
         const kind = tx.kind; // "income" or "expense"
         const amount =
           kind === "expense" ? -Number(total || 0) : Number(total || 0);
 
-        const dateStr = tx.dateissued; // ISO string
+        const dateStr = tx.date_issued; // ISO string
         const txDate = dateStr ? new Date(dateStr) : null;
 
         flat.push({
@@ -195,17 +197,23 @@ async function loadTransactions() {
       return;
     }
 
-    // Filter by month/year first
-    const targetMonth = currentMonth.getMonth();
-    const targetYear = currentMonth.getFullYear();
+   // Filter by wallet month/year (folder) ONLY, ignore tx date
+const targetMonthIndex = currentMonth.getMonth(); // 0-11
+const targetYear = currentMonth.getFullYear();
 
-    let filtered = allTransactions.filter((tx) => {
-      if (!tx._dateObj) return false;
-      return (
-        tx._dateObj.getMonth() === targetMonth &&
-        tx._dateObj.getFullYear() === targetYear
-      );
-    });
+// find folderIds whose wallet_budgets.month matches target year+month
+const targetFolderIds = (allWalletsMeta || [])
+  .filter((w) => {
+    const m = w.month || "";        // "yyyy-mm"
+    const y = Number(m.slice(0, 4));
+    const mm = Number(m.slice(5, 7)); // 1-12
+    return y === targetYear && mm === targetMonthIndex + 1;
+  })
+  .map((w) => w.id);
+
+let filtered = allTransactions.filter((tx) =>
+  targetFolderIds.includes(tx.folderId)
+);
 
     // Filter by type
     if (currentFilter !== "all") {
@@ -237,6 +245,30 @@ async function loadTransactions() {
     });
 
     container.innerHTML = html;
+
+// make each date clickable to jump to that month/year
+const dateEls = container.querySelectorAll(".transaction-date");
+dateEls.forEach((el) => {
+  el.style.cursor = "pointer";
+  el.title = "Click to go to this month";
+
+  // remove old listener if re-rendered
+  el.onclick = null;
+
+  el.addEventListener("click", () => {
+    const dateStr = el.dataset.date;
+    if (!dateStr) return;
+
+    const d = new Date(dateStr);
+    if (isNaN(d)) return;
+
+    currentMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+    updateMonthDisplay();
+    renderTransactions();
+  });
+});
+
+
   }
 
 function createTransactionCard(tx) {
@@ -269,14 +301,15 @@ function createTransactionCard(tx) {
     dateText = tx.date;
   }
 
-  const title = isIncome ? "INCOME TRANSACTION" : "EXPENSE TRANSACTION";
+const title = (tx.walletName || "").toUpperCase();
 
   return `
     <div class="transaction-card">
       <div class="transaction-left">
         <h5>${title}</h5>
         <p>${mainLabel}</p>
-        <span class="transaction-date">${dateText}</span>
+        <span class="transaction-date"
+          data-date="${dateText}">${dateText}</span>
       </div>
       <div class="transaction-right">
         <div class="transaction-amount ${isIncome ? "income" : "expense"}">
