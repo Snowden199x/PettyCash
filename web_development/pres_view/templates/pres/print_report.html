@@ -308,13 +308,14 @@
         </tr>
         {% endfor %}
         <tr>
-          <td colspan="4" class="text-right">
-            <strong>Total Amount of Expenses</strong>
-          </td>
-          <td class="text-right">
-            <strong>PHP {{ "%.2f"|format(totalexpense) }}</strong>
-          </td>
-        </tr>
+          <tr class="summary-highlight">
+            <td colspan="4" class="text-right">
+              <strong>Total Amount of Expenses</strong>
+            </td>
+            <td class="text-right">
+              <strong>PHP {{ "%.2f"|format(totalexpense) }}</strong>
+            </td>
+          </tr>
       </table>
 
       <!-- INCOME TABLE - SEPARATE AND AFTER EXPENSES -->
@@ -339,7 +340,7 @@
         </tr>
         {% endfor %}
 
-        <tr>
+        <tr class="summary-highlight">
           <td colspan="4" class="text-right">
             <strong>Total Amount of Income</strong>
           </td>
