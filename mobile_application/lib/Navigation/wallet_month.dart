@@ -1,8 +1,7 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // make sure you add intl in pubspec.yaml
-import 'package:image_picker/image_picker.dart'; // add image_picker in pubspec.yaml
+import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 
 class WalletMonthScreen extends StatefulWidget {
   final String month;
@@ -10,81 +9,77 @@ class WalletMonthScreen extends StatefulWidget {
   const WalletMonthScreen({super.key, required this.month});
 
   @override
-  State<WalletMonthScreen> createState() => _WalletMonthScreenState();
+  State<WalletMonthScreen> createState() => WalletMonthScreenState();
 }
 
-class _WalletMonthScreenState extends State<WalletMonthScreen> {
+class WalletMonthScreenState extends State<WalletMonthScreen> {
   // Sort state
-  String _sortFilter = 'Expense'; // All, Expense, Income
-  String _sortOrder = 'New to old'; // New to old, Old to new
+  String sortFilter = 'Expense';
+  String sortOrder = 'New to old';
+  final GlobalKey sortKey = GlobalKey();
 
-  final GlobalKey _sortKey = GlobalKey();
+  bool showAddMenu = false;
+  bool showAddIncomeForm = false;
+  bool showAddExpenseForm = false;
+  bool showAddReceiptForm = false;
 
-  bool _showAddMenu = false; // controls the add menu visibility
-  bool _showAddIncomeForm = false; // controls the Add Income popup
-  bool _showAddExpenseForm = false; // controls the Add Expense popup
-  bool _showAddReceiptForm = false; // controls the Add Receipt popup
+  // Tabs: 0 Transaction, 1 Reports, 2 Receipts, 3 Archive
+  int selectedTabIndex = 0;
 
-  // Tabs: 0 = Transaction, 1 = Reports, 2 = Receipts
-  int _selectedTabIndex = 0;
-
-  // Controllers / state for Add Income form
-  final TextEditingController _dateIssuedController = TextEditingController();
-  final TextEditingController _quantityController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _priceController = TextEditingController();
-
-  String? _selectedIncomeType;
-  final List<String> _incomeTypes = const [
+  // Controllers – Income
+  final TextEditingController dateIssuedController = TextEditingController();
+  final TextEditingController quantityController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController priceController = TextEditingController();
+  String? selectedIncomeType;
+  final List<String> incomeTypes = const [
     'Income Generating Projects',
     'Registration Fee',
     'Membership Fee',
   ];
 
-  // Controllers / state for Add Expense form
-  final TextEditingController _expenseDateController = TextEditingController();
-  final TextEditingController _expenseQuantityController =
+  // Controllers – Expense
+  final TextEditingController expenseDateController = TextEditingController();
+  final TextEditingController expenseQuantityController =
       TextEditingController();
-  final TextEditingController _expenseParticularsController =
+  final TextEditingController expenseParticularsController =
       TextEditingController();
-  final TextEditingController _expenseDescriptionController =
+  final TextEditingController expenseDescriptionController =
       TextEditingController();
-  final TextEditingController _expensePriceController =
-      TextEditingController();
+  final TextEditingController expensePriceController = TextEditingController();
 
-  // Controllers / state for Add Receipt form
-  final TextEditingController _receiptDescriptionController =
+  // Controllers – Receipt
+  final TextEditingController receiptDescriptionController =
       TextEditingController();
-  final TextEditingController _receiptDateController =
-      TextEditingController();
-  final ImagePicker _receiptPicker = ImagePicker();
-  File? _receiptImage;
+  final TextEditingController receiptDateController = TextEditingController();
+  final ImagePicker receiptPicker = ImagePicker();
+  File? receiptImage;
 
   @override
   void dispose() {
-    // Income controllers
-    _dateIssuedController.dispose();
-    _quantityController.dispose();
-    _descriptionController.dispose();
-    _priceController.dispose();
+    // Income
+    dateIssuedController.dispose();
+    quantityController.dispose();
+    descriptionController.dispose();
+    priceController.dispose();
 
-    // Expense controllers
-    _expenseDateController.dispose();
-    _expenseQuantityController.dispose();
-    _expenseParticularsController.dispose();
-    _expenseDescriptionController.dispose();
-    _expensePriceController.dispose();
+    // Expense
+    expenseDateController.dispose();
+    expenseQuantityController.dispose();
+    expenseParticularsController.dispose();
+    expenseDescriptionController.dispose();
+    expensePriceController.dispose();
 
-    // Receipt controllers
-    _receiptDescriptionController.dispose();
-    _receiptDateController.dispose();
-
+    // Receipt
+    receiptDescriptionController.dispose();
+    receiptDateController.dispose();
     super.dispose();
   }
 
-  void _showSortMenu() {
+  // SORT MENU
+  void showSortMenu() {
     final renderBox =
-        _sortKey.currentContext?.findRenderObject() as RenderBox?;
+        sortKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
 
     final overlay = Overlay.of(context);
@@ -97,9 +92,8 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
     entry = OverlayEntry(
       builder: (_) => Stack(
         children: [
-          // tap outside to close
           GestureDetector(
-            onTap: () => entry.remove(),
+            onTap: entry.remove,
             behavior: HitTestBehavior.translucent,
             child: SizedBox(
               width: overlayBox.size.width,
@@ -108,11 +102,10 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
           ),
           Positioned(
             left: position.dx,
-            // overlaps the "Sort by" row
-            top: position.dy,
+            top: position.dy + renderBox.size.height + 4,
             child: Material(
               color: Colors.transparent,
-              child: _buildSortMenuContent(entry),
+              child: buildSortMenuContent(entry),
             ),
           ),
         ],
@@ -122,7 +115,7 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
     overlay.insert(entry);
   }
 
-  Widget _buildSortMenuContent(OverlayEntry entry) {
+  Widget buildSortMenuContent(OverlayEntry entry) {
     return Container(
       width: 163,
       height: 160,
@@ -135,39 +128,42 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Sort by',
-              style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  fontFamily: 'Poppins')),
+          const Text(
+            'Sort by',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              fontFamily: 'Poppins',
+            ),
+          ),
           const SizedBox(height: 6),
-          _buildMenuRow('All', entry, isFilter: true),
-          _buildMenuRow('Expense', entry, isFilter: true),
-          _buildMenuRow('Income', entry, isFilter: true),
+          buildMenuRow('All', entry, isFilter: true),
+          buildMenuRow('Expense', entry, isFilter: true),
+          buildMenuRow('Income', entry, isFilter: true),
           const Divider(height: 14, thickness: 1),
-          _buildMenuRow('New to old', entry, isFilter: false),
-          _buildMenuRow('Old to new', entry, isFilter: false),
+          buildMenuRow('New to old', entry, isFilter: false),
+          buildMenuRow('Old to new', entry, isFilter: false),
         ],
       ),
     );
   }
 
-  Widget _buildMenuRow(
+  Widget buildMenuRow(
     String label,
     OverlayEntry entry, {
     required bool isFilter,
   }) {
     final bool selected =
-        isFilter ? _sortFilter == label : _sortOrder == label;
+        isFilter ? sortFilter == label : sortOrder == label;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
         setState(() {
           if (isFilter) {
-            _sortFilter = label;
+            sortFilter = label;
           } else {
-            _sortOrder = label;
+            sortOrder = label;
           }
         });
         entry.remove();
@@ -179,73 +175,81 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
             SizedBox(
               width: 18,
               child: selected
-                  ? const Icon(Icons.check, size: 18, color: Colors.black)
+                  ? const Icon(
+                      Icons.check,
+                      size: 18,
+                      color: Colors.black,
+                    )
                   : const SizedBox.shrink(),
             ),
             const SizedBox(width: 6),
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.black,
-                    fontFamily: 'Poppins')),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.black,
+                fontFamily: 'Poppins',
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  void _toggleAddMenu() {
+  // ADD MENU HANDLERS
+  void toggleAddMenu() {
     setState(() {
-      // close forms if open
-      _showAddIncomeForm = false;
-      _showAddExpenseForm = false;
-      _showAddReceiptForm = false;
-      _showAddMenu = !_showAddMenu;
+      showAddIncomeForm = false;
+      showAddExpenseForm = false;
+      showAddReceiptForm = false;
+      showAddMenu = !showAddMenu;
     });
   }
 
-  void _closeAddMenu() {
-    if (_showAddMenu ||
-        _showAddIncomeForm ||
-        _showAddExpenseForm ||
-        _showAddReceiptForm) {
+  void closeAddMenu() {
+    if (showAddMenu ||
+        showAddIncomeForm ||
+        showAddExpenseForm ||
+        showAddReceiptForm) {
       setState(() {
-        _showAddMenu = false;
-        _showAddIncomeForm = false;
-        _showAddExpenseForm = false;
-        _showAddReceiptForm = false;
+        showAddMenu = false;
+        showAddIncomeForm = false;
+        showAddExpenseForm = false;
+        showAddReceiptForm = false;
       });
     }
   }
 
-  void _openAddIncomeForm() {
+  void openAddIncomeForm() {
     setState(() {
-      _showAddMenu = false;
-      _showAddIncomeForm = true;
-      _showAddExpenseForm = false;
-      _showAddReceiptForm = false;
+      showAddMenu = false;
+      showAddIncomeForm = true;
+      showAddExpenseForm = false;
+      showAddReceiptForm = false;
     });
   }
 
-  void _openAddExpenseForm() {
+  void openAddExpenseForm() {
     setState(() {
-      _showAddMenu = false;
-      _showAddIncomeForm = false;
-      _showAddExpenseForm = true;
-      _showAddReceiptForm = false;
+      showAddMenu = false;
+      showAddIncomeForm = false;
+      showAddExpenseForm = true;
+      showAddReceiptForm = false;
     });
   }
 
-  void _openAddReceiptForm() {
+  void openAddReceiptForm() {
     setState(() {
-      _showAddMenu = false;
-      _showAddIncomeForm = false;
-      _showAddExpenseForm = false;
-      _showAddReceiptForm = true;
+      showAddMenu = false;
+      showAddIncomeForm = false;
+      showAddExpenseForm = false;
+      showAddReceiptForm = true;
     });
   }
 
-  Future<void> _pickDateIssued() async {
+  // PICKERS
+  Future<void> pickDateIssued() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
@@ -255,13 +259,11 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
     );
     if (picked != null) {
       final formatted = DateFormat('yyyy-MM-dd').format(picked);
-      setState(() {
-        _dateIssuedController.text = formatted;
-      });
+      setState(() => dateIssuedController.text = formatted);
     }
   }
 
-  Future<void> _pickExpenseDate() async {
+  Future<void> pickExpenseDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
@@ -271,13 +273,11 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
     );
     if (picked != null) {
       final formatted = DateFormat('yyyy-MM-dd').format(picked);
-      setState(() {
-        _expenseDateController.text = formatted;
-      });
+      setState(() => expenseDateController.text = formatted);
     }
   }
 
-  Future<void> _pickReceiptDate() async {
+  Future<void> pickReceiptDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
@@ -287,26 +287,21 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
     );
     if (picked != null) {
       final formatted = DateFormat('yyyy-MM-dd').format(picked);
-      setState(() {
-        _receiptDateController.text = formatted;
-      });
+      setState(() => receiptDateController.text = formatted);
     }
   }
 
-  Future<void> _pickReceiptImage() async {
+  Future<void> pickReceiptImage() async {
     final XFile? picked =
-        await _receiptPicker.pickImage(source: ImageSource.gallery);
+        await receiptPicker.pickImage(source: ImageSource.gallery);
     if (picked == null) return;
-    setState(() {
-      _receiptImage = File(picked.path);
-    });
+    setState(() => receiptImage = File(picked.path));
   }
 
   @override
   Widget build(BuildContext context) {
-    final String sortLabel = 'Sort by $_sortFilter';
-    final double keyboardInset =
-        MediaQuery.of(context).viewInsets.bottom;
+    final String sortLabel = 'Sort by $sortFilter';
+    final double keyboardInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -331,79 +326,89 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
                   Text(
                     widget.month,
                     style: const TextStyle(
-                        fontStyle: FontStyle.italic,
-                        fontFamily: 'PlayfairDisplay',
-                        fontSize: 32,
-                        fontWeight: FontWeight.w300,
-                        color: Colors.black),
+                      fontStyle: FontStyle.italic,
+                      fontFamily: 'PlayfairDisplay',
+                      fontSize: 32,
+                      fontWeight: FontWeight.w300,
+                      color: Colors.black,
+                    ),
                   ),
                   const SizedBox(height: 24),
-
-                  // Tabs: Transaction, Reports, Receipts
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _WalletTab(
-                        label: 'Transaction',
-                        isSelected: _selectedTabIndex == 0,
-                        onTap: () {
-                          setState(() => _selectedTabIndex = 0);
-                        },
-                      ),
-                      _WalletTab(
-                        label: 'Reports',
-                        isSelected: _selectedTabIndex == 1,
-                        onTap: () {
-                          setState(() => _selectedTabIndex = 1);
-                        },
-                      ),
-                      _WalletTab(
-                        label: 'Receipts',
-                        isSelected: _selectedTabIndex == 2,
-                        onTap: () {
-                          setState(() => _selectedTabIndex = 2);
-                        },
-                      ),
-                    ],
+                  // Segmented TABS
+                  Container(
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF6F2E8),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Row(
+                      children: [
+                        SegmentTab(
+                          label: 'Transaction',
+                          isSelected: selectedTabIndex == 0,
+                          onTap: () =>
+                              setState(() => selectedTabIndex = 0),
+                        ),
+                        SegmentTab(
+                          label: 'Reports',
+                          isSelected: selectedTabIndex == 1,
+                          onTap: () =>
+                              setState(() => selectedTabIndex = 1),
+                        ),
+                        SegmentTab(
+                          label: 'Receipts',
+                          isSelected: selectedTabIndex == 2,
+                          onTap: () =>
+                              setState(() => selectedTabIndex = 2),
+                        ),
+                        SegmentTab(
+                          label: 'Archive',
+                          isSelected: selectedTabIndex == 3,
+                          onTap: () =>
+                              setState(() => selectedTabIndex = 3),
+                        ),
+                      ],
+                    ),
                   ),
-
                   const SizedBox(height: 16),
-
                   // Sort by row ONLY for Transaction tab
-                  if (_selectedTabIndex == 0) ...[
+                  if (selectedTabIndex == 0)
                     GestureDetector(
-                      key: _sortKey,
-                      onTap: _showSortMenu,
+                      key: sortKey,
+                      onTap: showSortMenu,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             sortLabel,
                             style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.black,
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.w600),
+                              fontSize: 14,
+                              color: Colors.black,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           const SizedBox(width: 6),
-                          const Icon(Icons.keyboard_arrow_down_rounded,
-                              size: 18, color: Colors.black),
+                          const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 18,
+                            color: Colors.black,
+                          ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                  ],
-
+                  if (selectedTabIndex == 0) const SizedBox(height: 16),
                   // Tab content
                   Expanded(
                     child: Builder(
                       builder: (context) {
-                        if (_selectedTabIndex == 0) {
-                          // Transaction tab
+                        if (selectedTabIndex == 0) {
+                          // TRANSACTION TAB EMPTY STATE
                           return Align(
                             alignment: Alignment.center,
                             child: Padding(
-                              padding: const EdgeInsets.only(bottom: 100),
+                              padding:
+                                  const EdgeInsets.only(bottom: 100),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment:
@@ -442,138 +447,183 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
                               ),
                             ),
                           );
-                        } else if (_selectedTabIndex == 1) {
-                          // Reports tab
+                        } else if (selectedTabIndex == 1) {
+                          // REPORTS TAB – UPDATED DESIGN
                           return SingleChildScrollView(
-                            padding: const EdgeInsets.only(bottom: 100),
+                            padding:
+                                const EdgeInsets.only(bottom: 100),
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Generate Financial Report card
+                                // Gradient Generate Financial Report card
                                 Container(
                                   width: double.infinity,
-                                  padding: const EdgeInsets.all(10),
+                                  padding: const EdgeInsets.all(14),
                                   margin:
-                                      const EdgeInsets.only(bottom: 12),
+                                      const EdgeInsets.only(bottom: 16),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF3D58D),
-                                    borderRadius: BorderRadius.circular(8),
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFFF2CF83),
+                                        Color(0xFFE69F2E),
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
-                                        color: Colors.black, width: 1),
+                                      color: Colors.black,
+                                      width: 1,
+                                    ),
                                   ),
                                   child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
+                                      // reports.png without inner square
+                                      Image.asset(
+                                        'assets/Icons/reports.png',
+                                        width: 52.47,
+                                        height: 41.52,
+                                        fit: BoxFit.contain,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      // Title, subtitle and button stacked vertically
                                       Expanded(
-                                        child: Row(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Container(
-                                              width: 50,
-                                              height: 40,
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    const Color(0xFFB7671A),
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
+                                            const Text(
+                                              'Generate Financial Report',
+                                              style: TextStyle(
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                fontWeight:
+                                                    FontWeight.w600,
+                                                color: Colors.black,
                                               ),
-                                              child: const Icon(
-                                                  Icons.folder,
-                                                  color: Colors.white,
-                                                  size: 28),
                                             ),
-                                            const SizedBox(width: 10),
-                                            const Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment
-                                                        .start,
-                                                mainAxisSize:
-                                                    MainAxisSize.min,
-                                                children: [
-                                                  Text(
-                                                    'Generate Financial Report',
-                                                    style: TextStyle(
-                                                      fontFamily: 'Poppins',
-                                                      fontSize: 13,
-                                                      fontWeight:
-                                                          FontWeight.w600,
+                                            const SizedBox(height: 2),
+                                            const Text(
+                                              'Create an Activity Financial Statement for this wallet',
+                                              style: TextStyle(
+                                                fontFamily: 'Poppins',
+                                                fontSize: 10,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 10),
+                                            SizedBox(
+                                              height: 20,
+                                              child: ElevatedButton(
+                                                onPressed: () {
+                                                  // todo: generate report logic
+                                                },
+                                                style:
+                                                    ElevatedButton.styleFrom(
+                                                  backgroundColor:
+                                                      Colors.white,
+                                                  foregroundColor:
+                                                      Colors.black,
+                                                  elevation: 0,
+                                                  padding:
+                                                      const EdgeInsets
+                                                          .symmetric(
+                                                    horizontal: 5,
+                                                    vertical: 2,
+                                                  ),
+                                                  shape:
+                                                      RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius
+                                                            .circular(4),
+                                                    side: const BorderSide(
                                                       color: Colors.black,
+                                                      width: 1,
                                                     ),
                                                   ),
-                                                  SizedBox(height: 2),
-                                                  Text(
-                                                    'Create an Activity Financial Statement for this wallet.',
-                                                    style: TextStyle(
-                                                      fontFamily: 'Poppins',
-                                                      fontSize: 11,
-                                                      color: Colors.black87,
-                                                    ),
+                                                ),
+                                                child: const Text(
+                                                  'Generate Report',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Poppins',
+                                                    fontSize: 12,
+                                                    fontWeight:
+                                                        FontWeight.w600,
                                                   ),
-                                                ],
+                                                ),
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
-                                      SizedBox(
-                                        height: 40,
-                                        child: ElevatedButton(
-                                          onPressed: () {
-                                            // todo: generate report
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.white,
-                                            foregroundColor: Colors.black,
-                                            elevation: 0,
-                                            padding:
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 10),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              side: const BorderSide(
-                                                  color: Colors.black),
-                                            ),
-                                          ),
-                                          child: const Text('Generate',
-                                              style: TextStyle(
-                                                  fontFamily: 'Poppins',
-                                                  fontSize: 12,
-                                                  fontWeight:
-                                                      FontWeight.w600)),
-                                        ),
-                                      ),
                                     ],
                                   ),
                                 ),
-
-                                // Summary cards
-                                const _ReportSummaryCard(
-                                    title: 'Budget',
-                                    amountLabel: 'Php 0.00'),
-                                const _ReportSummaryCard(
-                                    title: 'Total amount of expenses',
-                                    amountLabel: 'Php 0.00'),
-                                const _ReportSummaryCard(
-                                    title: 'Total amount of  Income',
-                                    amountLabel: 'Php 0.00'),
-                                const _ReportSummaryCard(
-                                    title: 'Budget in Bank',
-                                    amountLabel: 'Php 0.00'),
-                                const _ReportSummaryCard(
-                                    title: 'Ending Cash',
-                                    amountLabel: 'Php 0.00'),
+                                // Summary cards in 2x2 grid like image
+                                Row(
+                                  children: const [
+                                    Expanded(
+                                      child: ReportSummaryCard(
+                                        title: 'Budget',
+                                        amountLabel: 'Php 0.00',
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: ReportSummaryCard(
+                                        title: 'Total amount of Income',
+                                        amountLabel: 'Php 0.00',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: const [
+                                    Expanded(
+                                      child: ReportSummaryCard(
+                                        title:
+                                            'Total amount of expenses',
+                                        amountLabel: 'Php 0.00',
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: ReportSummaryCard(
+                                        title: 'Ending Cash',
+                                        amountLabel: 'Php 0.00',
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
                           );
-                        } else {
-                          // Receipts tab
+                        } else if (selectedTabIndex == 2) {
+                          // RECEIPTS TAB
                           return const Center(
                             child: Text(
                               'No receipts yet',
                               style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 14,
-                                  color: Colors.black),
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                color: Colors.black,
+                              ),
+                            ),
+                          );
+                        } else {
+                          // ARCHIVE TAB
+                          return const Center(
+                            child: Text(
+                              'No archived items yet',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                color: Colors.black,
+                              ),
                             ),
                           );
                         }
@@ -585,42 +635,48 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
             ),
           ),
 
-          // Dark overlay when either menu or any form is visible
-          if (_showAddMenu ||
-              _showAddIncomeForm ||
-              _showAddExpenseForm ||
-              _showAddReceiptForm)
+          // Dark overlay
+          if (showAddMenu ||
+              showAddIncomeForm ||
+              showAddExpenseForm ||
+              showAddReceiptForm)
             Positioned.fill(
               child: GestureDetector(
-                onTap: _closeAddMenu,
+                onTap: closeAddMenu,
                 child: Container(
                   color: Colors.black.withValues(alpha: 0.4),
                 ),
               ),
             ),
 
-          // Three-option menu when + is tapped
-          if (_showAddMenu)
+          // Add menu
+          if (showAddMenu)
             Positioned(
               bottom: 100,
               right: 20,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  _AddMenuButton(
-                      label: 'Add Income', onTap: _openAddIncomeForm),
+                  AddMenuButton(
+                    label: 'Add Income',
+                    onTap: openAddIncomeForm,
+                  ),
                   const SizedBox(height: 8),
-                  _AddMenuButton(
-                      label: 'Add Expense', onTap: _openAddExpenseForm),
+                  AddMenuButton(
+                    label: 'Add Expense',
+                    onTap: openAddExpenseForm,
+                  ),
                   const SizedBox(height: 8),
-                  _AddMenuButton(
-                      label: 'Add Receipt', onTap: _openAddReceiptForm),
+                  AddMenuButton(
+                    label: 'Add Receipt',
+                    onTap: openAddReceiptForm,
+                  ),
                 ],
               ),
             ),
 
           // Add Income popup
-          if (_showAddIncomeForm)
+          if (showAddIncomeForm)
             Center(
               child: Padding(
                 padding: EdgeInsets.only(bottom: keyboardInset + 20),
@@ -628,7 +684,9 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
                   width: 300,
                   height: 461,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 16),
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -637,140 +695,176 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Add Income Transaction',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black)),
+                      const Text(
+                        'Add Income Transaction',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 2),
-                      const Text('Record an income transaction for this wallet.',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black87)),
+                      const Text(
+                        'Record an income transaction for this wallet.',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
+                      ),
                       const SizedBox(height: 10),
-
-                      const Text('Date Issued',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black)),
+                      const Text(
+                        'Date Issued',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 4),
                       SizedBox(
                         height: 40,
                         child: TextField(
-                          controller: _dateIssuedController,
+                          controller: dateIssuedController,
                           readOnly: true,
-                          onTap: _pickDateIssued,
+                          onTap: pickDateIssued,
                           textAlignVertical: TextAlignVertical.center,
                           style: const TextStyle(
-                              fontFamily: 'Poppins', fontSize: 13),
+                            fontFamily: 'Poppins',
+                            fontSize: 13,
+                          ),
                           decoration: const InputDecoration(
                             hintText: 'Select date',
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 8,
+                            ),
                             border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.black54)),
+                              borderSide:
+                                  BorderSide(color: Colors.black54),
+                            ),
                             isDense: true,
-                            suffixIcon:
-                                Icon(Icons.calendar_today_outlined, size: 18),
+                            suffixIcon: Icon(
+                              Icons.calendar_today_outlined,
+                              size: 18,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 8),
-
-                      const Text('Quantity',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black)),
+                      const Text(
+                        'Quantity',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      _PopupTextField(
-                          controller: _quantityController,
-                          keyboardType: TextInputType.number),
+                      PopupTextField(
+                        controller: quantityController,
+                        keyboardType: TextInputType.number,
+                      ),
                       const SizedBox(height: 8),
-
-                      const Text('Type of Income',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black)),
+                      const Text(
+                        'Type of Income',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 4),
                       SizedBox(
                         height: 40,
                         child: DropdownButtonFormField<String>(
-                          initialValue: _selectedIncomeType,
-                          items: _incomeTypes
+                          initialValue: selectedIncomeType,
+                          items: incomeTypes
                               .map(
                                 (type) => DropdownMenuItem<String>(
                                   value: type,
-                                  child: Text(type,
-                                      style: const TextStyle(
-                                          fontFamily: 'Poppins', fontSize: 13)),
+                                  child: Text(
+                                    type,
+                                    style: const TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 13,
+                                    ),
+                                  ),
                                 ),
                               )
                               .toList(),
                           onChanged: (value) {
-                            setState(() {
-                              _selectedIncomeType = value;
-                            });
+                            setState(() => selectedIncomeType = value);
                           },
                           decoration: const InputDecoration(
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 8,
+                            ),
                             border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.black54)),
+                              borderSide:
+                                  BorderSide(color: Colors.black54),
+                            ),
                             isDense: true,
                             hintText: 'Select Type',
                           ),
                         ),
                       ),
                       const SizedBox(height: 8),
-
-                      const Text('Description',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black)),
+                      const Text(
+                        'Description',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      _PopupTextField(controller: _descriptionController),
+                      PopupTextField(controller: descriptionController),
                       const SizedBox(height: 8),
-
-                      const Text('Price',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black)),
+                      const Text(
+                        'Price',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      _PopupTextField(
-                          controller: _priceController,
-                          keyboardType: TextInputType.number),
-
+                      PopupTextField(
+                        controller: priceController,
+                        keyboardType: TextInputType.number,
+                      ),
                       const Spacer(),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
-                            onPressed: _closeAddMenu,
+                            onPressed: closeAddMenu,
                             style: TextButton.styleFrom(
                               minimumSize: const Size(70, 30),
                               foregroundColor: Colors.black,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                side: const BorderSide(color: Colors.black),
+                                side: const BorderSide(
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
-                            child: const Text('Cancel',
-                                style: TextStyle(
-                                    fontFamily: 'Poppins', fontSize: 12)),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 8),
                           TextButton(
                             onPressed: () {
                               // todo: save income
-                              _closeAddMenu();
+                              closeAddMenu();
                             },
                             style: TextButton.styleFrom(
                               minimumSize: const Size(70, 30),
@@ -780,9 +874,13 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                            child: const Text('Save',
-                                style: TextStyle(
-                                    fontFamily: 'Poppins', fontSize: 12)),
+                            child: const Text(
+                              'Save',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -793,7 +891,7 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
             ),
 
           // Add Expense popup
-          if (_showAddExpenseForm)
+          if (showAddExpenseForm)
             Center(
               child: Padding(
                 padding: EdgeInsets.only(bottom: keyboardInset + 20),
@@ -801,7 +899,9 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
                   width: 300,
                   height: 461,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 16),
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -810,114 +910,146 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Add Expense Transaction',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black)),
+                      const Text(
+                        'Add Expense Transaction',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 2),
-                      const Text('Record an expense transaction for this wallet.',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black87)),
+                      const Text(
+                        'Record an expense transaction for this wallet.',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
+                      ),
                       const SizedBox(height: 10),
-
-                      const Text('Date Issued',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black)),
+                      const Text(
+                        'Date Issued',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 4),
                       SizedBox(
                         height: 40,
                         child: TextField(
-                          controller: _expenseDateController,
+                          controller: expenseDateController,
                           readOnly: true,
-                          onTap: _pickExpenseDate,
+                          onTap: pickExpenseDate,
                           textAlignVertical: TextAlignVertical.center,
                           style: const TextStyle(
-                              fontFamily: 'Poppins', fontSize: 13),
+                            fontFamily: 'Poppins',
+                            fontSize: 13,
+                          ),
                           decoration: const InputDecoration(
                             hintText: 'Select date',
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 8,
+                            ),
                             border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.black54)),
+                              borderSide:
+                                  BorderSide(color: Colors.black54),
+                            ),
                             isDense: true,
-                            suffixIcon:
-                                Icon(Icons.calendar_today_outlined, size: 18),
+                            suffixIcon: Icon(
+                              Icons.calendar_today_outlined,
+                              size: 18,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 8),
-
-                      const Text('Quantity',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black)),
+                      const Text(
+                        'Quantity',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      _PopupTextField(
-                          controller: _expenseQuantityController,
-                          keyboardType: TextInputType.number),
+                      PopupTextField(
+                        controller: expenseQuantityController,
+                        keyboardType: TextInputType.number,
+                      ),
                       const SizedBox(height: 8),
-
-                      const Text('Particulars',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black)),
+                      const Text(
+                        'Particulars',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      _PopupTextField(
-                          controller: _expenseParticularsController),
+                      PopupTextField(
+                        controller: expenseParticularsController,
+                      ),
                       const SizedBox(height: 8),
-
-                      const Text('Description',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black)),
+                      const Text(
+                        'Description',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      _PopupTextField(
-                          controller: _expenseDescriptionController),
+                      PopupTextField(
+                        controller: expenseDescriptionController,
+                      ),
                       const SizedBox(height: 8),
-
-                      const Text('Price',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black)),
+                      const Text(
+                        'Price',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      _PopupTextField(
-                          controller: _expensePriceController,
-                          keyboardType: TextInputType.number),
-
+                      PopupTextField(
+                        controller: expensePriceController,
+                        keyboardType: TextInputType.number,
+                      ),
                       const Spacer(),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
-                            onPressed: _closeAddMenu,
+                            onPressed: closeAddMenu,
                             style: TextButton.styleFrom(
                               minimumSize: const Size(70, 30),
                               foregroundColor: Colors.black,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                side: const BorderSide(color: Colors.black),
+                                side: const BorderSide(
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
-                            child: const Text('Cancel',
-                                style: TextStyle(
-                                    fontFamily: 'Poppins', fontSize: 12)),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 8),
                           TextButton(
                             onPressed: () {
                               // todo: save expense
-                              _closeAddMenu();
+                              closeAddMenu();
                             },
                             style: TextButton.styleFrom(
                               minimumSize: const Size(70, 30),
@@ -927,9 +1059,13 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                            child: const Text('Save',
-                                style: TextStyle(
-                                    fontFamily: 'Poppins', fontSize: 12)),
+                            child: const Text(
+                              'Save',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -940,7 +1076,7 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
             ),
 
           // Add Receipt popup
-          if (_showAddReceiptForm)
+          if (showAddReceiptForm)
             Center(
               child: Padding(
                 padding: EdgeInsets.only(bottom: keyboardInset + 20),
@@ -948,7 +1084,9 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
                   width: 300,
                   height: 380,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 16),
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -957,114 +1095,150 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Add Receipt',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black)),
+                      const Text(
+                        'Add Receipt',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 2),
-                      const Text('Upload a receipt image for this wallet.',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black87)),
+                      const Text(
+                        'Upload a receipt image for this wallet.',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
+                      ),
                       const SizedBox(height: 12),
-
-                      const Text('Receipt image',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black)),
+                      const Text(
+                        'Receipt image',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
                           ElevatedButton(
-                            onPressed: _pickReceiptImage,
+                            onPressed: pickReceiptImage,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF2F4366),
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 10),
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                side: const BorderSide(color: Colors.black),
+                                side: const BorderSide(
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
-                            child: const Text('Upload file',
-                                style: TextStyle(
-                                    fontFamily: 'Poppins', fontSize: 13)),
+                            child: const Text(
+                              'Upload file',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 13,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 8),
-                          if (_receiptImage != null)
-                            const Icon(Icons.check_circle,
-                                color: Colors.green, size: 20),
+                          if (receiptImage != null)
+                            const Icon(
+                              Icons.check_circle,
+                              color: Colors.green,
+                              size: 20,
+                            ),
                         ],
                       ),
                       const SizedBox(height: 8),
-
-                      const Text('Description',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black)),
+                      const Text(
+                        'Description',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      _PopupTextField(
-                          controller: _receiptDescriptionController),
+                      PopupTextField(
+                        controller: receiptDescriptionController,
+                      ),
                       const SizedBox(height: 8),
-
-                      const Text('Date',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              color: Colors.black)),
+                      const Text(
+                        'Date',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 4),
                       SizedBox(
                         height: 40,
                         child: TextField(
-                          controller: _receiptDateController,
+                          controller: receiptDateController,
                           readOnly: true,
-                          onTap: _pickReceiptDate,
+                          onTap: pickReceiptDate,
                           textAlignVertical: TextAlignVertical.center,
                           style: const TextStyle(
-                              fontFamily: 'Poppins', fontSize: 13),
+                            fontFamily: 'Poppins',
+                            fontSize: 13,
+                          ),
                           decoration: const InputDecoration(
                             hintText: 'Select date',
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 8,
+                            ),
                             border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.black54)),
+                              borderSide:
+                                  BorderSide(color: Colors.black54),
+                            ),
                             isDense: true,
-                            suffixIcon:
-                                Icon(Icons.calendar_today_outlined, size: 18),
+                            suffixIcon: Icon(
+                              Icons.calendar_today_outlined,
+                              size: 18,
+                            ),
                           ),
                         ),
                       ),
-
                       const Spacer(),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
-                            onPressed: _closeAddMenu,
+                            onPressed: closeAddMenu,
                             style: TextButton.styleFrom(
                               minimumSize: const Size(70, 30),
                               foregroundColor: Colors.black,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                side: const BorderSide(color: Colors.black),
+                                side: const BorderSide(
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
-                            child: const Text('Cancel',
-                                style: TextStyle(
-                                    fontFamily: 'Poppins', fontSize: 12)),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 8),
                           TextButton(
                             onPressed: () {
                               // todo: save receipt
-                              _closeAddMenu();
+                              closeAddMenu();
                             },
                             style: TextButton.styleFrom(
                               minimumSize: const Size(70, 30),
@@ -1074,9 +1248,13 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                            child: const Text('Save',
-                                style: TextStyle(
-                                    fontFamily: 'Poppins', fontSize: 12)),
+                            child: const Text(
+                              'Save',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -1087,7 +1265,6 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
             ),
         ],
       ),
-
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 20),
@@ -1095,12 +1272,16 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
           width: 60,
           height: 60,
           child: FloatingActionButton(
-            onPressed: _toggleAddMenu,
+            onPressed: toggleAddMenu,
             backgroundColor: const Color(0xFF2F4366),
             shape: const CircleBorder(
               side: BorderSide(color: Colors.black, width: 1),
             ),
-            child: const Icon(Icons.add, size: 32, color: Color(0xFFFFFFFF)),
+            child: const Icon(
+              Icons.add,
+              size: 32,
+              color: Color(0xFFFFFFFF),
+            ),
           ),
         ),
       ),
@@ -1108,12 +1289,17 @@ class _WalletMonthScreenState extends State<WalletMonthScreen> {
   }
 }
 
-// Simple input used in popup
-class _PopupTextField extends StatelessWidget {
+// Reusable widgets
+
+class PopupTextField extends StatelessWidget {
   final TextEditingController controller;
   final TextInputType? keyboardType;
 
-  const _PopupTextField({required this.controller, this.keyboardType});
+  const PopupTextField({
+    super.key,
+    required this.controller,
+    this.keyboardType,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1123,12 +1309,18 @@ class _PopupTextField extends StatelessWidget {
         controller: controller,
         keyboardType: keyboardType,
         textAlignVertical: TextAlignVertical.center,
-        style: const TextStyle(fontFamily: 'Poppins', fontSize: 13),
+        style: const TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 13,
+        ),
         decoration: const InputDecoration(
-          contentPadding:
-              EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          border:
-              OutlineInputBorder(borderSide: BorderSide(color: Colors.black54)),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 8,
+          ),
+          border: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.black54),
+          ),
           isDense: true,
         ),
       ),
@@ -1136,14 +1328,17 @@ class _PopupTextField extends StatelessWidget {
   }
 }
 
-// Reusable tab widget
-class _WalletTab extends StatelessWidget {
+class SegmentTab extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _WalletTab(
-      {required this.label, required this.isSelected, required this.onTap});
+  const SegmentTab({
+    super.key,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1151,23 +1346,26 @@ class _WalletTab extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          height: 36,
-          margin: const EdgeInsets.symmetric(horizontal: 4),
+          height: 34,
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFF3D58D) : Colors.white,
+            color: isSelected ? const Color(0xFFF3D58D) : Colors.transparent,
             borderRadius: BorderRadius.circular(5),
             border: Border.all(
-                color:
-                    isSelected ? const Color.fromARGB(255, 0, 0, 0) : Colors.black12),
+              color: isSelected ? Colors.black : Colors.transparent,
+              width: 1,
+            ),
           ),
           alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Text(
             label,
-            style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.black : Colors.black87),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
           ),
         ),
       ),
@@ -1175,12 +1373,15 @@ class _WalletTab extends StatelessWidget {
   }
 }
 
-// Small white buttons in the add menu
-class _AddMenuButton extends StatelessWidget {
+class AddMenuButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _AddMenuButton({required this.label, required this.onTap});
+  const AddMenuButton({
+    super.key,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1195,46 +1396,66 @@ class _AddMenuButton extends StatelessWidget {
           border: Border.all(color: Colors.black, width: 1),
         ),
         alignment: Alignment.center,
-        child: Text(label,
-            style: const TextStyle(
-                fontFamily: 'Poppins', fontSize: 13, color: Colors.black)),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 13,
+            color: Colors.black,
+          ),
+        ),
       ),
     );
   }
 }
 
-// Yellow summary card used in Reports tab
-class _ReportSummaryCard extends StatelessWidget {
+class ReportSummaryCard extends StatelessWidget {
   final String title;
   final String amountLabel;
 
-  const _ReportSummaryCard({required this.title, required this.amountLabel});
+  const ReportSummaryCard({
+    super.key,
+    required this.title,
+    required this.amountLabel,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3D58D),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.black, width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
+    return SizedBox(
+      height: 60, // keep consistent box height
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(12, 12, 2, 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFF3D58D), 
+          width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment:
+              MainAxisAlignment.spaceBetween, // pushes Php 0.00 to bottom
+          children: [
+            Text(
+              title,
               style: const TextStyle(
-                  fontFamily: 'Poppins', fontSize: 13, color: Colors.black)),
-          const SizedBox(height: 4),
-          Text(amountLabel,
+                fontFamily: 'Poppins',
+                fontSize: 11,
+                color: Colors.black87,
+              ),
+            ),
+            Text(
+              amountLabel,
               style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black)),
-        ],
+                fontFamily: 'Poppins',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
