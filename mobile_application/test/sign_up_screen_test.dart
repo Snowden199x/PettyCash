@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_application/main.dart'; // ✅ MyApp is here
+import 'package:pockitrack/main.dart'; // ✅ MyApp is here
 
 void main() {
   testWidgets('Sign Up screen loads correctly', (WidgetTester tester) async {

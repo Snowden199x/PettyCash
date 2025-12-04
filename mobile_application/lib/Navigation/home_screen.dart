@@ -248,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen>
                             _OverviewCard(
                               title: "Total of events:",
                               subtitle: '',
-                              amount: 'PHP 00.00',
+                              amount: '0',
                             ),
                           ],
                         ),
