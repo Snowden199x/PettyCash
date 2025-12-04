@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mobile_application/Navigation/home_screen.dart';
-import 'package:mobile_application/Navigation/transaction_history_screen.dart';
-import 'package:mobile_application/Navigation/wallet_screen.dart';
+import 'package:pockitrack/Navigation/home_screen.dart';
+import 'package:pockitrack/Navigation/transaction_history_screen.dart';
+import 'package:pockitrack/Navigation/wallet_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
