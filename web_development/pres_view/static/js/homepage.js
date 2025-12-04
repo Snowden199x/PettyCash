@@ -149,11 +149,12 @@ function loadTransactions(transactions) {
 
     const middleLine = parts.join(" - ");
     const totalDisplay = `Php ${tx.total_amount.toLocaleString()}`;
+    const txYear = new Date(tx.date).getFullYear();
 
     return `
       <div class="transaction-item ${tx.type}">
         <div class="transaction-info">
-          <h5>${tx.wallet_name}</h5>
+          <h5>${tx.wallet_name} ${txYear}</h5>
           <p>${middleLine}</p>
           <span class="transaction-date">${formattedDate}</span>
         </div>

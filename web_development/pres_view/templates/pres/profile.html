@@ -74,59 +74,313 @@
             <h3>Profile</h3>
           </section>
 
-          <div class="profile-container">
-            <!-- Profile Picture Section -->
+          <!-- Organization Overview Section -->
+          <div class="profile-overview">
             <div class="profile-picture-section">
               <div class="profile-picture">
-                <img id="profile-img" src="{{ url_for('pres.static', filename='images/default_avatar.png') }}" alt="Profile Picture" />
+                <img
+                  id="profile-img"
+                  src="{{ url_for('pres.static', filename='images/default_avatar.png') }}"
+                  alt="Organization Logo"
+                />
               </div>
-              <button class="change-photo-btn">
-                <img src="{{ url_for('pres.static', filename='images/camera_icon.png') }}" alt="Camera" />
+
+              <!-- Button and hidden input under the photo -->
+              <button class="change-photo-btn" id="org-photo-btn" disabled>
+                <img
+                  src="{{ url_for('pres.static', filename='images/camera_icon.png') }}"
+                  alt="Camera"
+                />
                 Change Photo
               </button>
-              <input type="file" id="photo-upload" accept="image/*" style="display: none;" />
+              <input
+                type="file"
+                id="photo-upload"
+                accept="image/*"
+                style="display:none;"
+              />
             </div>
 
-            <!-- Organization Information -->
-            <div class="info-section">
-              <h4>Organization Information</h4>
-              
-              <div class="info-card">
-                <div class="form-row">
-                  <div class="form-group full-width">
-                    <label>Organization Name</label>
-                    <input type="text" id="org-name" value="Information Technology Unity Hub" readonly />
+            <!-- Overview info (second flex item) -->
+            <div class="overview-info">
+              <h2 id="overview-org-name">Information Technology Unity Hub</h2>
+              <p class="overview-short-name" id="overview-short-name">ITUH</p>
+              <p class="overview-department" id="overview-department">
+                College of Computer Studies
+              </p>
+              <p class="overview-school" id="overview-school">
+                Laguna State Polytechnic University - Sta. Cruz Campus
+              </p>
+              <div
+                class="accreditation-badge accredited"
+                id="accreditation-badge"
+              >
+                <span class="badge-icon">✓</span>
+                <span class="badge-text">Accredited</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabs Navigation -->
+          <div class="tabs-container">
+            <div class="tabs-nav">
+              <button class="tab-btn active" data-tab="organization">
+                Organization Information
+              </button>
+              <button class="tab-btn" data-tab="officers">Officers</button>
+              <button class="tab-btn" data-tab="accreditation">
+                Accreditation Details
+              </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tabs-content">
+              <!-- Organization Information Tab -->
+              <div class="tab-pane active" id="organization-tab">
+                <div class="info-card">
+                  <div class="form-row">
+                    <div class="form-group full-width">
+                      <label>Organization Name</label>
+                      <input
+                        type="text"
+                        id="org-name"
+                        value="Information Technology Unity Hub"
+                        readonly
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Organization Shortened Name</label>
+                      <input
+                        type="text"
+                        id="org-short-name"
+                        value="ITUH"
+                        readonly
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label>Department</label>
+                      <input
+                        type="text"
+                        id="department"
+                        value="College of Computer Studies"
+                        readonly
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group full-width">
+                      <label>School/University</label>
+                      <input
+                        type="text"
+                        id="school"
+                        value="Laguna State Polytechnic University - Sta. Cruz Campus"
+                        readonly
+                      />
+                    </div>
+                  </div>
+
+                  <div class="action-buttons">
+                    <button class="edit-btn" id="edit-btn">Edit</button>
+                    <button
+                      class="save-btn"
+                      id="save-btn"
+                      style="display: none;"
+                    >
+                      Save Changes
+                    </button>
+                    <button
+                      class="cancel-btn"
+                      id="cancel-btn"
+                      style="display: none;"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </div>
+              </div>
 
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>Organization Shortened Name</label>
-                    <input type="text" id="org-short-name" value="ITUH" readonly />
-                  </div>
-                  <div class="form-group">
-                    <label>Department</label>
-                    <input type="text" id="department" value="College of Computer Studies" readonly />
-                  </div>
+              <!-- Officers Tab -->
+              <div class="tab-pane" id="officers-tab">
+                <div class="officers-header">
+                  <h4>Organization Officers</h4>
+                  <button class="add-officer-btn" id="add-officer-btn">
+                    <span>+</span> Add Officer
+                  </button>
                 </div>
 
-                <div class="form-row">
-                  <div class="form-group full-width">
-                    <label>School/University</label>
-                    <input type="text" id="school" value="Laguna State Polytechnic University - Sta. Cruz Campus" readonly />
+                <div class="officers-table-container">
+                  <table class="officers-table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Position</th>
+                        <th>Term Start</th>
+                        <th>Term End</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="officers-tbody">
+                      <!-- Sample data - will be populated dynamically -->
+                      <tr>
+                        <td>John Doe</td>
+                        <td>President</td>
+                        <td>August 2024</td>
+                        <td>May 2025</td>
+                        <td>
+                          <span class="status-badge active">Active</span>
+                        </td>
+                        <td>
+                          <button
+                            class="action-btn edit-officer-btn"
+                            data-id="1"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            class="action-btn delete-officer-btn"
+                            data-id="1"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Jane Smith</td>
+                        <td>Vice President</td>
+                        <td>August 2024</td>
+                        <td>May 2025</td>
+                        <td>
+                          <span class="status-badge active">Active</span>
+                        </td>
+                        <td>
+                          <button
+                            class="action-btn edit-officer-btn"
+                            data-id="2"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            class="action-btn delete-officer-btn"
+                            data-id="2"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Delete Officer Confirmation Modal -->
+              <div class="modal" id="delete-confirm-modal">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h3>Delete Officer</h3>
+                    <button class="modal-close" id="delete-confirm-close">&times;</button>
+                  </div>
+                  <div class="modal-body">
+                    <p id="delete-confirm-text">
+                      Are you sure you want to delete this officer?
+                    </p>
+                  </div>
+                  <div class="modal-footer">
+                    <button class="cancel-btn" id="delete-confirm-cancel">Cancel</button>
+                    <button class="save-btn" id="delete-confirm-confirm">Delete</button>
                   </div>
                 </div>
+              </div>
 
-                <div class="action-buttons">
-                  <button class="edit-btn" id="edit-btn">Edit</button>
-                  <button class="save-btn" id="save-btn" style="display: none;">Save Changes</button>
-                  <button class="cancel-btn" id="cancel-btn" style="display: none;">Cancel</button>
+
+              <!-- Accreditation Details Tab -->
+              <div class="tab-pane" id="accreditation-tab">
+                <div class="accreditation-info-card">
+                  <h4>Accreditation Information</h4>
+
+                  <div class="accreditation-details">
+                    <div class="detail-row">
+                      <span class="detail-label">Date of Accreditation:</span>
+                      <span class="detail-value">September 15, 2024</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Validity Period:</span>
+                      <span class="detail-value"
+                        >1 Year (September 15, 2024 - September 14, 2025)</span
+                      >
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Last Renewal Date:</span>
+                      <span class="detail-value">September 15, 2024</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Current Status:</span>
+                      <span class="detail-value status-accredited"
+                        >Accredited</span
+                      >
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+          <!-- end tabs-container -->
         </div>
+        <!-- end content-box -->
       </main>
+    </div>
+
+    <!-- Officer Modal -->
+    <div class="modal" id="officer-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modal-title">Add Officer</h3>
+          <button class="modal-close" id="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Name</label>
+            <input
+              type="text"
+              id="officer-name"
+              placeholder="Enter officer name"
+            />
+          </div>
+          <div class="form-group">
+            <label>Position</label>
+            <input
+              type="text"
+              id="officer-position"
+              placeholder="Enter position"
+            />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Term Start</label>
+              <input type="month" id="officer-term-start" />
+            </div>
+            <div class="form-group">
+              <label>Term End</label>
+              <input type="month" id="officer-term-end" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="officer-status">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="cancel-btn" id="modal-cancel">Cancel</button>
+          <button class="save-btn" id="modal-save">Save Officer</button>
+        </div>
+      </div>
     </div>
 
     <script src="{{ url_for('pres.static', filename='js/profile.js') }}"></script>
