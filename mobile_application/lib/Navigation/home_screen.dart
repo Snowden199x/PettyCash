@@ -9,7 +9,13 @@ import '../LogIn/log_in_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String orgName;
-  const HomeScreen({super.key, required this.orgName});
+  final int orgId;
+
+  const HomeScreen({
+    super.key,
+    required this.orgName,
+    required this.orgId,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -65,7 +71,10 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _showLoginSuccessNotification() {
+    if (!mounted) return;
     final overlay = Overlay.of(context);
+    if (overlay == null) return;
+
     final overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
         top: 60,
@@ -105,17 +114,25 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
     );
+
     overlay.insert(overlayEntry);
-    Future.delayed(const Duration(seconds: 1))
-        .then((_) => overlayEntry.remove());
+    Future.delayed(const Duration(seconds: 1)).then((_) {
+      if (mounted) {
+        overlayEntry.remove();
+      }
+    });
   }
 
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
+
     Widget nextScreen;
     switch (index) {
       case 0:
-        nextScreen = HomeScreen(orgName: widget.orgName);
+        nextScreen = HomeScreen(
+          orgName: widget.orgName,
+          orgId: widget.orgId,
+        );
         break;
       case 1:
         nextScreen = const TransactionHistoryScreen();
@@ -129,6 +146,7 @@ class _HomeScreenState extends State<HomeScreen>
       default:
         return;
     }
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
@@ -300,7 +318,6 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               const SizedBox(height: 70),
-              // Empty state: image + texts centered
               Center(
                 child: Column(
                   children: [
@@ -394,6 +411,7 @@ class _OverviewCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final String amount;
+
   const _OverviewCard({
     required this.title,
     required this.subtitle,
@@ -429,8 +447,10 @@ class _OverviewCard extends StatelessWidget {
             right: 10,
             child: Text(
               amount,
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ),
           ),
         ],

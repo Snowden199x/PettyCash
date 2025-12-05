@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "run-flask",
+      "type": "shell",
+      "command": "cd web_development && venv\\Scripts\\activate && python app.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "run-flutter",
+      "type": "shell",
+      "command": "cd mobile_application && flutter run",
+      "problemMatcher": []
+    },
+    {
+      "label": "run-all",
+      "dependsOn": ["run-flask", "run-flutter"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

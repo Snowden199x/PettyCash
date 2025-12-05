@@ -2,12 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:pockitrack/Navigation/home_screen.dart';
-import 'package:pockitrack/Navigation/transaction_history_screen.dart';
-import 'package:pockitrack/Navigation/wallet_screen.dart';
+import 'home_screen.dart';
+import 'transaction_history_screen.dart';
+import 'wallet_screen.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+class ProfileScreen extends StatelessWidget {
+  final int? orgId; // optional
+  const ProfileScreen({super.key, this.orgId});
+
+  const ProfileScreen({super.key, required this.orgName, required this.orgId});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -96,7 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Widget nextScreen;
     switch (index) {
       case 0:
-        nextScreen = const HomeScreen(orgName: "Organization");
+        nextScreen = HomeScreen(orgName: widget.orgName, orgId: widget.orgId);
         break;
       case 1:
         nextScreen = const TransactionHistoryScreen();
@@ -105,7 +108,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         nextScreen = const WalletScreen();
         break;
       case 3:
-        nextScreen = const ProfileScreen();
+        nextScreen = ProfileScreen(
+          orgName: widget.orgName,
+          orgId: widget.orgId,
+        );
         break;
       default:
         return;
