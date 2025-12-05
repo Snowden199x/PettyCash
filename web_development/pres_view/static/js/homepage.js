@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   // Live date display
   const dateElement = document.querySelector(".date-text");
   const today = new Date();
@@ -7,12 +7,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Sidebar active nav handling
   const navItems = document.querySelectorAll(".nav-item");
-  navItems.forEach(item => {
+  navItems.forEach((item) => {
     item.addEventListener("click", () => {
-      navItems.forEach(i => i.classList.remove("active"));
+      navItems.forEach((i) => i.classList.remove("active"));
       item.classList.add("active");
     });
   });
+
+  // NEW: load org profile for top-right avatar
+  try {
+    const res = await fetch("/pres/api/profile");
+    if (res.ok) {
+      const profile = await res.json();
+      const avatarImg = document.querySelector(".profile-avatar");
+      const nameSpan = document.querySelector(".profile-name");
+
+      if (avatarImg && profile.profile_photo_url) {
+        avatarImg.src = profile.profile_photo_url;
+      }
+      if (nameSpan && profile.org_name) {
+        nameSpan.textContent = profile.org_name;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load header profile:", err);
+  }
 
   // Load dashboard data
   loadDashboardData();
@@ -45,19 +64,18 @@ async function loadDashboardData() {
 
     // 3) Recent transactions
     // inside loadDashboardData()
-const transactionsResponse = await fetch("/pres/api/transactions");
-if (transactionsResponse.ok) {
-  const all = await transactionsResponse.json();
-  const recent = Array.isArray(all) ? all.slice(0, 5) : [];
-  if (recent.length > 0) {
-    loadTransactions(recent);
-  } else {
-    showEmptyTransactions();
-  }
-} else {
-  showEmptyTransactions();
-}
-
+    const transactionsResponse = await fetch("/pres/api/transactions");
+    if (transactionsResponse.ok) {
+      const all = await transactionsResponse.json();
+      const recent = Array.isArray(all) ? all.slice(0, 5) : [];
+      if (recent.length > 0) {
+        loadTransactions(recent);
+      } else {
+        showEmptyTransactions();
+      }
+    } else {
+      showEmptyTransactions();
+    }
   } catch (err) {
     console.error("Error loading dashboard data:", err);
     showEmptyWallets();
@@ -66,26 +84,35 @@ if (transactionsResponse.ok) {
 }
 
 function updateSummaryCards(summary) {
-  document.getElementById("total-balance").textContent =
-    `Php ${summary.total_balance.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
+  document.getElementById(
+    "total-balance"
+  ).textContent = `Php ${summary.total_balance.toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+  })}`;
   document.getElementById("reports-submitted").textContent =
     summary.reports_submitted;
-  document.getElementById("income-month").textContent =
-    `Php ${summary.income_month.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
-  document.getElementById("expenses-month").textContent =
-    `Php ${summary.expenses_month.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
+  document.getElementById(
+    "income-month"
+  ).textContent = `Php ${summary.income_month.toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+  })}`;
+  document.getElementById(
+    "expenses-month"
+  ).textContent = `Php ${summary.expenses_month.toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+  })}`;
 }
-
 
 function loadWallets(wallets) {
   const walletsContainer = document.getElementById("wallets-container");
 
-  walletsContainer.innerHTML = wallets.map(folder => {
-    const totalBudget = folder.budget || 0;
-    const used = folder.total_expenses || 0;
-    const progress = totalBudget > 0 ? (used / totalBudget) * 100 : 0;
+  walletsContainer.innerHTML = wallets
+    .map((folder) => {
+      const totalBudget = folder.budget || 0;
+      const used = folder.total_expenses || 0;
+      const progress = totalBudget > 0 ? (used / totalBudget) * 100 : 0;
 
-    return `
+      return `
       <div class="wallet-card">
         <div class="wallet-icon">
           <img src="/pres/static/images/wallet.png"
@@ -112,46 +139,47 @@ function loadWallets(wallets) {
         </div>
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 }
 
-
-
-
 function loadTransactions(transactions) {
-  const transactionsContainer = document.getElementById("transactions-container");
+  const transactionsContainer = document.getElementById(
+    "transactions-container"
+  );
   if (!transactionsContainer) return;
 
-  transactionsContainer.innerHTML = transactions.map(tx => {
-    const dateObj = new Date(tx.date);
-    const formattedDate = dateObj.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+  transactionsContainer.innerHTML = transactions
+    .map((tx) => {
+      const dateObj = new Date(tx.date);
+      const formattedDate = dateObj.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
 
-    // Build middle line:
-    const parts = [];
-    // price x quantity
-    parts.push(`Php ${tx.price.toLocaleString()} x ${tx.quantity}`);
+      // Build middle line:
+      const parts = [];
+      // price x quantity
+      parts.push(`Php ${tx.price.toLocaleString()} x ${tx.quantity}`);
 
-    if (tx.type === "income" && tx.income_type) {
-      // income: price x qty - type of income - description
-      parts.push(tx.income_type);
-    } else if (tx.type === "expense" && tx.particulars) {
-      // expense: price x qty - particulars - description
-      parts.push(tx.particulars);
-    }
+      if (tx.type === "income" && tx.income_type) {
+        // income: price x qty - type of income - description
+        parts.push(tx.income_type);
+      } else if (tx.type === "expense" && tx.particulars) {
+        // expense: price x qty - particulars - description
+        parts.push(tx.particulars);
+      }
 
-    if (tx.description) {
-      parts.push(tx.description);
-    }
+      if (tx.description) {
+        parts.push(tx.description);
+      }
 
-    const middleLine = parts.join(" - ");
-    const totalDisplay = `Php ${tx.total_amount.toLocaleString()}`;
-    const txYear = new Date(tx.date).getFullYear();
+      const middleLine = parts.join(" - ");
+      const totalDisplay = `Php ${tx.total_amount.toLocaleString()}`;
+      const txYear = new Date(tx.date).getFullYear();
 
-    return `
+      return `
       <div class="transaction-item ${tx.type}">
         <div class="transaction-info">
           <h5>${tx.wallet_name} ${txYear}</h5>
@@ -163,9 +191,9 @@ function loadTransactions(transactions) {
         </div>
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 }
-
 
 function showEmptyWallets() {
   const walletsContainer = document.getElementById("wallets-container");
@@ -179,7 +207,9 @@ function showEmptyWallets() {
 }
 
 function showEmptyTransactions() {
-  const transactionsContainer = document.getElementById("transactions-container");
+  const transactionsContainer = document.getElementById(
+    "transactions-container"
+  );
   transactionsContainer.innerHTML = `
     <div class="empty-card">
       <img src="/pres/static/images/nav_history.png" alt="History Icon" />
@@ -215,20 +245,24 @@ function setupProfileDropdown() {
 function setupHeaderSearch() {
   const input = document.getElementById("header-search");
   const walletsContainer = document.getElementById("wallets-container");
-  const transactionsContainer = document.getElementById("transactions-container");
+  const transactionsContainer = document.getElementById(
+    "transactions-container"
+  );
   if (!input || !walletsContainer || !transactionsContainer) return;
 
   input.addEventListener("input", () => {
     const term = input.value.toLowerCase().trim();
 
-    walletsContainer.querySelectorAll(".wallet-card").forEach(card => {
+    walletsContainer.querySelectorAll(".wallet-card").forEach((card) => {
       const text = card.textContent.toLowerCase();
       card.style.display = text.includes(term) ? "" : "none";
     });
 
-    transactionsContainer.querySelectorAll(".transaction-item").forEach(item => {
-      const text = item.textContent.toLowerCase();
-      item.style.display = text.includes(term) ? "" : "none";
-    });
+    transactionsContainer
+      .querySelectorAll(".transaction-item")
+      .forEach((item) => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(term) ? "" : "none";
+      });
   });
 }

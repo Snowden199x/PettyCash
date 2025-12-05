@@ -126,8 +126,14 @@ def osas_logout():
             ).eq("admin_id", admin["id"]).eq("device_info", device_info).eq(
                 "ip_address", ip_address
             ).execute()
-    session.clear()
+
+    # HUWAG na session.clear() para di ma‑logout ang PRES
+    session.pop("osas_admin", None)
+    session.pop("osas_role", None)       # kung meron kang ganitong key
+    session.pop("osas_permissions", None)  # at iba pang OSAS-only keys
+
     return redirect(url_for("osas.osas_login"))
+
 
 
 @osas.route("/reports")

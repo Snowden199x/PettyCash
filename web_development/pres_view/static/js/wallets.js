@@ -236,21 +236,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ===== Helpers for academic year (Aug–May) =====
-function getAcademicYears(list) {
-  const yearsSet = new Set();
-  list.forEach((w) => {
-    if (!w.month) return;
-    const year = w.month.slice(0, 4);
-    const month = Number(w.month.slice(5, 7));
-    if (month >= 8 && month <= 12) {
-      yearsSet.add(`${year}-${Number(year) + 1}`);      // Aug–Dec
-    } else if (month >= 1 && month <= 5) {
-      yearsSet.add(`${Number(year) - 1}-${year}`);      // Jan–May
-    }
-  });
-  return Array.from(yearsSet).sort();
-}
-
+  function getAcademicYears(list) {
+    const yearsSet = new Set();
+    list.forEach((w) => {
+      if (!w.month) return;
+      const year = w.month.slice(0, 4);
+      const month = Number(w.month.slice(5, 7));
+      if (month >= 8 && month <= 12) {
+        yearsSet.add(`${year}-${Number(year) + 1}`); // Aug–Dec
+      } else if (month >= 1 && month <= 5) {
+        yearsSet.add(`${Number(year) - 1}-${year}`); // Jan–May
+      }
+    });
+    return Array.from(yearsSet).sort();
+  }
 
   // ===== Load wallets (folders) =====
 
@@ -260,112 +259,111 @@ function getAcademicYears(list) {
 
       const data = await apiGet("/pres/api/wallets");
       wallets = data.map((w) => ({
-        id: w.id, // folder_id
-        walletId: w.wallet_id, // wallets.id
+        id: w.id,
+        walletId: w.wallet_id,
         name: w.name,
-        month: w.month, // yyyy-mm
-        beginningCash: Number(w.beginning_cash || 0),
+        month: w.month, // e.g. "2025-08"
+        beginningCash: w.beginning_cash,
         totalIncome: 0,
         totalExpenses: 0,
-        endingCash: Number(w.beginning_cash || 0),
+        endingCash: 0,
       }));
 
       // build year options
       // build years, newest first
       // build academic year options – e.g. 2024-2025
-function getAcademicYears(list) {
-  const yearsSet = new Set();
-  list.forEach((w) => {
-    if (!w.month) return;
-    const year = w.month.slice(0, 4);
-    const month = Number(w.month.slice(5, 7));
-    if (month >= 8 && month <= 12) {
-      // Aug–Dec belong to year-(year+1)
-      yearsSet.add(`${year}-${Number(year) + 1}`);
-    } else if (month >= 1 && month <= 5) {
-      // Jan–May belong to (year-1)-year
-      yearsSet.add(`${Number(year) - 1}-${year}`);
-    }
-  });
-  return Array.from(yearsSet).sort();
-}
+      function getAcademicYears(list) {
+        const yearsSet = new Set();
+        list.forEach((w) => {
+          if (!w.month) return;
+          const year = w.month.slice(0, 4);
+          const month = Number(w.month.slice(5, 7));
+          if (month >= 8 && month <= 12) {
+            // Aug–Dec belong to year-(year+1)
+            yearsSet.add(`${year}-${Number(year) + 1}`);
+          } else if (month >= 1 && month <= 5) {
+            // Jan–May belong to (year-1)-year
+            yearsSet.add(`${Number(year) - 1}-${year}`);
+          }
+        });
+        return Array.from(yearsSet).sort();
+      }
 
-// build academic year options – e.g. 2024-2025
-const yearSelect = document.getElementById("wallet-year-filter");
-const academicYears = getAcademicYears(wallets);
+      // build academic year options – e.g. 2024-2025
+      const yearSelect = document.getElementById("wallet-year-filter");
+      const academicYears = getAcademicYears(wallets);
 
-if (yearSelect && academicYears.length) {
-  // compute current academic year from today's date
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth() + 1; // 1–12
+      if (yearSelect && academicYears.length) {
+        // compute current academic year from today's date
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = now.getMonth() + 1; // 1–12
 
-  let currentAy;
-  if (m >= 8 && m <= 12) {
-    currentAy = `${y}-${y + 1}`;        // Aug–Dec
-  } else if (m >= 1 && m <= 5) {
-    currentAy = `${y - 1}-${y}`;        // Jan–May
-  } else {
-    // Jun–Jul: fallback to last academic year in data
-    currentAy = academicYears[academicYears.length - 1];
-  }
+        let currentAy;
+        if (m >= 8 && m <= 12) {
+          currentAy = `${y}-${y + 1}`; // Aug–Dec
+        } else if (m >= 1 && m <= 5) {
+          currentAy = `${y - 1}-${y}`; // Jan–May
+        } else {
+          // Jun–Jul: fallback to last academic year in data
+          currentAy = academicYears[academicYears.length - 1];
+        }
 
-  if (!academicYears.includes(currentAy)) {
-    currentAy = academicYears[academicYears.length - 1];
-  }
+        if (!academicYears.includes(currentAy)) {
+          currentAy = academicYears[academicYears.length - 1];
+        }
 
-  const latestAy = currentAy;
+        const latestAy = currentAy;
 
-  yearSelect.innerHTML = academicYears
-    .map((ay) => `<option value="${ay}">${ay}</option>`)
-    .join("");
+        yearSelect.innerHTML = academicYears
+          .map((ay) => `<option value="${ay}">${ay}</option>`)
+          .join("");
 
-  yearSelect.value = latestAy;
+        yearSelect.value = latestAy;
 
-  const monthOrder = [
-    "08",
-    "09",
-    "10",
-    "11",
-    "12",
-    "01",
-    "02",
-    "03",
-    "04",
-    "05",
-  ];
+        const monthOrder = [
+          "08",
+          "09",
+          "10",
+          "11",
+          "12",
+          "01",
+          "02",
+          "03",
+          "04",
+          "05",
+        ];
 
-  let result = wallets.filter((w) => {
-    if (!w.month) return false;
-    const walletYear = w.month.slice(0, 4);
-    const walletMonth = w.month.slice(5, 7);
-    const mNum = Number(walletMonth);
+        let result = wallets.filter((w) => {
+          if (!w.month) return false;
+          const walletYear = w.month.slice(0, 4);
+          const walletMonth = w.month.slice(5, 7);
+          const mNum = Number(walletMonth);
 
-    let walletAcademicYear = "";
-    if (mNum >= 8 && mNum <= 12) {
-      walletAcademicYear = `${walletYear}-${Number(walletYear) + 1}`;
-    } else if (mNum >= 1 && mNum <= 5) {
-      walletAcademicYear = `${Number(walletYear) - 1}-${walletYear}`;
-    }
+          let walletAcademicYear = "";
+          if (mNum >= 8 && mNum <= 12) {
+            walletAcademicYear = `${walletYear}-${Number(walletYear) + 1}`;
+          } else if (mNum >= 1 && mNum <= 5) {
+            walletAcademicYear = `${Number(walletYear) - 1}-${walletYear}`;
+          }
 
-    const matchesYear = walletAcademicYear === latestAy;
-    const matchesAcademicMonth = monthOrder.includes(walletMonth);
-    return matchesYear && matchesAcademicMonth;
-  });
+          const matchesYear = walletAcademicYear === latestAy;
+          const matchesAcademicMonth = monthOrder.includes(walletMonth);
+          return matchesYear && matchesAcademicMonth;
+        });
 
-  result.sort((a, b) => {
-    const ma = (a.month || "").slice(5, 7);
-    const mb = (b.month || "").slice(5, 7);
-    return monthOrder.indexOf(ma) - monthOrder.indexOf(mb);
-  });
+        result.sort((a, b) => {
+          const ma = (a.month || "").slice(5, 7);
+          const mb = (b.month || "").slice(5, 7);
+          return monthOrder.indexOf(ma) - monthOrder.indexOf(mb);
+        });
 
-  walletsFiltered = result;
-} else {
-  walletsFiltered = [...wallets];
-}
+        walletsFiltered = result;
+      } else {
+        walletsFiltered = [...wallets];
+      }
 
-renderWalletsList();
-
+      renderWalletsList();
 
       const state = getViewState();
       if (state.view === "detail" && state.folderId) {
@@ -423,57 +421,56 @@ renderWalletsList();
   }
 
   function applyWalletFilters() {
-  const q = walletSearchInput.value.toLowerCase();
-  const yearVal = walletYearFilter.value; // e.g. "2024-2025"
+    const q = walletSearchInput.value.toLowerCase();
+    const yearVal = walletYearFilter.value; // e.g. "2024-2025"
 
-  const monthOrder = [
-    "08",
-    "09",
-    "10",
-    "11",
-    "12",
-    "01",
-    "02",
-    "03",
-    "04",
-    "05",
-  ];
+    const monthOrder = [
+      "08",
+      "09",
+      "10",
+      "11",
+      "12",
+      "01",
+      "02",
+      "03",
+      "04",
+      "05",
+    ];
 
-  let result = wallets.filter((w) => {
-    const matchesText =
-      w.name.toLowerCase().includes(q) ||
-      (w.month || "").toLowerCase().includes(q);
+    let result = wallets.filter((w) => {
+      const matchesText =
+        w.name.toLowerCase().includes(q) ||
+        (w.month || "").toLowerCase().includes(q);
 
-    const walletYear = (w.month || "").slice(0, 4);
-    const walletMonth = (w.month || "").slice(5, 7);
-    const mNum = Number(walletMonth);
+      const walletYear = (w.month || "").slice(0, 4);
+      const walletMonth = (w.month || "").slice(5, 7);
+      const mNum = Number(walletMonth);
 
-    let walletAcademicYear = "";
-    if (mNum >= 8 && mNum <= 12) {
-      walletAcademicYear = `${walletYear}-${Number(walletYear) + 1}`;
-    } else if (mNum >= 1 && mNum <= 5) {
-      walletAcademicYear = `${Number(walletYear) - 1}-${walletYear}`;
-    }
+      let walletAcademicYear = "";
+      if (mNum >= 8 && mNum <= 12) {
+        walletAcademicYear = `${walletYear}-${Number(walletYear) + 1}`;
+      } else if (mNum >= 1 && mNum <= 5) {
+        walletAcademicYear = `${Number(walletYear) - 1}-${walletYear}`;
+      }
 
-    const matchesYear = yearVal ? walletAcademicYear === yearVal : true;
-    const matchesAcademicMonth = monthOrder.includes(walletMonth);
+      const matchesYear = yearVal ? walletAcademicYear === yearVal : true;
+      const matchesAcademicMonth = monthOrder.includes(walletMonth);
 
-    return matchesText && matchesYear && matchesAcademicMonth;
-  });
+      return matchesText && matchesYear && matchesAcademicMonth;
+    });
 
-  result.sort((a, b) => {
-    const ma = (a.month || "").slice(5, 7);
-    const mb = (b.month || "").slice(5, 7);
-    return monthOrder.indexOf(ma) - monthOrder.indexOf(mb);
-  });
+    result.sort((a, b) => {
+      const ma = (a.month || "").slice(5, 7);
+      const mb = (b.month || "").slice(5, 7);
+      return monthOrder.indexOf(ma) - monthOrder.indexOf(mb);
+    });
 
-  walletsFiltered = result;
-  renderWalletsList();
-}
+    walletsFiltered = result;
+    renderWalletsList();
+  }
 
-walletSearchInput.addEventListener("input", applyWalletFilters);
-walletYearFilter.addEventListener("change", applyWalletFilters);
-
+  walletSearchInput.addEventListener("input", applyWalletFilters);
+  walletYearFilter.addEventListener("change", applyWalletFilters);
 
   // ===== Navigation / tabs / filters =====
 
@@ -1046,6 +1043,10 @@ walletYearFilter.addEventListener("change", applyWalletFilters);
   }
 
   generateReportBtn.addEventListener("click", async () => {
+    if (generateReportBtn.disabled) {
+      return;
+    }
+
     if (!currentWallet) {
       showToast("Select a wallet first.", true);
       return;
@@ -1353,31 +1354,32 @@ walletYearFilter.addEventListener("change", applyWalletFilters);
 
   async function showWalletDetail(folderId) {
     currentWallet = wallets.find((w) => w.id === folderId);
-
-    const today = new Date().toISOString().slice(0, 10);
-    const monthKey = reportMonthKey(today);
-    const genKey = generatedKeyFor(currentWallet, monthKey);
-
-    if (localStorage.getItem(genKey)) {
-      // may pending generated report for this wallet+month
-      reportGeneratedForFolderId = currentWallet.id;
-      reportGeneratedForMonthKey = monthKey;
-      showReportButtons();
-      generateReportBtn.textContent = "Edit report";
-    } else {
-      reportGeneratedForFolderId = null;
-      reportGeneratedForMonthKey = null;
-      hideReportButtons();
-      generateReportBtn.textContent = "Generate report";
-    }
-
     if (!currentWallet) return;
+
+    const monthKey = currentWallet.month; // DAPAT ito ang ginagamit sa status API
+
+    try {
+      const res = await apiGet(
+        `/pres/api/wallets/reports/status?month=${encodeURIComponent(monthKey)}`
+      );
+
+      if (res.submitted) {
+        generateReportBtn.disabled = true;
+        generateReportBtn.classList.add("disabled");
+        generateReportBtn.title =
+          "You already submitted a report for this month.";
+      } else {
+        generateReportBtn.disabled = false;
+        generateReportBtn.classList.remove("disabled");
+        generateReportBtn.title = "";
+      }
+    } catch (e) {
+      console.error("Failed to load report status", e);
+    }
 
     document.getElementById("wallet-name").textContent = currentWallet.name;
     document.getElementById("wallets-view").classList.remove("active");
     document.getElementById("wallet-detail-view").classList.add("active");
-
-    updateStatsUI();
 
     // update budget button label based on currentWallet.beginningCash
     if (
@@ -1492,7 +1494,6 @@ walletYearFilter.addEventListener("change", applyWalletFilters);
 
   async function loadWalletArchives(folderId) {
     try {
-      // FIX: use /pres/api/... endpoint that Flask exposes
       const data = await apiGet(`/pres/api/wallets/${folderId}/archives`);
       walletArchives[folderId] = (data || []).map((a) => ({
         id: a.id,
