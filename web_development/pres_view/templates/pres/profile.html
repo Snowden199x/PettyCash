@@ -97,20 +97,16 @@
                 type="file"
                 id="photo-upload"
                 accept="image/*"
-                style="display:none;"
+                style="display: none"
               />
             </div>
 
-            <!-- Overview info (second flex item) -->
+            <!-- Overview info -->
             <div class="overview-info">
-              <h2 id="overview-org-name">Information Technology Unity Hub</h2>
-              <p class="overview-short-name" id="overview-short-name">ITUH</p>
-              <p class="overview-department" id="overview-department">
-                College of Computer Studies
-              </p>
-              <p class="overview-school" id="overview-school">
-                Laguna State Polytechnic University - Sta. Cruz Campus
-              </p>
+              <h2 id="overview-org-name"></h2>
+              <p class="overview-short-name" id="overview-short-name"></p>
+              <p class="overview-department" id="overview-department"></p>
+              <p class="overview-school" id="overview-school"></p>
               <div
                 class="accreditation-badge accredited"
                 id="accreditation-badge"
@@ -144,7 +140,7 @@
                       <input
                         type="text"
                         id="org-name"
-                        value="Information Technology Unity Hub"
+                        value=""
                         readonly
                       />
                     </div>
@@ -156,7 +152,7 @@
                       <input
                         type="text"
                         id="org-short-name"
-                        value="ITUH"
+                        value=""
                         readonly
                       />
                     </div>
@@ -165,7 +161,7 @@
                       <input
                         type="text"
                         id="department"
-                        value="College of Computer Studies"
+                        value=""
                         readonly
                       />
                     </div>
@@ -177,7 +173,7 @@
                       <input
                         type="text"
                         id="school"
-                        value="Laguna State Polytechnic University - Sta. Cruz Campus"
+                        value=""
                         readonly
                       />
                     </div>
@@ -188,14 +184,14 @@
                     <button
                       class="save-btn"
                       id="save-btn"
-                      style="display: none;"
+                      style="display: none"
                     >
                       Save Changes
                     </button>
                     <button
                       class="cancel-btn"
                       id="cancel-btn"
-                      style="display: none;"
+                      style="display: none"
                     >
                       Cancel
                     </button>
@@ -225,53 +221,7 @@
                       </tr>
                     </thead>
                     <tbody id="officers-tbody">
-                      <!-- Sample data - will be populated dynamically -->
-                      <tr>
-                        <td>John Doe</td>
-                        <td>President</td>
-                        <td>August 2024</td>
-                        <td>May 2025</td>
-                        <td>
-                          <span class="status-badge active">Active</span>
-                        </td>
-                        <td>
-                          <button
-                            class="action-btn edit-officer-btn"
-                            data-id="1"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            class="action-btn delete-officer-btn"
-                            data-id="1"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>Jane Smith</td>
-                        <td>Vice President</td>
-                        <td>August 2024</td>
-                        <td>May 2025</td>
-                        <td>
-                          <span class="status-badge active">Active</span>
-                        </td>
-                        <td>
-                          <button
-                            class="action-btn edit-officer-btn"
-                            data-id="2"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            class="action-btn delete-officer-btn"
-                            data-id="2"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
+                      <!-- rows populated by JS -->
                     </tbody>
                   </table>
                 </div>
@@ -282,7 +232,9 @@
                 <div class="modal-content">
                   <div class="modal-header">
                     <h3>Delete Officer</h3>
-                    <button class="modal-close" id="delete-confirm-close">&times;</button>
+                    <button class="modal-close" id="delete-confirm-close">
+                      &times;
+                    </button>
                   </div>
                   <div class="modal-body">
                     <p id="delete-confirm-text">
@@ -290,12 +242,15 @@
                     </p>
                   </div>
                   <div class="modal-footer">
-                    <button class="cancel-btn" id="delete-confirm-cancel">Cancel</button>
-                    <button class="save-btn" id="delete-confirm-confirm">Delete</button>
+                    <button class="cancel-btn" id="delete-confirm-cancel">
+                      Cancel
+                    </button>
+                    <button class="save-btn" id="delete-confirm-confirm">
+                      Delete
+                    </button>
                   </div>
                 </div>
               </div>
-
 
               <!-- Accreditation Details Tab -->
               <div class="tab-pane" id="accreditation-tab">
@@ -305,23 +260,14 @@
                   <div class="accreditation-details">
                     <div class="detail-row">
                       <span class="detail-label">Date of Accreditation:</span>
-                      <span class="detail-value">September 15, 2024</span>
-                    </div>
-                    <div class="detail-row">
-                      <span class="detail-label">Validity Period:</span>
-                      <span class="detail-value"
-                        >1 Year (September 15, 2024 - September 14, 2025)</span
-                      >
-                    </div>
-                    <div class="detail-row">
-                      <span class="detail-label">Last Renewal Date:</span>
-                      <span class="detail-value">September 15, 2024</span>
+                      <span class="detail-value" id="acc-date"></span>
                     </div>
                     <div class="detail-row">
                       <span class="detail-label">Current Status:</span>
-                      <span class="detail-value status-accredited"
-                        >Accredited</span
-                      >
+                      <span
+                        class="detail-value status-accredited"
+                        id="acc-status"
+                      ></span>
                     </div>
                   </div>
                 </div>

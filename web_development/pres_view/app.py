@@ -316,10 +316,10 @@ def profile():
 
 @pres.route("/logout")
 def pres_logout():
-    session.clear()
-    if request.accept_mimetypes.best == "application/json":
-        return jsonify({"success": True, "message": "Logged out"})
-    return redirect(url_for("pres.landingpage"))
+    session.pop("pres_user", None)
+    session.pop("org_id", None)
+    session.pop("org_name", None)
+    return redirect(url_for("pres.pres_login"))
 
 
 # -----------------------
@@ -414,6 +414,7 @@ def get_dashboard_summary():
             supabase.table("financial_reports")
             .select("id", count="exact")
             .eq("organization_id", org_id)
+            .in_("status", ["Submitted", "Approved"])
             .execute()
         )
         reports_submitted = reports_res.count or 0
@@ -442,7 +443,6 @@ def get_dashboard_summary():
 # -----------------------
 # API: wallets -> month folders
 # -----------------------
-
 
 @pres.route("/api/wallets", methods=["GET"])
 def get_wallets():
@@ -1180,6 +1180,36 @@ def generate_report():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@pres.route("/api/wallets/reports/status", methods=["GET"])
+def wallets_report_status():
+    if not session.get("pres_user"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    org_id = session.get("org_id")
+    month_code = request.args.get("month")  # e.g. "2025-12" or "december"
+    if not month_code:
+        return jsonify({"error": "Missing month"}), 400
+
+    res = (
+        supabase.table("financial_reports")
+        .select("id, status, report_month")
+        .eq("organization_id", org_id)
+        .eq("report_month", month_code)
+        .limit(1)
+        .execute()
+    )
+
+    has_report = bool(res.data)
+    status = res.data[0]["status"] if has_report else None
+    submitted = has_report and status in ["Pending Review", "Submitted", "Approved"]
+
+    return jsonify(
+        {
+            "has_report": has_report,
+            "status": status,
+            "submitted": submitted,
+        }
+    )
 
 @pres.route(
     "/api/wallets/<int:wallet_id>/budgets/<int:budget_id>/reports/next-number",
@@ -2186,90 +2216,10 @@ def download_archive(archive_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-# -----------------------
-# All transactions (history)
-# -----------------------
-
-
-@pres.route("/api/transactions", methods=["GET"])
-def get_all_transactions():
-    if not session.get("pres_user"):
-        return jsonify({"error": "Unauthorized"}), 401
-
-    org_id = session.get("org_id")
-
-    try:
-        # wallets for this org
-        wallets_res = (
-            supabase.table("wallets")
-            .select("id")
-            .eq("organization_id", org_id)
-            .execute()
-        )
-        wallet_ids = [w["id"] for w in (wallets_res.data or [])]
-        if not wallet_ids:
-            return jsonify([])
-
-        # folders (budgets) for those wallets → folder/month name, e.g. AUGUST
-        budgets_res = (
-            supabase.table("wallet_budgets")
-            .select("id, months (month_name)")
-            .in_("wallet_id", wallet_ids)
-            .execute()
-        )
-        folder_names = {
-            b["id"]: b["months"]["month_name"]
-            for b in (budgets_res.data or [])
-        }
-
-        # transactions with budget_id so we can map to folder
-        res = (
-            supabase.table("wallet_transactions")
-            .select(
-                "id, wallet_id, budget_id, kind, date_issued, description, "
-                "quantity, price, income_type, particulars"
-            )
-            .in_("wallet_id", wallet_ids)
-            .order("date_issued", desc=True)
-            .execute()
-        )
-
-        transactions = []
-        for tx in (res.data or []):
-            qty = int(tx.get("quantity") or 0)
-            price = float(tx.get("price") or 0)
-            total_amount = qty * price
-
-            folder_id = tx.get("budget_id")
-            wallet_name = folder_names.get(folder_id, "Wallet")
-
-            transactions.append(
-                {
-                    "id": tx["id"],
-                    "wallet_name": wallet_name,  # e.g. AUGUST
-                    "type": tx.get("kind"),
-                    "date": tx.get("date_issued"),
-                    "description": tx.get("description") or "",
-                    "quantity": qty,
-                    "price": price,
-                    "income_type": tx.get("income_type") or "",
-                    "particulars": tx.get("particulars") or "",
-                    "total_amount": total_amount,
-                }
-            )
-
-        return jsonify(transactions)
-    except Exception as e:
-        print("Error get_all_transactions:", e)
-        return jsonify({"error": str(e)}), 500
-
-
-
-
 # -----------------------
 # Profile APIs
 # -----------------------
+BUCKET_PROFILE_PHOTO = "profile_photo"  # supabase bucket name
 
 
 @pres.route("/api/profile", methods=["GET"])
@@ -2280,20 +2230,70 @@ def get_profile():
     org_id = session.get("org_id")
 
     try:
-        result = supabase.table("organizations").select("*").eq("id", org_id).execute()
-
-        if result.data:
-            org = result.data[0]
-            profile = {
-                "org_name": org.get("org_name"),
-                "org_short_name": org.get("org_short_name"),
-                "department": org.get("department"),
-                "school": org.get("school"),
-                "profile_picture": org.get("profile_picture"),
-            }
-            return jsonify(profile)
-        else:
+        # main org row (OSAS table)
+        org_res = (
+            supabase.table("organizations")
+            .select(
+                "id, org_name, department_id, "
+                "accreditation_date, status"
+            )
+            .eq("id", org_id)
+            .limit(1)
+            .execute()
+        )
+        if not org_res.data:
             return jsonify({"error": "Organization not found"}), 404
+
+        org = org_res.data[0]
+
+        # PRES-only profile row
+        prof_res = (
+            supabase.table("profile_users")
+            .select("org_short_name, campus, school_name, profile_photo_url")
+            .eq("organization_id", org_id)
+            .limit(1)
+            .execute()
+        )
+        prof = prof_res.data[0] if prof_res.data else {}
+
+        # department name
+        dept_name = None
+        if org.get("department_id") is not None:
+            dept_res = (
+                supabase.table("departments")
+                .select("dept_name")
+                .eq("id", org["department_id"])
+                .limit(1)
+                .execute()
+            )
+            if dept_res.data:
+                dept_name = dept_res.data[0]["dept_name"]
+
+        # optional public URL for profile photo (from profile_users)
+        photo_url = None
+        if prof.get("profile_photo_url"):
+            public = supabase.storage.from_(BUCKET_PROFILE_PHOTO).get_public_url(
+                prof["profile_photo_url"]
+            )
+            photo_url = public.get("publicUrl") if isinstance(public, dict) else public
+
+        # accreditation info purely from OSAS organizations table
+        status_text = "Accredited" if org.get("status") == "Active" else org.get("status")
+
+        profile = {
+            "org_name": org.get("org_name"),
+            "org_short_name": prof.get("org_short_name"),
+            "department": dept_name,
+            "department_id": org.get("department_id"),
+            "school": prof.get("school_name"),
+            "profile_photo_url": photo_url,
+            "accreditation": {
+                "date_of_accreditation": org.get("accreditation_date"),
+                "current_status": status_text,
+            },
+        }
+
+        return jsonify(profile)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -2307,24 +2307,71 @@ def update_profile():
     data = request.get_json() or {}
 
     try:
-        update_data = {}
-        allowed_fields = ["org_name", "org_short_name", "department", "school"]
+        org_update = {}
+        prof_update = {}
 
-        for field in allowed_fields:
-            if field in data:
-                update_data[field] = data[field]
+        # OSAS org table fields
+        if "org_name" in data:
+            org_update["org_name"] = data["org_name"]
+        if "department_id" in data:
+            org_update["department_id"] = data["department_id"]
 
-        if update_data:
-            supabase.table("organizations").update(update_data).eq(
+        # PRES profile fields (profile_users table)
+        if "org_short_name" in data:
+            prof_update["org_short_name"] = data["org_short_name"]
+        if "school" in data:
+            prof_update["school_name"] = data["school"]
+        if "campus" in data:
+            prof_update["campus"] = data["campus"]
+
+        # Update organizations
+        if org_update:
+            supabase.table("organizations").update(org_update).eq(
                 "id", org_id
             ).execute()
+            if "org_name" in data:
+                session["org_name"] = data["org_name"]
 
-            if "org_name" in update_data:
-                session["org_name"] = update_data["org_name"]
+               # Upsert profile_users
+        if prof_update:
+            existing = (
+                supabase.table("profile_users")
+                .select("id")
+                .eq("organization_id", org_id)
+                .limit(1)
+                .execute()
+            )
 
-            return jsonify({"success": True, "message": "Profile updated successfully"})
-        else:
-            return jsonify({"error": "No valid fields to update"}), 400
+            try:
+                if existing.data:
+                    supabase.table("profile_users").update(prof_update).eq(
+                        "organization_id", org_id
+                    ).execute()
+                else:
+                    prof_update["organization_id"] = org_id
+                    supabase.table("profile_users").insert(prof_update).execute()
+            except Exception as e:
+                # duplicate short name (unique violation)
+                msg = str(e)
+                if "duplicate key value violates unique constraint" in msg or "23505" in msg:
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "error": "Shortened name is already used by another organization.",
+                            }
+                        ),
+                        400,
+                    )
+                return jsonify({"success": False, "error": "Failed to update profile."}), 500
+
+        if org_update or prof_update:
+            return jsonify(
+                {"success": True, "message": "Profile updated successfully"}
+            )
+
+        return jsonify({"error": "No valid fields to update"}), 400
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -2333,6 +2380,8 @@ def update_profile():
 def upload_profile_picture():
     if not session.get("pres_user"):
         return jsonify({"error": "Unauthorized"}), 401
+
+    org_id = session.get("org_id")
 
     if "photo" not in request.files:
         return jsonify({"error": "No file provided"}), 400
@@ -2344,11 +2393,131 @@ def upload_profile_picture():
 
     allowed_extensions = {"png", "jpg", "jpeg", "gif"}
     file_ext = file.filename.rsplit(".", 1)[1].lower() if "." in file.filename else ""
-
     if file_ext not in allowed_extensions:
         return jsonify({"error": "Invalid file type"}), 400
 
-    # TODO: upload to Storage and save URL in organizations.profile_picture
-    return jsonify(
-        {"success": True, "message": "Profile picture uploaded successfully"}
+    try:
+        from uuid import uuid4
+
+        raw_bytes = file.read()
+        filename = f"org-{org_id}-{uuid4()}.{file_ext}"
+        path = f"orgs/{org_id}/{filename}"
+
+        # upload to Supabase Storage
+        supabase.storage.from_(BUCKET_PROFILE_PHOTO).upload(path, raw_bytes)
+
+        # upsert into profile_users.profile_photo_url
+        existing = (
+            supabase.table("profile_users")
+            .select("id")
+            .eq("organization_id", org_id)
+            .limit(1)
+            .execute()
+        )
+        if existing.data:
+            supabase.table("profile_users").update(
+                {"profile_photo_url": path}
+            ).eq("organization_id", org_id).execute()
+        else:
+            supabase.table("profile_users").insert(
+                {
+                    "organization_id": org_id,
+                    "profile_photo_url": path,
+                }
+            ).execute()
+
+        # return public URL
+        public = supabase.storage.from_(BUCKET_PROFILE_PHOTO).get_public_url(path)
+        url = public.get("publicUrl") if isinstance(public, dict) else public
+
+        return jsonify(
+            {
+                "success": True,
+                "message": "Profile picture uploaded successfully",
+                "path": path,
+                "url": url,
+            }
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# -----------------------
+# Officers APIs
+# -----------------------
+
+
+@pres.route("/api/officers", methods=["GET"])
+def get_officers():
+    if not session.get("pres_user"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    org_id = session.get("org_id")
+    res = (
+        supabase.table("profile_officers")
+        .select("id, name, position, term_start, term_end, status")
+        .eq("organization_id", org_id)
+        .order("term_start")
+        .execute()
     )
+    return jsonify({"officers": res.data or []})
+
+
+@pres.route("/api/officers", methods=["POST"])
+def create_officer():
+    if not session.get("pres_user"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    org_id = session.get("org_id")
+    data = request.get_json() or {}
+    officer = {
+        "organization_id": org_id,
+        "name": data.get("name"),
+        "position": data.get("position"),
+        "term_start": data.get("term_start"),
+        "term_end": data.get("term_end"),
+        "status": data.get("status") or "Active",
+    }
+    res = supabase.table("profile_officers").insert(officer).execute()
+    created = res.data[0]
+    return jsonify({"officer": created}), 201
+
+
+@pres.route("/api/officers/<int:officer_id>", methods=["PUT"])
+def update_officer(officer_id):
+    if not session.get("pres_user"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    org_id = session.get("org_id")
+    data = request.get_json() or {}
+    update = {
+        "name": data.get("name"),
+        "position": data.get("position"),
+        "term_start": data.get("term_start"),
+        "term_end": data.get("term_end"),
+        "status": data.get("status"),
+    }
+    update = {k: v for k, v in update.items() if v is not None}
+
+    res = (
+        supabase.table("profile_officers")
+        .update(update)
+        .eq("id", officer_id)
+        .eq("organization_id", org_id)
+        .execute()
+    )
+    if not res.data:
+        return jsonify({"error": "Not found"}), 404
+    return jsonify({"officer": res.data[0]})
+
+
+@pres.route("/api/officers/<int:officer_id>", methods=["DELETE"])
+def delete_officer(officer_id):
+    if not session.get("pres_user"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    org_id = session.get("org_id")
+    supabase.table("profile_officers").delete().eq("id", officer_id).eq(
+        "organization_id", org_id
+    ).execute()
+    return jsonify({"success": True})
