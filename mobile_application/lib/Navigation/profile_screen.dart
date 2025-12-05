@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:pockitrack/Navigation/home_screen.dart';
 import 'package:pockitrack/Navigation/transaction_history_screen.dart';
 import 'package:pockitrack/Navigation/wallet_screen.dart';
@@ -13,8 +16,18 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final int _selectedIndex = 3;
 
-  // New: selected option below Organization Name
-  int _selectedOrgTabIndex = 0; // 0 = Organization Information, 1 = Officers, 2 = Accreditation Details
+  // segmented tab index
+  int _selectedOrgTabIndex = 0;
+
+  // controllers for text fields (Organization Information)
+  final TextEditingController _orgNameController =
+      TextEditingController(text: 'ITUH');
+  final TextEditingController _shortNameController =
+      TextEditingController(text: 'ITUH');
+  final TextEditingController _departmentController =
+      TextEditingController(text: 'President');
+  final TextEditingController _schoolController =
+      TextEditingController(text: 'Laguna State Polytechnic University');
 
   final iconPaths = {
     'home': {
@@ -34,6 +47,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'inactive': 'assets/Icons/navigation_icons/nav_profile.png',
     },
   };
+
+  // dummy officers data
+  final List<Map<String, String>> _officers = [
+    {
+      'name': 'Zamuel..',
+      'position': 'President',
+      'start': 'August 2024',
+      'end': 'May 2025',
+      'status': 'Active',
+    },
+    {
+      'name': 'Rashed..',
+      'position': 'Vice Pre..',
+      'start': 'August 2024',
+      'end': 'May 2025',
+      'status': 'Active',
+    },
+    {
+      'name': 'Rhea M..',
+      'position': 'Secretar..',
+      'start': 'August 2024',
+      'end': 'May 2025',
+      'status': 'Active',
+    },
+  ];
+
+  // organization image (picked from gallery)
+  File? _orgImageFile;
+  final ImagePicker _picker = ImagePicker();
+
+  // shared horizontal controller for header + body
+  final ScrollController _officersHorizontalController = ScrollController();
+
+  Future<void> _pickOrgImage() async {
+    final XFile? picked =
+        await _picker.pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+
+    setState(() {
+      _orgImageFile = File(picked.path);
+    });
+  }
 
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
@@ -67,6 +122,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   @override
+  void dispose() {
+    _orgNameController.dispose();
+    _shortNameController.dispose();
+    _departmentController.dispose();
+    _schoolController.dispose();
+    _officersHorizontalController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -94,18 +159,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 24),
 
-              // --- Organization Card ---
+              // Organization Card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF4EEDF), // light beige background
+                  color: const Color(0xFFF4EEDF),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Left: circular photo placeholder + change button
+                    // Left: circular photo + change button
                     Column(
                       children: [
                         Container(
@@ -115,6 +180,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             shape: BoxShape.circle,
                             color: Color(0xFFD9D9D9),
                           ),
+                          clipBehavior: Clip.antiAlias,
+                          child: _orgImageFile == null
+                              ? const Icon(
+                                  Icons.person,
+                                  size: 40,
+                                  color: Colors.white70,
+                                )
+                              : Image.file(
+                                  _orgImageFile!,
+                                  fit: BoxFit.cover,
+                                ),
                         ),
                         const SizedBox(height: 8),
                         OutlinedButton.icon(
@@ -132,9 +208,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               fontFamily: 'Poppins',
                             ),
                           ),
-                          onPressed: () {
-                            // todo: implement change photo action
-                          },
+                          onPressed: _pickOrgImage,
                           icon: const Icon(
                             Icons.photo_camera_outlined,
                             size: 16,
@@ -143,10 +217,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ],
                     ),
-
                     const SizedBox(width: 16),
-
-                    // Right: organization details
+                    // Right: organization details (summary)
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,9 +233,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          const Text(
-                            "ITUH",
-                            style: TextStyle(
+                          Text(
+                            _orgNameController.text,
+                            style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
@@ -181,9 +253,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          const Text(
-                            "Laguna State Polytechnic University - Sta.\nCruz Campus",
-                            style: TextStyle(
+                          Text(
+                            _schoolController.text,
+                            style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
@@ -231,7 +303,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               const SizedBox(height: 16),
 
-              // --- New segmented options like WalletMonthScreen ---
+              // Segmented options
               Container(
                 height: 34,
                 decoration: BoxDecoration(
@@ -247,7 +319,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         setState(() {
                           _selectedOrgTabIndex = 0;
                         });
-                        // todo: navigate or show content for Organization Information
                       },
                     ),
                     _OrgSegmentTab(
@@ -257,7 +328,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         setState(() {
                           _selectedOrgTabIndex = 1;
                         });
-                        // todo: navigate or show content for Officers
                       },
                     ),
                     _OrgSegmentTab(
@@ -267,14 +337,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         setState(() {
                           _selectedOrgTabIndex = 2;
                         });
-                        // todo: navigate or show content for Accreditation Details
                       },
                     ),
                   ],
                 ),
               ),
 
-              // Add any extra Profile content below this segment row.
+              const SizedBox(height: 16),
+
+              // Content under segmented control
+              Expanded(
+                child: SingleChildScrollView(
+                  child: _buildOrgTabContent(),
+                ),
+              ),
             ],
           ),
         ),
@@ -283,6 +359,409 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // builds content depending on selected tab
+  Widget _buildOrgTabContent() {
+    switch (_selectedOrgTabIndex) {
+      case 0:
+        return _buildOrganizationInformationForm();
+      case 1:
+        return _buildOfficersSection();
+      case 2:
+        return _buildAccreditationInfo();
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  // ORGANIZATION INFORMATION FORM
+  Widget _buildOrganizationInformationForm() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF4EEDF),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Organization Name',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _orgNameController,
+            decoration: _inputDecoration(),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Organization Shorten Name',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _shortNameController,
+                      decoration: _inputDecoration(),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Department',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _departmentController,
+                      decoration: _inputDecoration(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'School University',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _schoolController,
+            decoration: _inputDecoration(),
+          ),
+          const SizedBox(height: 24),
+          Align(
+            alignment: Alignment.centerRight,
+            child: SizedBox(
+              width: 110,
+              height: 40,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF8B3B08),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () {
+                  setState(() {});
+                },
+                child: const Text(
+                  'Edit',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // OFFICERS SECTION (header + button + synced horizontal scroll)
+  Widget _buildOfficersSection() {
+    const double tableWidth = 600; // total logical width of columns
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header + Add Officer button
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Organization Officers',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+            SizedBox(
+              height: 36,
+              child: ElevatedButton(
+                onPressed: () {
+                  // todo: open add officer flow
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFB75A11),
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  '+ Add Officer',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Card with fixed height; header + body share horizontal controller
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF4EEDF),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                offset: Offset(0, 3),
+                blurRadius: 5,
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Header row (horizontal scroll controlled)
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                controller: _officersHorizontalController,
+                physics: const ClampingScrollPhysics(),
+                child: SizedBox(
+                  width: tableWidth,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFE2C98F),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                      ),
+                    ),
+                    child: Row(
+                      children: const [
+                        _HeaderCell('Name', flex: 2),
+                        _HeaderCell('Position', flex: 2),
+                        _HeaderCell('Term Start'),
+                        _HeaderCell('Term End'),
+                        _HeaderCell('Status'),
+                        _HeaderCell('Actions', flex: 2),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // Body: vertical scroll; wraps entire table row set in another
+              // SingleChildScrollView that reuses the same horizontal controller
+              SizedBox(
+                height: 180,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    controller: _officersHorizontalController,
+                    physics: const ClampingScrollPhysics(),
+                    child: SizedBox(
+                      width: tableWidth,
+                      child: Column(
+                        children: _officers.map((officer) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Color(0xFFE0E0E0),
+                                  width: 0.5,
+                                ),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                _DataCellText(officer['name']!, flex: 2),
+                                _DataCellText(officer['position']!, flex: 2),
+                                _DataCellText(officer['start']!),
+                                _DataCellText(officer['end']!),
+                                // status chip
+                                SizedBox(
+                                  width: 110,
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFBDEBC8),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Text(
+                                        officer['status']!,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF2F7D38),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // actions
+                                SizedBox(
+                                  width: 140,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      _SmallActionButton(
+                                        label: 'Edit',
+                                        color: const Color(0xFF4BA3FF),
+                                        onTap: () {
+                                          // edit action
+                                        },
+                                      ),
+                                      const SizedBox(width: 6),
+                                      _SmallActionButton(
+                                        label: 'Delete',
+                                        color: const Color(0xFFFF6B6B),
+                                        onTap: () {
+                                          // delete action
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ACCREDITATION INFORMATION CARD
+  Widget _buildAccreditationInfo() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFFFF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEAD9BC), width: 1),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            offset: Offset(0, 3),
+            blurRadius: 6,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text(
+            'Accreditation Information',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          SizedBox(height: 16),
+          _AccreditationRow(
+            label: 'Date of Accreditation:',
+            value: 'September 15, 2024',
+          ),
+          Divider(
+            height: 24,
+            thickness: 1,
+            color: Color(0xFFE5E5E5),
+          ),
+          _AccreditationRow(
+            label: 'Current Status:',
+            value: 'Accredited',
+            valueColor: Color(0xFF2F7D38),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // shared decoration for all TextFields
+  InputDecoration _inputDecoration() {
+    return InputDecoration(
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(6),
+        borderSide: const BorderSide(color: Color(0xFFE2D2B7), width: 1),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(6),
+        borderSide: const BorderSide(color: Color(0xFFE2D2B7), width: 1),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(6),
+        borderSide: const BorderSide(color: Color(0xFF8B3B08), width: 1.2),
+      ),
+    );
+  }
+
+  // bottom nav bar
   Widget _buildBottomNavigationBar() {
     return Container(
       decoration: const BoxDecoration(
@@ -336,7 +815,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// Reusable segmented tab widget (mirrors style from WalletMonthScreen)
+// Reusable segmented tab widget
 class _OrgSegmentTab extends StatelessWidget {
   final String label;
   final bool isSelected;
@@ -370,13 +849,154 @@ class _OrgSegmentTab extends StatelessWidget {
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontFamily: 'Poppins',
-              fontSize: 10, // slightly smaller to fit longer text
+              fontSize: 10,
               fontWeight: FontWeight.w600,
               color: Colors.black,
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+// header cell for officers table
+class _HeaderCell extends StatelessWidget {
+  final String title;
+  final int flex;
+
+  const _HeaderCell(this.title, {this.flex = 1});
+
+  double get _width => flex == 2 ? 140 : 110;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _width,
+      child: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Colors.black,
+        ),
+      ),
+    );
+  }
+}
+
+// data cell text
+class _DataCellText extends StatelessWidget {
+  final String text;
+  final int flex;
+
+  const _DataCellText(this.text, {this.flex = 1});
+
+  double get _width => flex == 2 ? 140 : 110;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _width,
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 11,
+          fontWeight: FontWeight.w400,
+          color: Colors.black87,
+        ),
+      ),
+    );
+  }
+}
+
+// small action buttons (Edit / Delete)
+class _SmallActionButton extends StatelessWidget {
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _SmallActionButton({
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: color, width: 1),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// row used in accreditation card
+class _AccreditationRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _AccreditationRow({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const SizedBox(width: 4),
+        Expanded(
+          flex: 2,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF7A7A7A),
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 3,
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: valueColor ?? Colors.black,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
