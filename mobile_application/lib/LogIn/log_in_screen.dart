@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'forgot_password.dart'; // Correct relative import for your folder structure
+import 'forgot_password.dart';
+import '../api_client.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,11 +16,14 @@ class _LoginScreenState extends State<LoginScreen>
 
   bool emailError = false;
   bool passwordError = false;
+  bool loading = false;
 
   late AnimationController _emailController;
   late AnimationController _passwordController;
   late Animation<double> _emailShake;
   late Animation<double> _passwordShake;
+
+  final _api = ApiClient();
 
   @override
   void initState() {
@@ -33,13 +37,15 @@ class _LoginScreenState extends State<LoginScreen>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _emailShake = TweenSequence([
+
+    _emailShake = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 0.0, end: -4.0), weight: 1),
       TweenSequenceItem(tween: Tween(begin: -4.0, end: 4.0), weight: 2),
       TweenSequenceItem(tween: Tween(begin: 4.0, end: -4.0), weight: 2),
       TweenSequenceItem(tween: Tween(begin: -4.0, end: 0.0), weight: 1),
     ]).animate(_emailController);
-    _passwordShake = TweenSequence([
+
+    _passwordShake = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 0.0, end: -4.0), weight: 1),
       TweenSequenceItem(tween: Tween(begin: -4.0, end: 4.0), weight: 2),
       TweenSequenceItem(tween: Tween(begin: 4.0, end: -4.0), weight: 2),
@@ -47,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen>
     ]).animate(_passwordController);
   }
 
-  void _validateAndLogin() {
+  Future<void> _validateAndLogin() async {
     setState(() {
       emailError = emailController.text.isEmpty;
       passwordError = passwordController.text.isEmpty;
@@ -55,10 +61,45 @@ class _LoginScreenState extends State<LoginScreen>
 
     if (emailError) _emailController.forward(from: 0);
     if (passwordError) _passwordController.forward(from: 0);
-
     if (emailError || passwordError) return;
 
-    Navigator.pushNamed(context, '/new-password');
+    setState(() => loading = true);
+    try {
+      final data = await _api.postJson('/pres/login/pres', {
+        'username': emailController.text.trim(),
+        'password': passwordController.text,
+      });
+
+      if (data['success'] == true) {
+        final orgName = data['org_name'] as String? ?? 'Organization';
+        final orgId = data['org_id'];
+
+        if (data['must_change_password'] == true) {
+          Navigator.pushReplacementNamed(
+            context,
+            '/new-password',
+            arguments: {'orgName': orgName, 'orgId': orgId},
+          );
+        } else {
+          Navigator.pushReplacementNamed(
+            context,
+            '/home',
+            arguments: {'orgName': orgName, 'orgId': orgId},
+          );
+        }
+      } else {
+        final msg = data['error']?.toString() ?? 'Login failed';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg)),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Network error: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
   }
 
   @override
@@ -74,7 +115,6 @@ class _LoginScreenState extends State<LoginScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 30),
-                // Header
                 const Center(
                   child: Text(
                     'Log In',
@@ -86,7 +126,6 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                 ),
                 const SizedBox(height: 40),
-                // Icon at the top
                 Center(
                   child: Image.asset(
                     'assets/Icons/wallet-icon2.png',
@@ -94,13 +133,11 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                 ),
                 const SizedBox(height: 40),
-                // Username label
                 const Text(
                   "Username",
                   style: TextStyle(fontFamily: "Poppins", fontSize: 16),
                 ),
                 const SizedBox(height: 5),
-                // Username input
                 AnimatedBuilder(
                   animation: _emailShake,
                   builder: (context, child) {
@@ -111,22 +148,22 @@ class _LoginScreenState extends State<LoginScreen>
                   },
                   child: TextField(
                     controller: emailController,
-                    cursorColor: Colors.black, // 👈 Always black caret
+                    cursorColor: Colors.black,
                     decoration: InputDecoration(
                       border: const OutlineInputBorder(),
-                      enabledBorder: OutlineInputBorder(
+                      enabledBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Color(0xFFE59E2C), width: 1),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Color(0xFFE59E2C), width: 1),
                       ),
-                      errorBorder: OutlineInputBorder(
+                      errorBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.red, width: 1),
                       ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Color(0xFFE59E2C), width: 1),
+                      focusedErrorBorder: const OutlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Color(0xFFE59E2C), width: 1),
                       ),
                       errorText: emailError
                           ? "Incorrect username. Please try again"
@@ -135,13 +172,11 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Password label
                 const Text(
                   "Password",
                   style: TextStyle(fontFamily: "Poppins", fontSize: 16),
                 ),
                 const SizedBox(height: 5),
-                // Password input
                 AnimatedBuilder(
                   animation: _passwordShake,
                   builder: (context, child) {
@@ -153,23 +188,22 @@ class _LoginScreenState extends State<LoginScreen>
                   child: TextField(
                     controller: passwordController,
                     obscureText: true,
-                    cursorColor: Colors.black, // 👈 Always black caret
+                    cursorColor: Colors.black,
                     decoration: InputDecoration(
                       border: const OutlineInputBorder(),
-                      enabledBorder: OutlineInputBorder(
+                      enabledBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1),
+                      ),
+                      focusedBorder: const OutlineInputBorder(
                         borderSide:
-                            BorderSide(color: Colors.grey, width: 1),
+                            BorderSide(color: Color(0xFFE59E2C), width: 1),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Color(0xFFE59E2C), width: 1),
-                      ),
-                      errorBorder: OutlineInputBorder(
+                      errorBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.red, width: 1),
                       ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Color(0xFFE59E2C), width: 1),
+                      focusedErrorBorder: const OutlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Color(0xFFE59E2C), width: 1),
                       ),
                       errorText: passwordError
                           ? "Incorrect password. Please try again"
@@ -177,7 +211,6 @@ class _LoginScreenState extends State<LoginScreen>
                     ),
                   ),
                 ),
-                // Forgot Password link below password field
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -187,7 +220,8 @@ class _LoginScreenState extends State<LoginScreen>
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => const ForgotPassword()),
+                            builder: (context) => const ForgotPassword(),
+                          ),
                         );
                       },
                       child: const Text(
@@ -214,9 +248,9 @@ class _LoginScreenState extends State<LoginScreen>
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _validateAndLogin,
+              onPressed: loading ? null : _validateAndLogin,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFF5D37D),
+                backgroundColor: const Color(0xFFF5D37D),
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -224,9 +258,9 @@ class _LoginScreenState extends State<LoginScreen>
                   side: const BorderSide(color: Colors.black),
                 ),
               ),
-              child: const Text(
-                "Log In",
-                style: TextStyle(
+              child: Text(
+                loading ? "Logging in..." : "Log In",
+                style: const TextStyle(
                   fontFamily: "Poppins",
                   fontSize: 20,
                   fontWeight: FontWeight.w600,

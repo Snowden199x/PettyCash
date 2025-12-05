@@ -5,7 +5,14 @@ import 'wallet_screen.dart';
 import 'profile_screen.dart';
 
 class TransactionHistoryScreen extends StatefulWidget {
-  const TransactionHistoryScreen({super.key});
+  final String orgName;
+  final int orgId;
+
+  const TransactionHistoryScreen({
+    super.key,
+    required this.orgName,
+    required this.orgId,
+  });
 
   @override
   State<TransactionHistoryScreen> createState() =>
@@ -42,16 +49,19 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     Widget nextScreen;
     switch (index) {
       case 0:
-        nextScreen = const HomeScreen(orgName: "Organization");
+        nextScreen = HomeScreen(orgName: widget.orgName, orgId: widget.orgId);
         break;
       case 1:
-        nextScreen = const TransactionHistoryScreen();
+        nextScreen = TransactionHistoryScreen(
+          orgName: widget.orgName,
+          orgId: widget.orgId,
+        );
         break;
       case 2:
-        nextScreen = const WalletScreen();
+        nextScreen = const WalletScreen(); // kung di kailangan orgId dito
         break;
       case 3:
-        nextScreen = const ProfileScreen();
+        nextScreen = const ProfileScreen(); // same here
         break;
       default:
         return;
@@ -69,7 +79,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
   void _changeMonth(int offset) {
     setState(() {
-      _selectedDate = DateTime(_selectedDate.year, _selectedDate.month + offset);
+      _selectedDate = DateTime(
+        _selectedDate.year,
+        _selectedDate.month + offset,
+      );
     });
   }
 
@@ -148,8 +161,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                         ),
                         child: Text(
                           formattedMonthYear,
-                          style:
-                              const TextStyle(fontWeight: FontWeight.w500),
+                          style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                       ),
                     ),

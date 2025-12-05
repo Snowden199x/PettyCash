@@ -1,24 +1,30 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:pockitrack/Navigation/home_screen.dart';
-import 'package:pockitrack/Navigation/transaction_history_screen.dart';
-import 'package:pockitrack/Navigation/wallet_screen.dart';
+import 'home_screen.dart';
+import 'transaction_history_screen.dart';
+import 'wallet_screen.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+class ProfileScreen extends StatelessWidget {
+  final int? orgId; // optional
+  const ProfileScreen({super.key, this.orgId});
+
+  const ProfileScreen({super.key, required this.orgName, required this.orgId});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final TextEditingController _nameController =
-      TextEditingController(text: 'Information Technology Unity Hub');
-  final TextEditingController _emailController =
-      TextEditingController(text: 'College of Computer Studies');
-  final TextEditingController _phoneController =
-      TextEditingController(text: 'ituh@gmail.com');
+  final TextEditingController _nameController = TextEditingController(
+    text: 'Information Technology Unity Hub',
+  );
+  final TextEditingController _emailController = TextEditingController(
+    text: 'College of Computer Studies',
+  );
+  final TextEditingController _phoneController = TextEditingController(
+    text: 'ituh@gmail.com',
+  );
 
   final int _selectedIndex = 3;
 
@@ -65,10 +71,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
+
     Widget nextScreen;
     switch (index) {
       case 0:
-        nextScreen = const HomeScreen(orgName: "Organization");
+        nextScreen = HomeScreen(orgName: widget.orgName, orgId: widget.orgId);
         break;
       case 1:
         nextScreen = const TransactionHistoryScreen();
@@ -77,11 +84,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         nextScreen = const WalletScreen();
         break;
       case 3:
-        nextScreen = const ProfileScreen();
+        nextScreen = ProfileScreen(
+          orgName: widget.orgName,
+          orgId: widget.orgId,
+        );
         break;
       default:
         return;
     }
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
@@ -127,7 +138,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       backgroundImage: _profileImage != null
                           ? FileImage(_profileImage!)
                           : const AssetImage('assets/profile_pictures/bank.jpg')
-                              as ImageProvider,
+                                as ImageProvider,
                     ),
                     Positioned(
                       right: 4,
