@@ -16,21 +16,21 @@ class _WalletScreenState extends State<WalletScreen> {
 
   // Months from August to May
   final List<String> _months = [
-    'AUGUST 2024',
+    'AUGUST',
     'SEPTEMBER',
     'OCTOBER',
     'NOVEMBER',
     'DECEMBER',
-    'JANUARY 2025',
+    'JANUARY',
     'FEBRUARY',
     'MARCH',
     'APRIL',
     'MAY',
   ];
 
-  // Sorting state
-  String _sortField = 'Month';
-  String _sortOrder = 'New to old';
+  // Academic Year dropdown (replaces Sort by month/date modified)
+  String _selectedAcademicYear = '';
+  List<String> _academicYears = const [];
 
   final iconPaths = {
     'home': {
@@ -51,7 +51,25 @@ class _WalletScreenState extends State<WalletScreen> {
     },
   };
 
-  final GlobalKey _sortKey = GlobalKey();
+  @override
+  void initState() {
+    super.initState();
+    _initAcademicYears();
+  }
+
+  void _initAcademicYears() {
+    const int startYear = 2020;
+    const int count = 50;
+    final years = List.generate(count, (index) {
+      final int y1 = startYear + index;
+      final int y2 = y1 + 1;
+      return '$y1–$y2';
+    });
+
+    _academicYears = years;
+    _selectedAcademicYear =
+        years.firstWhere((ay) => ay == '2025–2026', orElse: () => years[0]);
+  }
 
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
@@ -84,131 +102,8 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
-  void _showCustomSortMenu() {
-    final renderBox =
-        _sortKey.currentContext?.findRenderObject() as RenderBox?;
-    final overlayBox =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
-
-    if (renderBox == null) return;
-
-    final position =
-        renderBox.localToGlobal(Offset.zero, ancestor: overlayBox);
-
-    late OverlayEntry entry;
-
-    entry = OverlayEntry(
-      builder: (_) => Stack(
-        children: [
-          // tap outside to close
-          GestureDetector(
-            onTap: () => entry.remove(),
-            behavior: HitTestBehavior.translucent,
-            child: SizedBox(
-              width: overlayBox.size.width,
-              height: overlayBox.size.height,
-            ),
-          ),
-          Positioned(
-            left: position.dx,
-            top: position.dy,
-            child: Material(
-              color: Colors.transparent,
-              child: _buildSortMenuContent(entry),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    Overlay.of(context).insert(entry);
-  }
-
-  Widget _buildSortMenuContent(OverlayEntry entry) {
-    return Container(
-      width: 163,
-      height: 142,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8D7AA),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.black, width: 1),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Sort by',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              fontFamily: 'Poppins',
-            ),
-          ),
-          const SizedBox(height: 6),
-          _buildCustomMenuRow('Month', entry),
-          _buildCustomMenuRow('Date Modified', entry),
-          const Divider(height: 14, thickness: 1),
-          _buildCustomMenuRow('New to old', entry, isOrder: true),
-          _buildCustomMenuRow('Old to new', entry, isOrder: true),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCustomMenuRow(
-      String label, OverlayEntry entry, {bool isOrder = false}) {
-    final bool selected = isOrder
-        ? _sortOrder == label
-        : _sortField == label ||
-            (_sortField == 'Month' && label == 'Month');
-
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        setState(() {
-          if (isOrder) {
-            _sortOrder = label;
-          } else {
-            _sortField = label;
-          }
-        });
-        entry.remove();
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 18,
-              child: selected
-                  ? const Icon(
-                      Icons.check,
-                      size: 18,
-                      color: Colors.black,
-                    )
-                  : const SizedBox.shrink(),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.black,
-                fontFamily: 'Poppins',
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final String sortLabel =
-        _sortField == 'Month' ? 'Sort by month' : 'Sort by date modified';
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -223,6 +118,7 @@ class _WalletScreenState extends State<WalletScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Wallet title ONLY
               const Text(
                 "Wallet",
                 style: TextStyle(
@@ -233,30 +129,63 @@ class _WalletScreenState extends State<WalletScreen> {
                   color: Colors.black,
                 ),
               ),
-              const SizedBox(height: 12),
-              GestureDetector(
-                key: _sortKey,
-                onTap: _showCustomSortMenu,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      sortLabel,
-                      style: const TextStyle(
-                        fontSize: 14,
+              const SizedBox(height: 8),
+              // Compact AY dropdown in place of the old "Sort by" row
+              SizedBox(
+                height: 28,
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedAcademicYear.isEmpty
+                        ? null
+                        : _selectedAcademicYear,
+                    isDense: true, // reduces button height [web:7][web:11]
+                    hint: const Text(
+                      'Select AY',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11,
                         color: Colors.black,
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    Image.asset(
-                      'assets/Icons/dropdown.png',
-                      width: 16,
-                      height: 16,
+                    items: _academicYears
+                        .map(
+                          (ay) => DropdownMenuItem<String>(
+                            value: ay,
+                            child: Text(
+                              ay,
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 11, // smaller text
+                                height: 1.0,  // tighter line height
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setState(() {
+                        _selectedAcademicYear = value;
+                        // Todo: filter wallets list by AY if needed
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(6),
+                    icon: const Icon(
+                      Icons.arrow_drop_down,
+                      size: 16,
+                      color: Colors.black,
                     ),
-                  ],
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 11,
+                      color: Colors.black,
+                    ),
+                    menuMaxHeight: 200, // optional: smaller menu height [web:12]
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Expanded(
                 child: GridView.builder(
                   itemCount: _months.length,
@@ -274,8 +203,7 @@ class _WalletScreenState extends State<WalletScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                                WalletMonthScreen(month: name),
+                            builder: (_) => WalletMonthScreen(month: name),
                           ),
                         );
                       },
