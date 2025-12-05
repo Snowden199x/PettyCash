@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:pockitrack/Navigation/home_screen.dart';
 import 'package:pockitrack/Navigation/transaction_history_screen.dart';
 import 'package:pockitrack/Navigation/wallet_screen.dart';
@@ -13,14 +11,10 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final TextEditingController _nameController =
-      TextEditingController(text: 'Information Technology Unity Hub');
-  final TextEditingController _emailController =
-      TextEditingController(text: 'College of Computer Studies');
-  final TextEditingController _phoneController =
-      TextEditingController(text: 'ituh@gmail.com');
-
   final int _selectedIndex = 3;
+
+  // New: selected option below Organization Name
+  int _selectedOrgTabIndex = 0; // 0 = Organization Information, 1 = Officers, 2 = Accreditation Details
 
   final iconPaths = {
     'home': {
@@ -41,30 +35,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     },
   };
 
-  File? _profileImage;
-  final ImagePicker _picker = ImagePicker();
-
-  Future<void> _pickImage() async {
-    final XFile? picked = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
-    if (picked == null) return;
-    setState(() {
-      _profileImage = File(picked.path);
-    });
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    super.dispose();
-  }
-
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
+
     Widget nextScreen;
     switch (index) {
       case 0:
@@ -82,6 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       default:
         return;
     }
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
@@ -98,108 +72,209 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text(
-          "Profile",
-          style: TextStyle(
-            fontStyle: FontStyle.italic,
-            fontFamily: 'Poppins',
-            fontSize: 22,
-            color: Colors.black,
-          ),
-        ),
-        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
+        toolbarHeight: 0,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 30.0, right: 20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
-              GestureDetector(
-                onTap: _pickImage,
-                child: Stack(
-                  alignment: Alignment.bottomRight,
+              const Text(
+                "Profile",
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  fontFamily: 'Times New Roman',
+                  fontSize: 32,
+                  fontWeight: FontWeight.w300,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // --- Organization Card ---
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF4EEDF), // light beige background
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage: _profileImage != null
-                          ? FileImage(_profileImage!)
-                          : const AssetImage('assets/profile_pictures/bank.jpg')
-                              as ImageProvider,
+                    // Left: circular photo placeholder + change button
+                    Column(
+                      children: [
+                        Container(
+                          width: 72,
+                          height: 72,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFFD9D9D9),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            side: const BorderSide(
+                              color: Color(0xFFCCCCCC),
+                            ),
+                            foregroundColor: Colors.black87,
+                            textStyle: const TextStyle(
+                              fontSize: 11,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                          onPressed: () {
+                            // todo: implement change photo action
+                          },
+                          icon: const Icon(
+                            Icons.photo_camera_outlined,
+                            size: 16,
+                          ),
+                          label: const Text('Change Photo'),
+                        ),
+                      ],
                     ),
-                    Positioned(
-                      right: 4,
-                      bottom: 4,
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFF7A4F22),
-                        ),
-                        padding: const EdgeInsets.all(6),
-                        child: const Icon(
-                          Icons.edit,
-                          size: 20,
-                          color: Colors.white,
-                        ),
+
+                    const SizedBox(width: 16),
+
+                    // Right: organization details
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Organization Name",
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            "ITUH",
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            "Department",
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            "Laguna State Polytechnic University - Sta.\nCruz Campus",
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black87,
+                              height: 1.3,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF28A745),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.check_circle,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  "Accredited",
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 30),
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Organization',
-                  prefixIcon: Icon(Icons.person_outline),
-                  border: OutlineInputBorder(),
+
+              const SizedBox(height: 16),
+
+              // --- New segmented options like WalletMonthScreen ---
+              Container(
+                height: 34,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF6F2E8),
+                  borderRadius: BorderRadius.circular(5),
                 ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Department',
-                  prefixIcon: Icon(Icons.school_outlined),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.email_outlined),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Profile saved successfully!'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7A4F22),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                child: Row(
+                  children: [
+                    _OrgSegmentTab(
+                      label: 'Organization Information',
+                      isSelected: _selectedOrgTabIndex == 0,
+                      onTap: () {
+                        setState(() {
+                          _selectedOrgTabIndex = 0;
+                        });
+                        // todo: navigate or show content for Organization Information
+                      },
                     ),
-                  ),
-                  child: const Text(
-                    'Save',
-                    style: TextStyle(fontSize: 16, color: Colors.white),
-                  ),
+                    _OrgSegmentTab(
+                      label: 'Officers',
+                      isSelected: _selectedOrgTabIndex == 1,
+                      onTap: () {
+                        setState(() {
+                          _selectedOrgTabIndex = 1;
+                        });
+                        // todo: navigate or show content for Officers
+                      },
+                    ),
+                    _OrgSegmentTab(
+                      label: 'Accreditation Details',
+                      isSelected: _selectedOrgTabIndex == 2,
+                      onTap: () {
+                        setState(() {
+                          _selectedOrgTabIndex = 2;
+                        });
+                        // todo: navigate or show content for Accreditation Details
+                      },
+                    ),
+                  ],
                 ),
               ),
+
+              // Add any extra Profile content below this segment row.
             ],
           ),
         ),
@@ -257,6 +332,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
       label: label,
+    );
+  }
+}
+
+// Reusable segmented tab widget (mirrors style from WalletMonthScreen)
+class _OrgSegmentTab extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _OrgSegmentTab({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 34,
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFFF3D58D) : Colors.transparent,
+            borderRadius: BorderRadius.circular(5),
+            border: Border.all(
+              color: isSelected ? Colors.black : Colors.transparent,
+              width: 1,
+            ),
+          ),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 10, // slightly smaller to fit longer text
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
