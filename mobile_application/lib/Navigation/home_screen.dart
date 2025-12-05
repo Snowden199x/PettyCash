@@ -3,6 +3,9 @@ import 'package:intl/intl.dart';
 import 'transaction_history_screen.dart';
 import 'wallet_screen.dart';
 import 'profile_screen.dart';
+// FIX 1: Correct path to your LoginScreen file.
+// If your LoginScreen is somewhere else, change this path:
+import '../LogIn/log_in_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String orgName;
@@ -154,6 +157,22 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
+  // Handles the Profile / Logout menu choices
+  void _onMenuSelected(String value) {
+    if (value == 'profile') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
+      );
+    } else if (value == 'logout') {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (Route<dynamic> route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -192,10 +211,23 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ],
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _onItemTapped(3);
-                    },
+                  // Avatar with popup menu (Profile + Logout)
+                  PopupMenuButton<String>(
+                    onSelected: _onMenuSelected,
+                    offset: const Offset(0, 40),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    itemBuilder: (context) => const [
+                      PopupMenuItem<String>(
+                        value: 'profile',
+                        child: Text('Profile'),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'logout',
+                        child: Text('Logout'),
+                      ),
+                    ],
                     child: const CircleAvatar(
                       radius: 18,
                       backgroundImage: AssetImage(
@@ -239,6 +271,7 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                       ),
                       const SizedBox(height: 8),
+                      // FIX 2: Remove `const` here because some children may not be fully const
                       Expanded(
                         child: GridView.count(
                           crossAxisCount: 2,
@@ -400,20 +433,12 @@ class _OverviewCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.black87,
-                  ),
-                ),
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.bold)),
+                Text(subtitle,
+                    style: const TextStyle(
+                        fontSize: 12, color: Colors.black87)),
               ],
             ),
           ),

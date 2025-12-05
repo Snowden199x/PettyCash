@@ -124,23 +124,27 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
-        title: const Text(
-          'Transaction History',
-          style: TextStyle(
-            fontStyle: FontStyle.italic,
-            fontFamily: 'Times New Roman',
-            color: Colors.black,
-            fontSize: 22,
-          ),
-        ),
+        toolbarHeight: 0, // hide bar, like Wallet screen
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+          padding: const EdgeInsets.only(left: 20, top: 30.0, right: 20),
           child: SingleChildScrollView(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const Text(
+                  'Transaction History',
+                  style: TextStyle(
+                    fontStyle: FontStyle.italic,
+                    fontFamily: 'Times New Roman',
+                    fontSize: 32,
+                    fontWeight: FontWeight.w300,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
                 // Month Selector
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -258,7 +262,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           ),
         ),
       ),
-      // No FAB
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
