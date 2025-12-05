@@ -131,6 +131,8 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.5.4"
+<<<<<<< HEAD
+=======
   image_picker:
     dependency: "direct main"
     description:
@@ -195,6 +197,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.2"
+>>>>>>> e512666eac9f7a79b5ef6274bfe052b61294912f
   intl:
     dependency: "direct main"
     description:
@@ -266,8 +269,7 @@ packages:
       sha256: e3641ec5d63ebf0d9b41bd43201a66e3fc79a65db5f61fc181f04cd27aab950c
       url: "https://pub.dev"
     source: hosted
-    version: "1.17.0"
-<<<<<<< HEAD
+    version: "1.16.0"
   mime:
     dependency: transitive
     description:
@@ -276,8 +278,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-=======
->>>>>>> 826ae1e (Mobile)
   path:
     dependency: transitive
     description:
