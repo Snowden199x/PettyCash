@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PockiTrack Login</title>
+
+    <!-- FIXED: blueprint static -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('pres.static', filename='css/loginStyle.css') }}"
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Logo (clickable back to landing page) -->
+    <!-- FIXED -->
+    <a href="{{ url_for('pres.landingpage') }}" class="logo">
+      <img
+        src="{{ url_for('pres.static', filename='images/pocki_logo.png') }}"
+        alt="PockiTrack Logo"
+      />
+      <span class="logo_name">PockiTrack</span>
+    </a>
+
+    <!-- Login Container -->
+    <div class="container">
+      <div class="login-box">
+        <h2>Log in</h2>
+        <p class="subtitle">Enter your details to sign in to your account.</p>
+        {% with messages = get_flashed_messages(with_categories=true) %} {% if
+        messages %} {% for category, message in messages %}
+        <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %} {% endif %} {% endwith %}
+        <!-- FIXED: correct action -->
+        <form
+          id="loginForm"
+          method="POST"
+          action="{{ url_for('pres.pres_login') }}"
+        >
+          <!-- Username -->
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" />
+          <p id="usernameError" class="error-message"></p>
+
+          <!-- Password -->
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" />
+          <p id="passwordError" class="error-message"></p>
+
+          <!-- FIXED -->
+          <a href="{{ url_for('pres.pres_forgot_password') }}" class="forgot"
+            >Forgot password?</a
+          >
+
+          <button type="submit" class="login-btn">Log in</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- JS fixed to blueprint static -->
+    <script src="{{ url_for('pres.static', filename='js/loginValidation.js') }}"></script>
+  </body>
+</html>

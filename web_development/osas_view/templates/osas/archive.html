@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PockiTrack | Archive</title>
+
+    <!-- ===== CSS LINK ===== -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('osas.static', filename='css/archive.css') }}"
+    />
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('osas.static', filename='css/layout.css') }}"
+    />
+
+    <!-- ===== JS ===== -->
+    <script src="{{ url_for('osas.static', filename='js/archive.js') }}"></script>
+    
+    <!-- ===== GOOGLE FONT ===== -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <!-- HEADER -->
+    <header class="admin-header">
+      <div class="logo" id="logoLink">
+        <img
+          src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}"
+          alt="PockiTrack Logo"
+        />
+        <span class="logo_name">PockiTrack</span>
+      </div>
+    </header>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar hover-sidebar">
+      <nav class="nav-menu">
+        <a href="{{ url_for('osas.osas_dashboard') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+          <img src="{{ url_for('osas.static', filename='images/dashboard_menu.png') }}" class="nav-icon-img" alt="Dashboard" />
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="{{ url_for('osas.osas_orgs') }}" class="nav-item {% if active_page == 'orgs' %}active{% endif %}">
+          <img src="{{ url_for('osas.static', filename='images/organization_menu.png') }}" class="nav-icon-img" alt="Organizations" />
+          <span class="nav-label">Accredited Organizations</span>
+        </a>
+        <a href="{{ url_for('osas.osas_reports') }}" class="nav-item {% if active_page == 'reports' %}active{% endif %}">
+          <img src="{{ url_for('osas.static', filename='images/reports_menu.png') }}" class="nav-icon-img" alt="Reports" />
+          <span class="nav-label">Reports</span>
+        </a>
+        <a href="{{ url_for('osas.osas_archive') }}" class="nav-item {% if active_page == 'archive' %}active{% endif %}">
+          <img src="{{ url_for('osas.static', filename='images/archive_menu.png') }}" class="nav-icon-img" alt="Archive" />
+          <span class="nav-label">Archive</span>
+        </a>
+        <a href="{{ url_for('osas.osas_settings') }}" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
+          <img src="{{ url_for('osas.static', filename='images/settings_menu.png') }}" class="nav-icon-img" alt="Settings" />
+          <span class="nav-label">Settings</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="dashboard with-sidebar">
+      <!-- PAGE HEADER -->
+      <section class="page-header">
+        <div>
+          <h1>Archive</h1>
+          <p>Deleted organizations - Restore or permanently delete</p>
+        </div>
+        <div class="header-actions">
+          <input 
+            type="text" 
+            id="searchArchive" 
+            placeholder="Search archived organizations..."
+            class="search-input"
+          />
+          <button id="emptyArchiveBtn" class="danger-btn">
+            🗑️ Empty Archive
+          </button>
+        </div>
+      </section>
+
+      <!-- ARCHIVE CONTAINER -->
+      <section class="archive-section">
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+          <img
+            src="{{ url_for('osas.static', filename='images/empty_org.png') }}"
+            alt="No Archived Items"
+          />
+          <h4>Archive is Empty</h4>
+          <p>
+            Deleted organizations will appear here. You can restore them or permanently delete them.
+          </p>
+        </div>
+
+        <!-- Archive Grid -->
+        <div class="archive-grid" id="archiveGrid" style="display: none;"></div>
+      </section>
+
+      <!-- RESTORE CONFIRMATION MODAL -->
+      <div id="restoreModal" class="modal">
+        <div class="modal-box">
+          <div class="modal-header">
+            <h2>Restore Organization</h2>
+            <button class="close-btn" id="closeRestoreModal">&times;</button>
+          </div>
+          <p id="restoreMessage">Are you sure you want to restore this organization?</p>
+          <div class="modal-buttons">
+            <button id="cancelRestoreBtn" class="secondary-btn">Cancel</button>
+            <button id="confirmRestoreBtn" class="primary-btn">Restore</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PERMANENT DELETE MODAL -->
+      <div id="permanentDeleteModal" class="modal">
+        <div class="modal-box">
+          <div class="modal-header">
+            <h2>⚠️ Permanent Delete</h2>
+            <button class="close-btn" id="closePermanentDeleteModal">&times;</button>
+          </div>
+          <p id="permanentDeleteMessage">
+            This action cannot be undone. Are you sure you want to permanently delete this organization?
+          </p>
+          <div class="warning-notice">
+            <span class="warning-icon">⚠️</span>
+            <span>All associated data will be permanently lost!</span>
+          </div>
+          <div class="modal-buttons">
+            <button id="cancelPermanentDeleteBtn" class="secondary-btn">Cancel</button>
+            <button id="confirmPermanentDeleteBtn" class="danger-btn">Delete Forever</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMPTY ARCHIVE CONFIRMATION MODAL -->
+      <div id="emptyArchiveModal" class="modal">
+        <div class="modal-box">
+          <div class="modal-header">
+            <h2>⚠️ Empty Entire Archive</h2>
+            <button class="close-btn" id="closeEmptyArchiveModal">&times;</button>
+          </div>
+          <p>
+            This will permanently delete ALL archived organizations. This action cannot be undone.
+          </p>
+          <div class="warning-notice">
+            <span class="warning-icon">⚠️</span>
+            <span>You are about to delete <strong id="totalArchiveCount">0</strong> organizations permanently!</span>
+          </div>
+          <div class="modal-buttons">
+            <button id="cancelEmptyArchiveBtn" class="secondary-btn">Cancel</button>
+            <button id="confirmEmptyArchiveBtn" class="danger-btn">Delete All Forever</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUCCESS/ERROR TOAST -->
+      <div id="toast" class="toast"></div>
+    </main>
+  </body>
+</html>

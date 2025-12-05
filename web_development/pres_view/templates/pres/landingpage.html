@@ -4,10 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PockiTrack</title>
+
+    <!-- FIXED: blueprint static -->
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='css/landingStyle.css') }}"
+      href="{{ url_for('pres.static', filename='css/landingStyle.css') }}"
     />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -18,15 +21,17 @@
   <body>
     <!-- HEADER -->
     <header>
-      <a href="{{ url_for('landingpage') }}" class="logo">
+      <!-- FIXED: blueprint endpoint -->
+      <a href="{{ url_for('pres.landingpage') }}" class="logo">
         <img
-          src="{{ url_for('static', filename='images/pocki_logo.png') }}"
+          src="{{ url_for('pres.static', filename='images/pocki_logo.png') }}"
           alt="PockiTrack Logo"
         />
         <h2 class="logo_name">PockiTrack</h2>
       </a>
 
-      <a href="{{ url_for('pres_login') }}" class="login-btn">Log in</a>
+      <!-- FIXED -->
+      <a href="{{ url_for('pres.pres_login') }}" class="login-btn">Log in</a>
     </header>
 
     <!-- HERO SECTION -->
@@ -40,15 +45,17 @@
           PockiTrack helps university organizations track expenses, manage
           budgets, and generate professional financial reports with ease.
         </p>
-        <a href="{{ url_for('pres_login') }}"
-          ><button class="get-started">Get started →</button></a
-        >
+
+        <!-- FIXED -->
+        <a href="{{ url_for('pres.pres_login') }}">
+          <button class="get-started">Get started →</button>
+        </a>
       </div>
 
       <div class="hero-card">
         <div class="card">
           <img
-            src="{{ url_for('static', filename='images/wallet_icon.png') }}"
+            src="{{ url_for('pres.static', filename='images/wallet_icon.png') }}"
             alt="Wallet Icon"
             class="wallet-icon"
           />
@@ -67,7 +74,7 @@
 
         <div class="card">
           <img
-            src="{{ url_for('static', filename='images/wallet_icon.png') }}"
+            src="{{ url_for('pres.static', filename='images/wallet_icon.png') }}"
             alt="Wallet Icon"
             class="wallet-icon"
           />
@@ -97,7 +104,7 @@
       <div class="features-grid">
         <div class="feature-box">
           <img
-            src="{{ url_for('static', filename='images/track_finances.png') }}"
+            src="{{ url_for('pres.static', filename='images/track_finances.png') }}"
             alt="Track Finances Icon"
             class="feature-icon"
           />
@@ -112,7 +119,7 @@
 
         <div class="feature-box">
           <img
-            src="{{ url_for('static', filename='images/generate_reports.png') }}"
+            src="{{ url_for('pres.static', filename='images/generate_reports.png') }}"
             alt="Generate Reports Icon"
             class="feature-icon"
           />
@@ -127,7 +134,7 @@
 
         <div class="feature-box">
           <img
-            src="{{ url_for('static', filename='images/secured.png') }}"
+            src="{{ url_for('pres.static', filename='images/secured.png') }}"
             alt="Secure & Reliable Icon"
             class="feature-icon"
           />
@@ -142,7 +149,7 @@
 
         <div class="feature-box">
           <img
-            src="{{ url_for('static', filename='images/collaborate.png') }}"
+            src="{{ url_for('pres.static', filename='images/collaborate.png') }}"
             alt="Multi-Officer Access Icon"
             class="feature-icon"
           />
@@ -164,9 +171,11 @@
         Get started with PockiTrack today and manage your finances with
         confidence.
       </p>
-      <a href="{{ url_for('pres_login') }}"
-        ><button class="btn access-btn">Access your account</button></a
-      >
+
+      <!-- FIXED -->
+      <a href="{{ url_for('pres.pres_login') }}">
+        <button class="btn access-btn">Access your account</button>
+      </a>
     </section>
 
     <!-- FOOTER -->
@@ -187,6 +196,7 @@
       <p class="footer-credit">© 2025 PockiTrack. All rights reserved.</p>
     </footer>
 
-    <script src="{{ url_for('static', filename='js/landing_page.js') }}"></script>
+    <!-- FIXED: blueprint static -->
+    <script src="{{ url_for('pres.static', filename='js/landing_page.js') }}"></script>
   </body>
 </html>

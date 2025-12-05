@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PockiTrack | Financial Reports</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('osas.static', filename='css/layout.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('osas.static', filename='css/reports.css') }}"
+    />
+
+    <script src="{{ url_for('osas.static', filename='js/reports.js') }}"></script>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <!-- HEADER -->
+    <header class="admin-header">
+      <div class="logo" id="logoLink">
+        <img
+          src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}"
+          alt="PockiTrack Logo"
+        />
+        <span class="logo_name">PockiTrack</span>
+      </div>
+    </header>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar hover-sidebar">
+      <nav class="nav-menu">
+        <a
+          href="{{ url_for('osas.osas_dashboard') }}"
+          class="nav-item {% if active_page == 'dashboard' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/dashboard_menu.png') }}"
+            class="nav-icon-img"
+            alt="Dashboard"
+          />
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a
+          href="{{ url_for('osas.osas_orgs') }}"
+          class="nav-item {% if active_page == 'orgs' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/organization_menu.png') }}"
+            class="nav-icon-img"
+            alt="Organizations"
+          />
+          <span class="nav-label">Accredited Organizations</span>
+        </a>
+        <a
+          href="{{ url_for('osas.osas_reports') }}"
+          class="nav-item {% if active_page == 'reports' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/reports_menu.png') }}"
+            class="nav-icon-img"
+            alt="Reports"
+          />
+          <span class="nav-label">Reports</span>
+        </a>
+        <a
+          href="{{ url_for('osas.osas_archive') }}"
+          class="nav-item {% if active_page == 'archive' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/archive_menu.png') }}"
+            class="nav-icon-img"
+            alt="Archive"
+          />
+          <span class="nav-label">Archive</span>
+        </a>
+        <a
+          href="{{ url_for('osas.osas_settings') }}"
+          class="nav-item {% if active_page == 'settings' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/settings_menu.png') }}"
+            class="nav-icon-img"
+            alt="Settings"
+          />
+          <span class="nav-label">Settings</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="dashboard with-sidebar">
+      <!-- PAGE HEADER -->
+      <section class="page-header">
+        <div>
+          <h1>Financial Reports</h1>
+          <p>Track and manage organization report submissions</p>
+        </div>
+        <div class="filter-controls">
+          <select id="statusFilter" class="filter-select">
+            <option value="all">All Status</option>
+            <option value="Pending Review">Pending</option>
+            <option value="In Review">In Review</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <div class="filter-dropdown">
+            <select id="departmentFilter" class="filter-select">
+              <option value="">All Departments</option>
+              <!-- options get filled by JS -->
+            </select>
+          </div>
+          <input
+            type="text"
+            id="searchReports"
+            placeholder="Search organizations..."
+            class="search-input"
+          />
+        </div>
+      </section>
+
+      <!-- REPORTS SECTION -->
+      <section class="reports-section">
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+          <img
+            src="{{ url_for('osas.static', filename='images/empty_org.png') }}"
+            alt="No Reports"
+          />
+          <h4>No Reports Available</h4>
+          <p>
+            Organizations will appear here once they start submitting financial
+            reports.
+          </p>
+        </div>
+
+        <!-- Reports Grid -->
+        <div class="reports-grid" id="reportsGrid" style="display: none"></div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="pagination"></div>
+      </section>
+
+      <!-- REPORT DETAILS MODAL -->
+      <div id="reportModal" class="modal">
+        <div class="modal-box report-modal">
+          <div class="modal-header">
+            <div>
+              <h2 id="modalOrgName">Organization Name</h2>
+              <p id="modalSubmissionDate">Accredited on: N/A</p>
+            </div>
+            <button class="close-btn" id="closeModal">&times;</button>
+          </div>
+          <div class="checklist-section">
+            <h3>Monthly Submissions</h3>
+            <p class="section-subtitle">
+              Receive and view monthly financial reports or notes
+            </p>
+            <div class="months-list" id="monthsList">
+              <!-- filled by JS -->
+            </div>
+          </div>
+
+          <div class="notes-section">
+            <h3>Admin Notes</h3>
+            <p class="section-subtitle">
+              Add feedback or requirements for the organization
+            </p>
+            <textarea
+              id="adminNotes"
+              placeholder="e.g., Missing receipts..."
+              rows="6"
+            ></textarea>
+          </div>
+
+          <div class="modal-buttons">
+            <button type="button" id="cancelModal" class="secondary-btn">
+              Cancel
+            </button>
+            <button type="button" id="completeReport" class="secondary-btn">
+              Mark as Complete
+            </button>
+            <button type="button" id="saveReport" class="primary-btn">
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="toast" class="toast"></div>
+    </main>
+  </body>
+</html>

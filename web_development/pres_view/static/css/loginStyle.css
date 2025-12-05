@@ -162,6 +162,27 @@ input:hover {
   margin-bottom: 10px;
   display: none;
 }
+.flash-message {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* red for danger */
+.flash-message.danger {
+  background-color: #ffe5e5;
+  color: #c0392b;
+  border: 1px solid #e74c3c;
+}
+.flash-message.success {
+  background-color: #e8f8f1;
+  color: #1e8449;
+  border: 1px solid #2ecc71;
+}
+
 
 /* Shake animation */
 @keyframes shake {

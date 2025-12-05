@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PockiTrack | Dashboard</title>
+
+    <!-- ===== CSS LINK ===== -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('osas.static', filename='css/layout.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('osas.static', filename='css/homepage.css') }}"
+    />
+
+    <!-- ===== JS ===== -->
+    <script src="{{ url_for('osas.static', filename='js/homepage.js') }}"></script>
+
+    <!-- ===== GOOGLE FONT ===== -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <!-- HEADER -->
+    <header class="admin-header">
+      <div class="logo">
+        <img
+          src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}"
+          alt="PockiTrack Logo"
+        />
+        <span class="logo_name">PockiTrack</span>
+      </div>
+
+      <div class="header-right">
+        <div class="search-bar">
+          <input
+            type="text"
+            id="globalSearch"
+            placeholder="Search organizations..."
+          />
+          <span class="search-icon"></span>
+        </div>
+
+        <!-- Notification button -->
+        <button class="notif-btn" id="notifBtn" aria-label="Notifications">
+          <span class="notif-icon">🔔</span>
+          <span class="notif-dot" id="notifDot" style="display: none"></span>
+        </button>
+
+        <div class="notif-menu" id="notifMenu">
+          <div id="notifList"></div>
+        </div>
+
+        <div class="profile-dropdown">
+          <button class="profile-btn" id="profileBtn">
+            <div class="profile-avatar">A</div>
+            <span class="profile-name">Admin User</span>
+            <span class="dropdown-arrow">▼</span>
+          </button>
+
+          <div class="dropdown-menu" id="profileMenu">
+            <a href="{{ url_for('osas.osas_settings') }}" class="dropdown-item">
+              <span class="item-icon"></span>
+              <span>Settings</span>
+            </a>
+            <a
+              href="{{ url_for('osas.osas_logout') }}"
+              class="dropdown-item logout"
+            >
+              <span class="item-icon"></span>
+              <span>Log Out</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar hover-sidebar">
+      <nav class="nav-menu">
+        <a
+          href="{{ url_for('osas.osas_dashboard') }}"
+          class="nav-item {% if active_page == 'dashboard' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/dashboard_menu.png') }}"
+            class="nav-icon-img"
+            alt="Dashboard"
+          />
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a
+          href="{{ url_for('osas.osas_orgs') }}"
+          class="nav-item {% if active_page == 'orgs' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/organization_menu.png') }}"
+            class="nav-icon-img"
+            alt="Organizations"
+          />
+          <span class="nav-label">Accredited Organizations</span>
+        </a>
+        <a
+          href="{{ url_for('osas.osas_reports') }}"
+          class="nav-item {% if active_page == 'reports' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/reports_menu.png') }}"
+            class="nav-icon-img"
+            alt="Reports"
+          />
+          <span class="nav-label">Reports</span>
+        </a>
+        <a
+          href="{{ url_for('osas.osas_archive') }}"
+          class="nav-item {% if active_page == 'archive' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/archive_menu.png') }}"
+            class="nav-icon-img"
+            alt="Archive"
+          />
+          <span class="nav-label">Archive</span>
+        </a>
+        <a
+          href="{{ url_for('osas.osas_settings') }}"
+          class="nav-item {% if active_page == 'settings' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/settings_menu.png') }}"
+            class="nav-icon-img"
+            alt="Settings"
+          />
+          <span class="nav-label">Settings</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="dashboard with-sidebar">
+      <!-- WELCOME SECTION -->
+      <section class="welcome-section">
+        <div class="welcome-content">
+          <h1>Welcome back, <span id="adminName">Admin</span>!</h1>
+          <p>Here's what's happening with your organizations today</p>
+        </div>
+        <div class="quick-actions">
+          <button type="button" id="addOrgHomepageBtn" class="action-btn">
+            <span class="btn-icon"></span>
+            Add Organization
+          </button>
+          <a
+            href="{{ url_for('osas.osas_reports') }}"
+            class="action-btn secondary"
+          >
+            <span class="btn-icon"></span>
+            View Reports
+          </a>
+        </div>
+      </section>
+
+      <!-- SUMMARY CARDS -->
+      <section class="summary-cards">
+        <div class="stat-card primary">
+          <div class="card-icon">
+            <img
+              src="{{ url_for('osas.static', filename='images/org_icon.png') }}"
+              alt="Total Organizations"
+            />
+          </div>
+          <div class="card-content">
+            <p class="card-label">Total Organizations</p>
+            <h2 class="card-value" id="totalOrgs">0</h2>
+          </div>
+        </div>
+
+        <div class="stat-card warning">
+          <div class="card-icon">
+            <img
+              src="{{ url_for('osas.static', filename='images/reports_icon.png') }}"
+              alt="Pending Reports"
+            />
+          </div>
+          <div class="card-content">
+            <p class="card-label">Pending Reports</p>
+            <h2 class="card-value" id="pendingReports">0</h2>
+          </div>
+        </div>
+
+        <div class="stat-card success">
+          <div class="card-icon">
+            <img
+              src="{{ url_for('osas.static', filename='images/approve_icon.png') }}"
+              alt="Approved Reports"
+            />
+          </div>
+          <div class="card-content">
+            <p class="card-label">Completed</p>
+            <h2 class="card-value" id="approvedReports">0</h2>
+          </div>
+        </div>
+
+        <div class="stat-card info">
+          <div class="card-icon">
+            <img
+              src="{{ url_for('osas.static', filename='images/pending.icon.png') }}"
+              alt="In Review"
+            />
+          </div>
+          <div class="card-content">
+            <p class="card-label">In Review</p>
+            <h2 class="card-value" id="inReviewReports">0</h2>
+          </div>
+        </div>
+      </section>
+
+      <!-- ANALYTICS SECTION -->
+      <section class="analytics-section">
+        <div class="analytics-grid">
+          <!-- Organizations by Department -->
+          <div class="analytics-card" id="orgsByDeptCard">
+            <div class="card-header">
+              <h3>Organizations by Department</h3>
+              <select id="dashboardDeptFilter" class="filter-select">
+                <option value="">All Departments</option>
+              </select>
+            </div>
+            <div
+              class="dashboard-loading"
+              id="deptLoading"
+              style="display: none"
+            >
+              <span class="loading-spinner"></span> Loading...
+            </div>
+            <div class="chart-container" id="deptChartContainer">
+              <canvas id="departmentChart" width="300" height="300"></canvas>
+            </div>
+            <div class="chart-legend" id="deptLegend"></div>
+          </div>
+
+          <!-- Report Status Overview -->
+          <div class="analytics-card">
+            <div class="card-header">
+              <h3>Report Status Overview</h3>
+              <span class="card-badge">Real-time</span>
+            </div>
+            <div
+              class="dashboard-loading"
+              id="statusLoading"
+              style="display: none"
+            >
+              <span class="loading-spinner"></span> Loading...
+            </div>
+            <div class="chart-container">
+              <canvas id="statusChart" width="300" height="300"></canvas>
+            </div>
+            <div id="statusBreakdown">
+              <div class="status-item" data-status="pending">
+                <span class="status-label">Pending Review</span>
+                <span class="status-count" id="pendingCount">0</span>
+              </div>
+              <div class="status-item" data-status="review">
+                <span class="status-label">In Review</span>
+                <span class="status-count" id="reviewCount">0</span>
+              </div>
+              <div class="status-item" data-status="completed">
+                <span class="status-label">Completed</span>
+                <span class="status-count" id="completedCount">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- RECENT ACTIVITIES -->
+          <div class="analytics-card tall">
+            <div class="card-header">
+              <h3>Recent Activities</h3>
+              <a
+                href="{{ url_for('osas.osas_settings') }}#activity"
+                class="view-all-link"
+                >View All</a
+              >
+            </div>
+            <div class="activity-feed" id="activityFeed">
+              <div class="activity-item">
+                <div class="activity-icon">🔄</div>
+                <div class="activity-details">
+                  <p class="activity-text">Loading activities...</p>
+                  <p class="activity-time">Just now</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOAST -->
+        <div id="toast" class="toast"></div>
+      </section>
+    </main>
+  </body>
+</html>

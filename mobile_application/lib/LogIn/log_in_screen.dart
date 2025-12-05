@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'forgot_password.dart';
+import 'forgot_password.dart'; // Correct relative import for your folder structure
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,34 +29,22 @@ class _LoginScreenState extends State<LoginScreen>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-
     _passwordController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-
     _emailShake = TweenSequence([
       TweenSequenceItem(tween: Tween(begin: 0.0, end: -4.0), weight: 1),
       TweenSequenceItem(tween: Tween(begin: -4.0, end: 4.0), weight: 2),
       TweenSequenceItem(tween: Tween(begin: 4.0, end: -4.0), weight: 2),
       TweenSequenceItem(tween: Tween(begin: -4.0, end: 0.0), weight: 1),
     ]).animate(_emailController);
-
     _passwordShake = TweenSequence([
       TweenSequenceItem(tween: Tween(begin: 0.0, end: -4.0), weight: 1),
       TweenSequenceItem(tween: Tween(begin: -4.0, end: 4.0), weight: 2),
       TweenSequenceItem(tween: Tween(begin: 4.0, end: -4.0), weight: 2),
       TweenSequenceItem(tween: Tween(begin: -4.0, end: 0.0), weight: 1),
     ]).animate(_passwordController);
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    emailController.dispose();
-    passwordController.dispose();
-    super.dispose();
   }
 
   void _validateAndLogin() {
@@ -70,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen>
 
     if (emailError || passwordError) return;
 
-    Navigator.pushNamed(context, '/home');
+    Navigator.pushNamed(context, '/new-password');
   }
 
   @override
@@ -80,55 +68,39 @@ class _LoginScreenState extends State<LoginScreen>
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 28,
-          ), // adjusted slightly left
+          padding: const EdgeInsets.symmetric(horizontal: 28),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 🔹 Title
-                Container(
-                  margin: const EdgeInsets.only(top: 30),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Log In',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w300,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 const SizedBox(height: 30),
-
-                // 🔹 Icon
-                Center(
-                  child: Image.asset(
-                    'assets/Icons/wallet-icon2.png',
-                    height: 171.67,
-                    width: 174,
-                    fit: BoxFit.contain,
+                // Header
+                const Center(
+                  child: Text(
+                    'Log In',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 40),
-
-                // 🔹 Username Field
-                const Text(
-                  'Username',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
+                // Icon at the top
+                Center(
+                  child: Image.asset(
+                    'assets/Icons/wallet-icon2.png',
+                    height: 160,
                   ),
                 ),
-                const SizedBox(height: 2),
-
+                const SizedBox(height: 40),
+                // Username label
+                const Text(
+                  "Username",
+                  style: TextStyle(fontFamily: "Poppins", fontSize: 16),
+                ),
+                const SizedBox(height: 5),
+                // Username input
                 AnimatedBuilder(
                   animation: _emailShake,
                   builder: (context, child) {
@@ -137,66 +109,39 @@ class _LoginScreenState extends State<LoginScreen>
                       child: child,
                     );
                   },
-                  child: Container(
-                    margin: const EdgeInsets.only(
-                      right: 4,
-                    ), // fixes right cutoff
-                    child: TextField(
-                      controller: emailController,
-                      onChanged: (_) {
-                        if (emailError) setState(() => emailError = false);
-                      },
-                      decoration: InputDecoration(
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 12,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(
-                            color: emailError ? Colors.red : Colors.black,
-                            width: 0.8, // smaller border for visibility
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(
-                            color: emailError
-                                ? Colors.red
-                                : const Color(0xFFE59E2C),
-                            width: 1.0,
-                          ),
-                        ),
+                  child: TextField(
+                    controller: emailController,
+                    cursorColor: Colors.black, // 👈 Always black caret
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1),
                       ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: Color(0xFFE59E2C), width: 1),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.red, width: 1),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: Color(0xFFE59E2C), width: 1),
+                      ),
+                      errorText: emailError
+                          ? "Incorrect username. Please try again"
+                          : null,
                     ),
                   ),
                 ),
-                if (emailError)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 4, left: 4),
-                    child: Text(
-                      "Incorrect username. Please try again",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.red,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                  ),
                 const SizedBox(height: 20),
-
-                // 🔹 Password Field
+                // Password label
                 const Text(
-                  'Password',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                  ),
+                  "Password",
+                  style: TextStyle(fontFamily: "Poppins", fontSize: 16),
                 ),
-                const SizedBox(height: 2),
-
+                const SizedBox(height: 5),
+                // Password input
                 AnimatedBuilder(
                   animation: _passwordShake,
                   builder: (context, child) {
@@ -205,145 +150,91 @@ class _LoginScreenState extends State<LoginScreen>
                       child: child,
                     );
                   },
-                  child: Container(
-                    margin: const EdgeInsets.only(
-                      right: 4,
-                    ), // fixes right cutoff
-                    child: TextField(
-                      controller: passwordController,
-                      obscureText: true,
-                      onChanged: (_) {
-                        if (passwordError) {
-                          setState(() => passwordError = false);
-                        }
-                      },
-                      decoration: InputDecoration(
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 12,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(
-                            color: passwordError ? Colors.red : Colors.black,
-                            width: 0.8,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(
-                            color: passwordError
-                                ? Colors.red
-                                : const Color(0xFFE59E2C),
-                            width: 1.0,
-                          ),
-                        ),
+                  child: TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    cursorColor: Colors.black, // 👈 Always black caret
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Colors.grey, width: 1),
                       ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: Color(0xFFE59E2C), width: 1),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.red, width: 1),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: Color(0xFFE59E2C), width: 1),
+                      ),
+                      errorText: passwordError
+                          ? "Incorrect password. Please try again"
+                          : null,
                     ),
                   ),
                 ),
-                if (passwordError)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 4, left: 4),
-                    child: Text(
-                      "Incorrect password. Please try again",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.red,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                  ),
-
+                // Forgot Password link below password field
                 const SizedBox(height: 8),
-
-                // 🔹 Forgot Password button
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ForgotPassword(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const ForgotPassword()),
+                        );
+                      },
+                      child: const Text(
+                        'Forgot Password',
+                        style: TextStyle(
+                          color: Color(0xFF8B5A2B),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          fontFamily: 'Poppins',
                         ),
-                      );
-                    },
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: const Size(0, 0),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: const Text(
-                      'Forgot Password?',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 14,
-                        color: Color(0xFF8B3B08),
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 150),
+                const SizedBox(height: 100),
               ],
             ),
           ),
         ),
       ),
-
-      // 🔹 Login Button
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(30, 0, 30, 30),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _validateAndLogin,
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.resolveWith<Color>((
-                    states,
-                  ) {
-                    if (states.contains(WidgetState.pressed)) {
-                      return const Color(0xFFE59E2C);
-                    }
-                    return const Color(0xFFF3D58D);
-                  }),
-                  foregroundColor: WidgetStateProperty.resolveWith<Color>((
-                    states,
-                  ) {
-                    if (states.contains(WidgetState.pressed)) {
-                      return Colors.white;
-                    }
-                    return Colors.black;
-                  }),
-                  padding: WidgetStateProperty.all(
-                    const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  shape: WidgetStateProperty.all(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      side: const BorderSide(color: Colors.black, width: 1),
-                    ),
-                  ),
-                  elevation: WidgetStateProperty.all(0),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _validateAndLogin,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFF5D37D),
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  side: const BorderSide(color: Colors.black),
                 ),
-                child: const Text(
-                  'Log in',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 2.0,
-                  ),
+              ),
+              child: const Text(
+                "Log In",
+                style: TextStyle(
+                  fontFamily: "Poppins",
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 2,
                 ),
               ),
             ),
-            const SizedBox(height: 15),
-          ],
+          ),
         ),
       ),
     );

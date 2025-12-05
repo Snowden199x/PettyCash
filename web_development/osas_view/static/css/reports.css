@@ -1,0 +1,733 @@
+/* =========================================
+   GLOBAL STYLES
+========================================= */
+body {
+  margin: 0;
+  font-family: Poppins;
+  background-color: #F5F1E8;
+  color: #000000;
+}
+
+/* =========================================
+   HEADER
+========================================= */
+.admin-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to bottom, #FFFFFF, #ECDDC6);
+  padding: 10px 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  height: 60px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.logo:hover {
+  opacity: 0.8;
+}
+
+.logo img {
+  width: 60px;
+  height: 60px;
+}
+
+.logo_name {
+  font-weight: 500;
+  font-size: 28px;
+  color: #000000;
+}
+
+/* PAGINATION*/
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.page-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  cursor: pointer;
+  font-family: Poppins, sans-serif;
+}
+
+.page-btn.active {
+  background-color: #8B3B08;
+  color: #fff;
+  border-color: #8B3B08;
+}
+
+
+/* =========================================
+   MAIN DASHBOARD
+========================================= */
+.dashboard {
+  margin-left: 100px;      
+  padding: 30px 40px;
+  padding-top: 100px;     
+}
+
+.dashboard.with-sidebar {
+  margin-left: 60px;
+  transition: margin-left 0.25s;
+}
+/* When the sidebar is hovered (i.e., open), shift the main content */
+.sidebar.hover-sidebar:hover ~ .dashboard.with-sidebar {
+  margin-left: 260px;
+}
+
+
+/* =========================================
+   PAGE HEADER
+========================================= */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.page-header h1 {
+  font-size: 32px;
+  font-weight: 600;
+  margin: 0;
+  color: #000000;
+}
+
+.page-header p {
+  font-size: 16px;
+  color: #828282;
+  margin: 5px 0 0 0;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.filter-select {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  font-family: Poppins;
+  background-color: #fff;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+  width: 190px;
+}
+
+.filter-select:hover {
+  border-color: #8B3B08;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #8B3B08;
+}
+
+.filter-dropdown {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.search-input {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  font-family: 'Poppins', sans-serif;
+  width: 300px;
+  transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #8B3B08;
+}
+
+/* =========================================
+   EMPTY STATE
+========================================= */
+.empty-state {
+  width: 100%;
+  background-color: #FFFFFF;
+  border: 1px solid rgba(130, 130, 130, 0.5);
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 60px 5px;
+  box-shadow: 0px 4px 7.9px 4px rgba(243, 213, 141, 0.4);
+  animation: fadeIn 0.5s ease-in;
+}
+
+.empty-state img {
+  width: 85px;
+  height: 85px;
+  margin-bottom: 20px;
+}
+
+.empty-state h4 {
+  font-size: 24px;
+  font-weight: 500;
+  color: #000000;
+  margin: 0 0 10px 0;
+}
+
+.empty-state p {
+  font-size: 18px;
+  font-weight: 300;
+  color: #616161;
+  margin: 0;
+  max-width: 600px;
+}
+
+/* =========================================
+   REPORTS GRID
+========================================= */
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 25px;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.report-card {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(130, 130, 130, 0.3);
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0px 4px 7.9px 4px rgba(243, 213, 141, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.report-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 6px 12px 4px rgba(243, 213, 141, 0.4);
+}
+
+.report-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.report-card-header h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  color: #000000;
+  flex: 1;
+}
+
+.status-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-pending {
+  background-color: #FFF3E0;
+  color: #E65100;
+}
+
+.status-inreview {
+  background-color: #E3F2FD;
+  color: #1565C0;
+}
+
+.status-completed {
+  background-color: #E8F5E9;
+  color: #2E7D32;
+}
+
+.report-card-date {
+  font-size: 14px;
+  color: #828282;
+  margin: 0;
+}
+
+.progress-section {
+  margin-top: 10px;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #616161;
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #E0E0E0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8B3B08, #E59E2C);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.notes-preview {
+  font-size: 14px;
+  color: #616161;
+  font-style: italic;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.no-notes {
+  color: #BDBDBD;
+}
+
+/* =========================================
+   REPORT MODAL
+========================================= */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.report-modal {
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-box {
+  background: #FFFFFF;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 25px;
+  gap: 20px;
+}
+
+.modal-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  color: #000000;
+}
+
+.modal-header p {
+  font-size: 14px;
+  color: #828282;
+  margin: 5px 0 0 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #828282;
+  transition: color 0.2s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: #000000;
+}
+
+/* =========================================
+   STATUS SECTION
+========================================= */
+.status-section {
+  margin-bottom: 25px;
+}
+
+.status-section label {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #000000;
+}
+
+.status-select {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  font-family: 'Poppins', sans-serif;
+  background-color: #fff;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: #8B3B08;
+}
+
+
+/* =========================================
+   NOTES SECTION
+========================================= */
+.notes-section {
+  margin-bottom: 25px;
+}
+
+.notes-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 5px 0;
+  color: #000000;
+}
+
+.notes-section textarea {
+  width: 100%;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+  font-family: 'Poppins', sans-serif;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.notes-section textarea:focus {
+  outline: none;
+  border-color: #8B3B08;
+}
+
+/* =========================================
+   MODAL BUTTONS
+========================================= */
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.primary-btn,
+.secondary-btn {
+  padding: 12px 30px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.primary-btn {
+  background-color: #8B3B08;
+  color: #FFFFFF;
+}
+
+.primary-btn:hover {
+  background-color: #602805;
+}
+
+.secondary-btn {
+  background-color: #E0E0E0;
+  color: #333333;
+}
+
+.secondary-btn:hover {
+  background-color: #BDBDBD;
+}
+
+/* =========================================
+   TOAST
+========================================= */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #2d8a47;
+  color: #fff;
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  display: none;
+  z-index: 10001;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast.error {
+  background-color: #e74c3c;
+}
+
+/* loading spinner */
+.loading-spinner {
+display: inline-block;
+width: 24px;
+height: 24px;
+border: 3px solid #e8decf;
+border-top: 3px solid #db9600;
+border-radius: 50%;
+animation: repSpin 0.8s linear infinite;
+}
+@keyframes repSpin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
+
+/* month buttons in modal */
+.months-list {
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+.month-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 8px 0;
+border-bottom: 1px solid #f1f1f1;
+}
+.month-label {
+font-size: 14px;
+font-weight: 500;
+}
+.month-btn {
+padding: 6px 14px;
+border-radius: 999px;
+border: none;
+cursor: pointer;
+font-size: 13px;
+font-family: Poppins, sans-serif;
+transition: background-color 0.2s ease, transform 0.1s ease;
+}
+.month-btn.primary {
+background-color: #8B3B08;
+color: #fff;
+}
+.month-btn.primary:hover {
+background-color: #6e2f06;
+}
+.month-btn.secondary {
+background-color: #f3f3f3;
+color: #444;
+}
+.month-btn.secondary:hover {
+background-color: #e0e0e0;
+}
+
+/* =========================================
+   ANIMATIONS
+========================================= */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+@media (max-width: 1024px) {
+  .reports-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 20px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filter-controls {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .search-input,
+  .filter-select {
+    width: 100%;
+  }
+
+  .reports-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-box {
+    padding: 20px;
+  }
+
+  .modal-buttons {
+    flex-direction: column;
+  }
+
+  .primary-btn,
+  .secondary-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 24px;
+  }
+
+  .report-card {
+    padding: 20px;
+  }
+
+  .logo_name {
+    font-size: 22px;
+  }
+}
+.report-card-sub {
+  margin: 2px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.report-card-sub.muted {
+  font-size: 13px;
+  color: #9e9e9e;  /* same feel as "No notes added yet" */
+}
+
+.report-card-top {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.report-org {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.report-meta {
+  font-size: 14px;
+  color: #333;
+}
+
+.report-meta-muted {
+  color: #9e9e9e;
+}
+
+.month-row.received .month-label {
+  color: #2e7d32;
+  font-weight: 600;
+}
+.report-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-inreview {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.status-completed {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}

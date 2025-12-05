@@ -5,19 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PockiTrack | Admin Homepage</title>
 
-    <!-- ===== CSS LINK ===== -->
     <link
       rel="stylesheet"
-      href="{{ url_for('osas.static', filename='css/homepage.css') }}"
+      href="{{ url_for('osas.static', filename='css/layout.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('osas.static', filename='css/orgs.css') }}"
     />
     <link
       rel="stylesheet"
       href="{{ url_for('osas.static', filename='css/add_org.css') }}"
     />
 
-    <!-- ===== JS ===== -->
-    <script src="{{ url_for('osas.static', filename='js/homepage.js') }}"></script>
-    <!-- ===== GOOGLE FONT ===== -->
+    <script src="{{ url_for('osas.static', filename='js/orgs.js') }}"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
       rel="stylesheet"
@@ -27,50 +28,64 @@
   <body>
     <!-- HEADER -->
     <header class="admin-header">
-      <div class="logo">
-        <img
-          src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}"
-          alt="PockiTrack Logo"
-        />
+      <div class="logo" id="logoLink">
+        <img src="{{ url_for('osas.static', filename='images/pocki_logo.png') }}" alt="PockiTrack Logo" />
         <span class="logo_name">PockiTrack</span>
-      </div>
-      <div class="menu-icon">
-        <img
-          src="{{ url_for('osas.static', filename='images/menu.png') }}"
-          alt="Menu"
-        />
       </div>
     </header>
 
+    <!-- SIDEBAR -->
+    <aside class="sidebar hover-sidebar">
+  <nav class="nav-menu">
+    <a href="{{ url_for('osas.osas_dashboard') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+      <img src="{{ url_for('osas.static', filename='images/dashboard_menu.png') }}" class="nav-icon-img" alt="Dashboard" />
+      <span class="nav-label">Dashboard</span>
+    </a>
+    <a href="{{ url_for('osas.osas_orgs') }}" class="nav-item {% if active_page == 'orgs' %}active{% endif %}">
+      <img src="{{ url_for('osas.static', filename='images/organization_menu.png') }}" class="nav-icon-img" alt="Organizations" />
+      <span class="nav-label">Accredited Organizations</span>
+    </a>
+    <a href="{{ url_for('osas.osas_reports') }}" class="nav-item {% if active_page == 'reports' %}active{% endif %}">
+      <img src="{{ url_for('osas.static', filename='images/reports_menu.png') }}" class="nav-icon-img" alt="Reports" />
+      <span class="nav-label">Reports</span>
+    </a>
+    <a href="{{ url_for('osas.osas_archive') }}" class="nav-item {% if active_page == 'archive' %}active{% endif %}">
+      <img src="{{ url_for('osas.static', filename='images/archive_menu.png') }}" class="nav-icon-img" alt="Archive" />
+      <span class="nav-label">Archive</span>
+    </a>
+    <a href="{{ url_for('osas.osas_settings') }}" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
+      <img src="{{ url_for('osas.static', filename='images/settings_menu.png') }}" class="nav-icon-img" alt="Settings" />
+      <span class="nav-label">Settings</span>
+    </a>
+  </nav>
+</aside>
+
     <!-- MAIN CONTENT -->
-    <main class="dashboard">
-      <!-- STAT CARDS -->
-      <section class="stats">
-        <div class="stat-card">
-          <p class="label">Total Organizations</p>
-          <h2 class="count" id="totalOrganizations">0</h2>
-        </div>
-        <div class="stat-card">
-          <p class="label">Pending Financial Report</p>
-          <h2 class="count" id="pendingReports">0</h2>
-        </div>
-        <div class="stat-card">
-          <p class="label">Approved Financial Report</p>
-          <h2 class="count" id="approvedReports">0</h2>
-        </div>
-      </section>
+    <main class="dashboard with-sidebar">
 
       <!-- ORGANIZATIONS -->
-      <section class="organizations">
-        <div class="header-row">
-          <div>
-            <h3>Accredited Organizations</h3>
-            <p>Manage organizations and their login credentials</p>
-          </div>
-          <button id="addOrganization" class="add-btn">
-            + Add Organization
-          </button>
-        </div>
+      <div class="orgs-header-row">
+  <div class="orgs-header-text">
+    <h3>Accredited Organizations</h3>
+    <p>Manage organizations and their login credentials</p>
+  </div>
+  <div class="orgs-header-actions">
+    <input
+      type="text"
+      id="searchOrgs"
+      placeholder="Search organizations..."
+      class="search-input"
+    />
+    <div class="filter-dropdown">
+      <select id="departmentFilter" class="filter-select">
+        <option value="">All Departments</option>
+      </select>
+    </div>
+    <button id="addOrganization" class="add-btn">
+      + Add Organization
+    </button>
+  </div>
+</div>
 
         <!-- WRAPPER BOX -->
         <div class="org-box">
@@ -93,6 +108,7 @@
               <thead>
                 <tr>
                   <th>Organization Name</th>
+                  <th>Department</th>
                   <th>Username</th>
                   <th>Password</th>
                   <th>Accreditation Date</th>
@@ -117,6 +133,13 @@
 
           <form id="addOrgForm">
             <div class="input-group">
+              <label>Department</label>
+              <select id="orgDepartment" name="orgDepartment" required>
+                <option value="">Select Department</option>
+              </select>
+            </div>
+
+            <div class="input-group">
               <label>Organization Name</label>
               <input type="text" id="orgName" name="orgName" required />
             </div>
@@ -134,7 +157,6 @@
             <div class="input-group">
               <label>Password</label>
               <div class="input-with-btn">
-                <!-- REMOVED required so it's optional on edit -->
                 <input type="text" id="orgPassword" name="orgPassword" />
                 <button type="button" id="genPass" class="generate-btn">
                   Generate
@@ -152,13 +174,7 @@
               />
             </div>
 
-            <div class="input-group">
-              <label>Status</label>
-              <select id="orgStatus" name="orgStatus" required>
-                <option value="Approved">Approved</option>
-                <option value="Pending">Pending</option>
-              </select>
-            </div>
+            <!-- Status is always Active; no select -->
 
             <div class="modal-buttons">
               <button type="button" id="cancelModal">Cancel</button>
@@ -170,35 +186,23 @@
         </div>
       </div>
 
-      <!-- DELETE MODAL -->
+      <!-- DELETE CONFIRM MODAL -->
       <div id="deleteModal" class="modal">
-        <div class="modal-box delete-box">
-          <h2>Delete Organization</h2>
-          <p>
-            Are you sure you want to delete this organization? This action cannot
-            be undone.
-          </p>
+        <div class="modal-box">
+          <div class="modal-header">
+            <h2>Confirm Deletion</h2>
+            <button class="close-btn" id="closeDeleteModal">&times;</button>
+          </div>
+          <p>Are you sure you want to delete this organization?</p>
           <div class="modal-buttons">
-            <button id="cancelDelete">Cancel</button>
-            <button id="confirmDelete" class="primary-btn">Delete</button>
+            <button id="cancelDeleteBtn">Cancel</button>
+            <button id="confirmDeleteBtn" class="primary-btn">Delete</button>
           </div>
         </div>
       </div>
 
-      <!-- SIDE MENU -->
-      <div id="sideMenu" class="side-menu">
-        <div class="side-menu-content">
-          <h3>Admin Menu</h3>
-          <ul>
-            <li><a href="#">Dashboard</a></li>
-            <li><a href="#">Reports</a></li>
-            <li><a href="#">Settings</a></li>
-          </ul>
-          <a href="{{ url_for('osas.osas_logout') }}" class="logout-btn"
-            >Log Out</a
-          >
-        </div>
-      </div>
+      <!-- SUCCESS/ERROR POPUP -->
+      <div id="toast" class="toast"></div>
     </main>
   </body>
 </html>
