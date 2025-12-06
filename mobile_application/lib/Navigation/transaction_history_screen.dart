@@ -10,8 +10,8 @@ class TransactionHistoryScreen extends StatefulWidget {
 
   const TransactionHistoryScreen({
     super.key,
-    required this.orgName,
-    required this.orgId,
+    this.orgName = 'Organization',
+    this.orgId = 0,
   });
 
   @override
@@ -70,7 +70,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => nextScreen,
+        pageBuilder: (_, _, _) => nextScreen,
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),
