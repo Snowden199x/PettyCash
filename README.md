@@ -1,6 +1,8 @@
-# 💰 PockiTrack (Pocket Tracker)
+<h1 align="center">💰 PockiTrack (Pocket Tracker)</h1>
 
-**A Web and Mobile Application for Managing Petty Cash Transactions of LSPU -- Sta. Cruz Campus Organizations**
+<p align="center">
+  <b>A Web and Mobile Application for Managing Petty Cash Transactions of LSPU -- Sta. Cruz Campus Organizations</b>
+</p>
 
 <div align="center">
 
@@ -9,6 +11,7 @@
 ![Status](https://img.shields.io/badge/status-Active_Development-success?style=for-the-badge)
 
 </div>
+
 
 ---
 
@@ -23,7 +26,9 @@
 
 ---
 
+<a name="about-the-project"></a>
 ## 📖 About the Project
+
 
 **PockiTrack** is a comprehensive financial management system designed specifically for student organizations at Laguna State Polytechnic University - Sta. Cruz Campus (LSPU-SCC). The application addresses the challenges of manual petty cash tracking by providing a digital, automated, and transparent solution for recording income and expenses, monitoring event-based transactions, and generating accurate financial reports.
 
@@ -44,7 +49,7 @@ This project is developed as a research initiative by students from the College 
 **Year**: 2025
 
 ---
-
+<a name="key-features"></a>
 ## ✨ Key Features
 
 <table>
@@ -89,7 +94,7 @@ This project is developed as a research initiative by students from the College 
 - **Secure Authentication**: Protected login system with session management
 
 ---
-
+<a name="technologies-used"></a>
 ## 🛠 Technologies Used
 
 <div align="center">
@@ -167,8 +172,8 @@ This project is developed as a research initiative by students from the College 
 </details>
 
 ---
-
-## 🏗 System Architecture
+<a name="system-architecture"></a>
+## 🛠 System Architecture
 
 <div align="center">
 
@@ -223,7 +228,7 @@ PockiTrack follows a **three-tier client-server architecture**:
    - File storage for receipt images
 
 ---
-
+<a name="getting-started"></a>
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -299,8 +304,8 @@ flutter run
 ```
 
 ---
-
-## 👥 Contributors
+<a name="contributors"></a>
+## 👥 Contributors 
 
 <div align="center">
 
@@ -469,7 +474,7 @@ The project follows an **Iterative Development Model**:
 </div>
 
 ---
-
+<a name="license"></a>
 ## 📝 License
 
 This project is developed for academic purposes as part of the requirements for the Bachelor of Science in Information Technology program at LSPU-SCC.
