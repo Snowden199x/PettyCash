@@ -158,12 +158,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await apiGet(
         `/pres/api/wallets/${currentWallet.walletId}/budgets/${currentWallet.id}/submit`
       );
-      return res.submitted || false;
+      return !!res.submitted;
     } catch (err) {
       console.error(err);
       return false;
     }
   }
+
+
 
   function showDeleteModal({ title, message, onConfirm }) {
     confirmDeleteTitle.textContent = title || "Delete";
@@ -1277,19 +1279,19 @@ document.addEventListener("DOMContentLoaded", () => {
   function hideSubmitModal() {
     confirmSubmitOverlay.classList.remove("active");
   }
-  submitReportBtn.addEventListener("click", async () => {
-    if (!currentWallet || reportGeneratedForFolderId !== currentWallet.id) {
-      showToast("Generate the report first for this month.", true);
-      return;
-    }
+  submitReportBtn.addEventListener('click', async () => {
+  if (!currentWallet || reportGeneratedForFolderId !== currentWallet.id) {
+    showToast('Generate the report first for this month.', true);
+    return;
+  }
 
-    const alreadySubmitted = await checkSubmissionStatus();
-    if (alreadySubmitted) {
-      showToast("You already submitted this month.", true);
-      return;
-    }
+  const alreadySubmitted = await checkSubmissionStatus();
+  if (alreadySubmitted) {
+    showToast('You already submitted a report for this month.', true);
+    return;
+  }
 
-    confirmSubmitOverlay.classList.add("active");
+  confirmSubmitOverlay.classList.add('active');
   });
 
   closeSubmitModal.addEventListener("click", hideSubmitModal);
@@ -1299,30 +1301,39 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   confirmSubmitBtn.addEventListener("click", async () => {
+    // close the confirmation modal
     hideSubmitModal();
+
     if (!currentWallet || !currentReportDetails) return;
 
     const monthKey = reportMonthKey(currentReportDetails.datePrepared);
-    const genKey = `report_generated_${currentWallet.walletId}_${currentWallet.id}_${monthKey}`;
+    const genKey = `report:generated:${currentWallet.walletId}:${currentWallet.id}:${monthKey}`;
     const draftKey = draftKeyFor(currentWallet);
 
     showToast("Submitting report to OSAS...", false);
+
     try {
+      // call backend to submit this wallet's report
       await apiPost(`/pres/reports/${currentWallet.walletId}/submit`, {});
 
-      // tanggalin draft at mark ng generated para malinis na yung month na yun
+      // clean localStorage flags for this month
       localStorage.removeItem(draftKey);
       localStorage.removeItem(genKey);
 
-      showToast("Report submitted successfully.");
-      hideReportButtons();
-      generateReportBtn.textContent = "Generate report"; // dagdag
-      // optional pero recommended: linisin in-memory state
-      currentReportDetails = null;
-      reportGeneratedForFolderId = null;
-      reportGeneratedForMonthKey = null;
+      showToast("Report submitted successfully.", false);
 
-      // clear report detail fields
+      // lock generate/edit and submit for this wallet-month
+      generateReportBtn.disabled = true;
+      generateReportBtn.classList.add("disabled");
+      generateReportBtn.title =
+        "You already submitted a report for this month.";
+
+
+      // clear in-memory report state
+      currentReportDetails = null;
+     
+
+      // clear report detail fields in the form
       repEventName.value = "";
       repDatePrepared.value = "";
       repNumber.value = "";
@@ -1333,15 +1344,12 @@ document.addEventListener("DOMContentLoaded", () => {
       repPrevFund.value = "";
       repBudgetBank.value = "";
 
-      currentReportDetails = null;
-      reportGeneratedForFolderId = null;
-      reportGeneratedForMonthKey = null;
-
-      // reset local state for this folder
+      // reset current wallet stats and UI if that's your intended behavior
       currentWallet.beginningCash = 0;
       currentWallet.totalIncome = 0;
       currentWallet.totalExpenses = 0;
       currentWallet.endingCash = 0;
+
       walletTransactions[currentWallet.id] = [];
       walletReceipts[currentWallet.id] = [];
 
@@ -1349,9 +1357,10 @@ document.addEventListener("DOMContentLoaded", () => {
       renderWalletTransactions();
       renderReceipts();
 
-      // reload archives
+      // reload archives so the new submitted report appears there
       await loadWalletArchives(currentWallet.id);
-      if (getViewState().tab === "archives") {
+      const state = getViewState();
+      if (state.tab === "archives") {
         renderArchives();
       }
     } catch (err) {
@@ -1359,6 +1368,7 @@ document.addEventListener("DOMContentLoaded", () => {
       showToast("Failed to submit report.", true);
     }
   });
+
 
   // ===== Detail view functions =====
 
@@ -1374,18 +1384,24 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
       if (res.submitted) {
-        generateReportBtn.disabled = true;
-        generateReportBtn.classList.add("disabled");
-        generateReportBtn.title =
-          "You already submitted a report for this month.";
-      } else {
-        generateReportBtn.disabled = false;
-        generateReportBtn.classList.remove("disabled");
-        generateReportBtn.title = "";
-      }
-    } catch (e) {
-      console.error("Failed to load report status", e);
+      generateReportBtn.disabled = true;
+      generateReportBtn.classList.add('disabled');
+      generateReportBtn.title = 'You already submitted a report for this month.';
+      // also lock submit
+      submitReportBtn.disabled = true;
+      submitReportBtn.classList.add('disabled');
+      submitReportBtn.title = 'You already submitted a report for this month.';
+    } else {
+      generateReportBtn.disabled = false;
+      generateReportBtn.classList.remove('disabled');
+      generateReportBtn.title = '';
+      submitReportBtn.disabled = false;
+      submitReportBtn.classList.remove('disabled');
+      submitReportBtn.title = '';
     }
+  } catch (e) {
+    console.error('Failed to load report status', e);
+  }
 
     document.getElementById("wallet-name").textContent = currentWallet.name;
     document.getElementById("wallets-view").classList.remove("active");
