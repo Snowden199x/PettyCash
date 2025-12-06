@@ -102,8 +102,16 @@
               </div>
             </div>
 
-            <!-- Wallets Grid -->
-            <div class="wallets-grid" id="wallets-grid">
+            <!-- Wallets loading + grid -->
+            <div id="wallets-loading" class="wallets-loading">
+              <div class="loading-card">
+                <img src="{{ url_for('pres.static', filename='images/nav_wallet.png') }}" alt="Loading" />
+                <h4>Loading wallets...</h4>
+                <p>Please wait a moment.</p>
+              </div>
+            </div>
+
+            <div class="wallets-grid" id="wallets-grid" style="display: none;">
               <!-- populated by JS -->
             </div>
           </section>

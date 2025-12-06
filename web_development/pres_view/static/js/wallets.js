@@ -254,6 +254,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== Load wallets (folders) =====
 
   async function loadWallets() {
+    const loadingEl = document.getElementById("wallets-loading");
+    const gridEl = document.getElementById("wallets-grid");
+
+    if (loadingEl) loadingEl.style.display = "flex";
+    if (gridEl) gridEl.style.display = "none";
+
     try {
       await loadAuth();
 
@@ -383,6 +389,10 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error(err);
       showToast("Failed to load wallets.", true);
     }
+     finally {
+    if (loadingEl) loadingEl.style.display = "none";
+    if (gridEl) gridEl.style.display = "grid";  // or "block" if you use block layout
+  }
   }
 
   // ===== Wallet list & filters =====

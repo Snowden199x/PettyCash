@@ -600,6 +600,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initial load
   // -----------------------
   async function init() {
+    const loadingEl = document.getElementById("profile-loading");
+    const contentEl = document.getElementById("profile-content");
+
+    if (loadingEl) loadingEl.style.display = "flex";
+    if (contentEl) contentEl.style.display = "none";
+
     try {
       const profile = await apiGet(`${API_BASE}/profile`);
 
@@ -643,6 +649,9 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) {
       console.error(err);
       showToast("Failed to load profile.", "error");
+    } finally {
+    if (loadingEl) loadingEl.style.display = "none";
+    if (contentEl) contentEl.style.display = "block";
     }
   }
 

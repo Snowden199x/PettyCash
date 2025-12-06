@@ -41,6 +41,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function loadDashboardData() {
+  const loader = document.getElementById("dashboard-loader");
+  const content = document.getElementById("dashboard-content");
+
+  // show loader, hide dashboard
+  if (loader) loader.style.display = "flex";
+  if (content) content.style.display = "none";
+
   try {
     // 1) Summary
     const summaryResponse = await fetch("/pres/api/dashboard/summary");
@@ -63,7 +70,6 @@ async function loadDashboardData() {
     }
 
     // 3) Recent transactions
-    // inside loadDashboardData()
     const transactionsResponse = await fetch("/pres/api/transactions");
     if (transactionsResponse.ok) {
       const all = await transactionsResponse.json();
@@ -80,8 +86,13 @@ async function loadDashboardData() {
     console.error("Error loading dashboard data:", err);
     showEmptyWallets();
     showEmptyTransactions();
+  } finally {
+    // hide loader, show dashboard
+    if (loader) loader.style.display = "none";
+    if (content) content.style.display = "block";
   }
 }
+
 
 function updateSummaryCards(summary) {
   document.getElementById(
