@@ -25,12 +25,15 @@ document.addEventListener("DOMContentLoaded", () => {
     orgShortName: document.getElementById("org-short-name"),
     department: document.getElementById("department"),
     school: document.getElementById("school"),
+    email: document.getElementById("email"),
   };
 
   const overviewOrgName = document.getElementById("overview-org-name");
   const overviewShortName = document.getElementById("overview-short-name");
   const overviewDepartment = document.getElementById("overview-department");
   const overviewSchool = document.getElementById("overview-school");
+  const overviewEmail = document.getElementById("overview-email");
+
 
   // -----------------------
   // Tabs
@@ -158,6 +161,32 @@ document.addEventListener("DOMContentLoaded", () => {
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
+  function validateEmailFormat(inputEl) {
+  const value = inputEl.value.trim();
+  const group = inputEl.closest(".form-group");
+  if (!group) return true;
+
+  // basic, common email format: text@text.tld
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // widely used pattern [web:23][web:26]
+
+  // clear previous state
+  group.classList.remove("error", "shake");
+  const oldMsg = group.querySelector(".error-message");
+  if (oldMsg) oldMsg.remove();
+
+  if (!emailPattern.test(value)) {
+    group.classList.add("error", "shake");
+    const msg = document.createElement("div");
+    msg.className = "error-message";
+    msg.textContent = "Please enter a valid email address (e.g., name@example.com).";
+    group.appendChild(msg);
+    setTimeout(() => group.classList.remove("shake"), 300);
+    return false;
+  }
+  return true;
+}
+
+
   // -----------------------
   // Tabs
   // -----------------------
@@ -186,7 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
     isEditing = true;
 
     // orgShortName lang ang editable
-    const editableKeys = ["orgShortName"];
+    const editableKeys = ["orgShortName", "email"];
     editableKeys.forEach((key) => {
       const input = inputs[key];
       originalValues[key] = input.value;
@@ -207,7 +236,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function saveChanges() {
-    const fieldsToCheck = [inputs.orgShortName];
+    const fieldsToCheck = [inputs.orgShortName, inputs.email];
 
     let allValid = true;
     fieldsToCheck.forEach((input) => {
@@ -216,6 +245,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
+    // extra email format check if email not empty
+    if (inputs.email.value.trim() && !validateEmailFormat(inputs.email)) {
+      allValid = false;
+    }
+
     if (!allValid) {
       showToast("Please fill in all required fields.", "error");
       return;
@@ -223,6 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const payload = {
       org_short_name: inputs.orgShortName.value,
+      email: inputs.email.value,
     };
 
     try {
@@ -572,6 +607,7 @@ document.addEventListener("DOMContentLoaded", () => {
       inputs.orgName.value = profile.org_name || "";
       inputs.orgShortName.value = profile.org_short_name || "";
       inputs.school.value = profile.school || "";
+      inputs.email.value = profile.email || "";
 
       // Department display: use name, not ID
       if (inputs.department) {
@@ -583,6 +619,7 @@ document.addEventListener("DOMContentLoaded", () => {
       overviewShortName.textContent = profile.org_short_name || "";
       overviewDepartment.textContent = profile.department || "";
       overviewSchool.textContent = profile.school || "";
+      overviewEmail.textContent = profile.email || "";
 
       // Accreditation details
       const accDateEl = document.getElementById("acc-date");
