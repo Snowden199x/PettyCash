@@ -2,6 +2,7 @@ from flask import Flask, redirect, url_for, session, jsonify, request
 from supabase import create_client
 import os
 from dotenv import load_dotenv
+from flask_mail import Mail 
 
 # Blueprints
 from osas_view.app import osas
@@ -9,9 +10,21 @@ from pres_view.app import pres
 
 # Load environment variables
 load_dotenv()
+mail = Mail()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
+
+# Email (Gmail SMTP)
+app.config["MAIL_SERVER"] = "smtp.gmail.com"
+app.config["MAIL_PORT"] = 587
+app.config["MAIL_USE_TLS"] = True
+app.config["MAIL_USE_SSL"] = False
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_USERNAME")
+
+mail.init_app(app)
 
 # Session configuration
 app.config["SESSION_COOKIE_NAME"] = "pockitrack_session"
