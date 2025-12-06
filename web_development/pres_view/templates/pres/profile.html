@@ -74,6 +74,18 @@
             <h3>Profile</h3>
           </section>
 
+              <!-- Loading state -->
+          <div id="profile-loading" class="profile-loading">
+            <div class="loading-card">
+              <img src="{{ url_for('pres.static', filename='images/nav_profile.png') }}" alt="Loading" />
+              <h4>Loading informations...</h4>
+              <p>Please wait a moment.</p>
+            </div>
+          </div>
+
+          <!-- Real content, hidden at first -->
+          <div id="profile-content" style="display: none;">
+
           <!-- Organization Overview Section -->
           <div class="profile-overview">
             <div class="profile-picture-section">

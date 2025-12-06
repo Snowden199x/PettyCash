@@ -104,9 +104,24 @@
       <!-- Main Content -->
       <main class="main-content">
         <div class="content-box">
+
+          <!-- header ALWAYS visible -->
           <section class="header">
             <h3>Hello, <span id="username">{{ session['org_name'] }}</span></h3>
             <p class="date-text"></p>
+          </section>
+
+          <!-- LOADING OVERLAY (centered in the remaining area) -->
+          <div id="dashboard-loader">
+            <div class="loading-card">
+              <img src="/pres/static/images/nav_home.png" alt="Loading icon" />
+              <h4>Loading informations...</h4>
+              <p>Please wait a moment.</p>
+            </div>
+          </div>
+
+          <!-- DASHBOARD CONTENT (HIDDEN AT FIRST) -->
+          <div id="dashboard-content" style="display: none;">
 
             <div class="summary-wrapper">
               <div class="summary">

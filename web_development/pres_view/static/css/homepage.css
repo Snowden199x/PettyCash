@@ -9,6 +9,43 @@ html {
   scroll-behavior: smooth;
 }
 
+#dashboard-loader {
+  min-height: 200px;
+  display: flex;
+  align-items: flex-start;   /* align from top */
+  justify-content: center;
+}
+
+/* Card-style loading state */
+.loading-card {
+  text-align: center;
+  padding: 15px 16px;
+  margin-top: 120px;          /* move everything downward */
+  color: #333333;
+  position: fixed;
+}
+
+.loading-card img {
+  width: 80px;
+  height: 80px;
+  opacity: 0.2;
+  margin-bottom: 0px;        /* less gap under icon */
+}
+
+.loading-card h4 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 4px;        /* less gap between title and subtitle */
+}
+
+.loading-card p {
+  font-size: 0.95rem;
+  color: #777777;
+  margin: 0;                 /* remove extra space below text */
+}
+
+
+
 .top-header {
   position: fixed;
   left: clamp(230px, 17vw, 250px); /* start after sidebar width */

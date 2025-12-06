@@ -14,6 +14,41 @@ html {
   height: 100vh;
 }
 
+/* Wallets page loading state */
+.wallets-loading {
+  min-height: 260px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.wallets-loading .loading-card {
+  text-align: center;
+  padding: 20px 16px;
+  margin-top: 80px;           /* move block downward */
+  color: #333333;
+}
+
+.wallets-loading .loading-card img {
+  width: 80px;
+  height: 80px;
+  opacity: 0.25;
+  margin-bottom: 8px;         /* tighter spacing under icon */
+}
+
+.wallets-loading .loading-card h4 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 4px;         /* tighter spacing title->subtitle */
+}
+
+.wallets-loading .loading-card p {
+  font-size: 0.95rem;
+  color: #777777;
+  margin: 0;
+}
+
+
 /* Sidebar */
 .sidebar {
   width: clamp(230px, 17vw, 250px);
