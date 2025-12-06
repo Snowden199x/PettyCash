@@ -1,4 +1,7 @@
 <h1 align="center">💰 PockiTrack (Pocket Tracker)</h1>
+<p align="center">
+  <img src="System_Banner.png" alt="PockiTrack Banner" />
+</p>
 
 <p align="center">
   <b>A Web and Mobile Application for Managing Petty Cash Transactions of LSPU -- Sta. Cruz Campus Organizations</b>
