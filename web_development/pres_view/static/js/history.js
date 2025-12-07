@@ -77,96 +77,47 @@ async function loadTransactions() {
   `;
 
   try {
-    // 1) Get all wallet folders (same endpoint used by wallets.js)
-    const walletsRes = await fetch("/pres/api/wallets");
-    if (!walletsRes.ok) throw new Error("Failed to load wallets");
-    const walletsData = await walletsRes.json();
-    allWalletsMeta = walletsData || [];
-    // walletsData: [{ id (folderId), walletid, name, month, beginningcash }]
+    const res = await fetch("/pres/api/transactions/recent");
+    if (!res.ok) throw new Error("Failed to load transactions");
+    const data = await res.json();
 
-    const folderIds = (walletsData || []).map((w) => w.id);
+    // Map to the shape renderTransactions/createTransactionCard expect
+    allTransactions = (data || []).map(tx => {
+      const qty = Number(tx.quantity || 0);
+      const price = Number(tx.price || 0);
+      const amount = Number(
+        tx.total_amount != null ? tx.total_amount : qty * price
+      );
 
-    if (!folderIds.length) {
-      allTransactions = [];
-      loaded = true;
-      renderTransactions();
-      return;
-    }
+      let d = null;
+      if (tx.date) {
+        const tmp = new Date(tx.date);
+        d = isNaN(tmp) ? null : tmp;
+      }
 
-    // 2) For each folder, get its transactions
-    const txPromises = folderIds.map((folderId) =>
-      fetch(`/pres/api/wallets/${folderId}/transactions`).then((res) => {
-        if (!res.ok) return [];
-        return res.json();
-      }).catch(() => [])
-    );
-
-    const allByFolder = await Promise.all(txPromises);
-
-    // 3) Flatten + map to common shape
-    // Endpoint returns: id, quantity, price, incometype, particulars,
-    // description, totalamount, dateissued, kind. [file:2]
-    const flat = [];
-
-    allByFolder.forEach((folderTxs, idx) => {
-      const folderId = folderIds[idx];
-      const walletMeta = walletsData.find((w) => w.id === folderId);
-      const walletName = walletMeta ? walletMeta.name : `Wallet ${folderId}`;
-
-      (folderTxs || []).forEach((tx) => {
-        const qty = Number(tx.quantity || 0);
-        const price = Number(tx.price || 0);
-        const total = Number(tx.totalamount || qty * price);
-        const kind = tx.kind; // "income" or "expense"
-        const amount =
-          kind === "expense" ? -Number(total || 0) : Number(total || 0);
-
-        const dateStr = tx.dateissued;
-        let txDate = null;
-        if (dateStr) {
-          // Try native parse first
-          let d = new Date(dateStr);
-          if (isNaN(d)) {
-            // Fallback if stored as YYYY-MM-DD (no time)
-            const parts = dateStr.split("-");
-            if (parts.length === 3) {
-              d = new Date(
-                Number(parts[0]),
-                Number(parts[1]) - 1,
-                Number(parts[2])
-              );
-            }
-          }
-          txDate = isNaN(d) ? null : d;
-        }
-
-
-
-        flat.push({
-          id: tx.id,
-          folderId,
-          walletId: walletMeta ? walletMeta.walletid : null,
-          walletName,
-          quantity: qty,
-          price: price,
-          incometype: tx.incometype || "",
-          particulars: tx.particulars || "",
-          rawdescription: tx.description || "",
-          type: kind,
-          amount,
-          date: dateStr,
-          _dateObj: txDate,
-        });
-      });
+      return {
+        id: tx.id,
+        folderId: null,
+        walletId: null,
+        walletName: tx.wallet_name || "Wallet",
+        quantity: qty,
+        price: price,
+        incometype: tx.income_type || "",
+        particulars: tx.particulars || "",
+        rawdescription: tx.description || "",
+        type: tx.type, // "income"/"expense"
+        amount: tx.type === "expense" ? -amount : amount,
+        date: tx.date,
+        _dateObj: d,
+      };
     });
 
-    // Sort newest first
-    flat.sort((a, b) => {
+    // newest first
+    allTransactions.sort((a, b) => {
       if (!a._dateObj || !b._dateObj) return 0;
       return b._dateObj - a._dateObj;
     });
 
-    allTransactions = flat;
     loaded = true;
     renderTransactions();
   } catch (err) {
@@ -180,6 +131,7 @@ async function loadTransactions() {
     `;
   }
 }
+
 
 
   function updateMonthDisplay() {
