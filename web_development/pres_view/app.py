@@ -60,12 +60,12 @@ def send_reset_email(to_email, reset_link):
         return
 
     msg = Message(
-        subject="PockiTrack PRES Password Reset",
+        subject="PockiTrack Password Reset",
         recipients=[to_email],
         sender=current_app.config.get("MAIL_DEFAULT_SENDER"),
     )
     msg.body = (
-        "You requested a password reset for your PockiTrack PRES account.\n\n"
+        "You requested a password reset for your PockiTrack account.\n\n"
         f"Use this link to set a new password (valid for 15 minutes):\n{reset_link}\n\n"
         "If you did not request this, you can ignore this email."
     )
@@ -1140,6 +1140,39 @@ def upload_wallet_receipt(folder_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@pres.route("/api/wallets/<int:folder_id>/receipts", methods=["GET"])
+def get_wallet_receipts(folder_id):
+    if not session.get("pres_user"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    # hanapin wallet_id mula sa folder_id (wallet_budgets.id)
+    wallet_id = get_real_wallet_id(folder_id)
+    if wallet_id is None:
+        return jsonify([])
+
+    try:
+        res = (
+            supabase.table("wallet_receipts")
+            .select("id, description, receipt_date, file_url")
+            .eq("wallet_id", wallet_id)
+            .eq("budget_id", folder_id)
+            .order("receipt_date")
+            .execute()
+        )
+        rows = res.data or []
+        # field names tugma sa JS: id, description, receiptdate, fileurl
+        out = [
+            {
+                "id": r["id"],
+                "description": r.get("description") or "",
+                "receiptdate": r.get("receipt_date") or "",
+                "fileurl": r.get("file_url") or "",
+            }
+            for r in rows
+        ]
+        return jsonify(out)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @pres.route("/api/receipts/<int:receipt_id>/url", methods=["GET"])
 def get_receipt_public_url(receipt_id):
@@ -1305,22 +1338,27 @@ def wallets_report_status():
         return jsonify({"error": "Unauthorized"}), 401
 
     org_id = session.get("org_id")
-    month_code = request.args.get("month")  # e.g. "2025-12" or "december"
-    if not month_code:
-        return jsonify({"error": "Missing month"}), 400
+    wallet_id = request.args.get("wallet_id", type=int)
+    budget_id = request.args.get("budget_id", type=int)
+
+    if not wallet_id or not budget_id:
+        return jsonify({"error": "Missing params"}), 400
 
     res = (
         supabase.table("financial_reports")
-        .select("id, status, report_month")
+        .select("id, status")
         .eq("organization_id", org_id)
-        .eq("report_month", month_code)
+        .eq("wallet_id", wallet_id)
+        .eq("budget_id", budget_id)
+        .order("created_at", desc=True)
         .limit(1)
         .execute()
     )
 
     has_report = bool(res.data)
     status = res.data[0]["status"] if has_report else None
-    submitted = has_report and status in ["Pending Review", "Submitted", "Approved"]
+
+    submitted = has_report and status in ("Submitted", "Approved")
 
     return jsonify(
         {
@@ -1329,6 +1367,7 @@ def wallets_report_status():
             "submitted": submitted,
         }
     )
+
 
 @pres.route(
     "/api/wallets/<int:wallet_id>/budgets/<int:budget_id>/reports/next-number",
@@ -2036,19 +2075,6 @@ def submitreportwalletid(wallet_id):
             supabase.table("financial_report_archive_receipts").insert(
                 rc_rows
             ).execute()
-
-        # Clear current month data
-        supabase.table("wallet_transactions").delete().eq("wallet_id", wallet_id).eq(
-            "budget_id", budget_id
-        ).execute()
-
-        supabase.table("wallet_receipts").delete().eq("wallet_id", wallet_id).eq(
-            "budget_id", budget_id
-        ).execute()
-
-        supabase.table("wallet_budgets").update({"amount": 0}).eq(
-            "id", budget_id
-        ).execute()
 
         # Update OSAS-side financial_reports checklist/status
         update_osas_financial_report(org_id, budget_id)

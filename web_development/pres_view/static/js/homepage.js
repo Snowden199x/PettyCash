@@ -4,7 +4,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   const today = new Date();
   const options = { weekday: "long", month: "long", day: "numeric" };
   dateElement.textContent = today.toLocaleDateString("en-US", options);
-
+  const monthName = today.toLocaleDateString("en-US", { month: "long" });
+  const incomeLabelEl = document.getElementById("income-month-label");
+  const expensesLabelEl = document.getElementById("expenses-month-label");
+  if (incomeLabelEl) {
+    incomeLabelEl.textContent = `Income this ${monthName}`;
+  }
+  if (expensesLabelEl) {
+    expensesLabelEl.textContent = `Expenses this ${monthName}`;
+  }
   // Sidebar active nav handling
   const navItems = document.querySelectorAll(".nav-item");
   navItems.forEach((item) => {
