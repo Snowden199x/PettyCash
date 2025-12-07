@@ -115,10 +115,134 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   let deleteAction = null; // function to run on confirm
-
   const toastContainer = document.getElementById("toast-container");
+  // INITIAL search galing homepage (?search=...)
+  const params = new URLSearchParams(window.location.search);
+  const initialSearch = params.get("search");
+
+  if (initialSearch && walletSearchInput) {
+    walletSearchInput.value = initialSearch;
+  }
+
+  // normal filters for manual search
+  walletSearchInput.addEventListener("input", applyWalletFilters);
+  walletYearFilter.addEventListener("change", applyWalletFilters);
+
+  if (initialSearch) {
+    // i‑filter muna gamit existing logic (text + year)
+    applyWalletFilters();
+
+    const parsed = parseMonthFromSearch(initialSearch);
+    if (parsed) {
+      openWalletByMonth(parsed.monthIndex, parsed.year);
+    }
+  }
 
   // ===== Helpers =====
+  function parseMonthFromSearch(term) {
+    const lower = term.toLowerCase();
+
+    const monthNames = [
+      "january",
+      "february",
+      "march",
+      "april",
+      "may",
+      "june",
+      "july",
+      "august",
+      "september",
+      "october",
+      "november",
+      "december",
+    ];
+
+    let monthIndex = null;
+
+    monthNames.forEach((name, idx) => {
+      if (lower.includes(name)) {
+        monthIndex = idx; // 0‑based
+      }
+    });
+
+    if (monthIndex === null) {
+      const short = [
+        "jan",
+        "feb",
+        "mar",
+        "apr",
+        "may",
+        "jun",
+        "jul",
+        "aug",
+        "sep",
+        "oct",
+        "nov",
+        "dec",
+      ];
+      short.forEach((s, idx) => {
+        if (lower.includes(s)) {
+          monthIndex = idx;
+        }
+      });
+    }
+
+    if (monthIndex === null) return null;
+
+    const yearMatch = lower.match(/\b(20\d{2})\b/);
+    const year = yearMatch ? parseInt(yearMatch[1], 10) : null;
+
+    return { monthIndex, year }; // 0–11, optional year
+  }
+
+  function openWalletByMonth(monthIndex, year) {
+    // convert 0–11 → "01".."12"
+    const monthToNumber = [
+      "01",
+      "02",
+      "03",
+      "04",
+      "05",
+      "06",
+      "07",
+      "08",
+      "09",
+      "10",
+      "11",
+      "12",
+    ];
+    const targetMonthNum = monthToNumber[monthIndex];
+
+    // 1) set year filter kung may year sa search
+    const yearFilter = document.getElementById("wallet-year-filter");
+    if (yearFilter && year) {
+      Array.from(yearFilter.options).forEach((opt) => {
+        if (
+          opt.value.includes(year.toString()) ||
+          opt.text.includes(year.toString())
+        ) {
+          yearFilter.value = opt.value;
+        }
+      });
+    }
+
+    // 2) re‑apply filters para ma‑update walletsFiltered
+    if (typeof applyWalletFilters === "function") {
+      applyWalletFilters();
+    }
+
+    // 3) hanapin sa walletsFiltered yung month na tumutugma
+    const targetWallet = (walletsFiltered || []).find((w) => {
+      if (!w.month) return false; // w.month e.g. "2025-12-01"
+      const m = w.month.slice(5, 7); // "12"
+      return m === targetMonthNum;
+    });
+
+    if (!targetWallet) return;
+
+    // 4) gamit na existing function para buksan yung wallet
+    showWalletDetail(targetWallet.id);
+  }
 
   function showToast(message, isError = false) {
     const toast = document.createElement("div");

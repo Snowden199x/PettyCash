@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
   const emailFromUrl = params.get("email");
   const codeFromUrl = params.get("code");
+  const isFirstTimeSetup = !emailFromUrl && !codeFromUrl;
 
   let hasStartedTyping = false;
 
@@ -49,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // submit → tawag sa /pres/reset-password gamit email + code sa URL
+  // submit → depende kung first-time setup o reset link
   submitBtn.addEventListener("click", async (e) => {
     e.preventDefault();
 
@@ -78,6 +79,13 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // FIRST-TIME NEW USER: walang email/code → regular form submit sa /change-password
+    if (isFirstTimeSetup) {
+      document.getElementById("changePassForm").submit();
+      return;
+    }
+
+    // FORGOT PASSWORD FLOW: kailangan may email + code
     if (!emailFromUrl || !codeFromUrl) {
       showPopup("Invalid or expired reset link.");
       return;

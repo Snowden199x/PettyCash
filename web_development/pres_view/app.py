@@ -172,59 +172,66 @@ def pres_login():
             .execute()
         )
 
-        if result.data:
-            org = result.data[0]
-
-            # block Archived orgs
-            if org.get("status") == "Archived":
-                error_msg = (
-                    "This organization account is archived. Please contact OSAS."
-                )
-                if request.accept_mimetypes.best == "application/json":
-                    return jsonify({"success": False, "error": error_msg}), 403
-                flash(error_msg, "danger")
-                return redirect(url_for("pres.pres_login"))
-
-            if check_password_hash(org["password"], password):
-                session["pres_user"] = True
-                session["org_id"] = org["id"]
-                session["org_name"] = org["org_name"]
-                ...
-
-                if request.accept_mimetypes.best == "application/json":
-                    if org.get("must_change_password", False):
-                        return jsonify(
-                            {
-                                "success": True,
-                                "must_change_password": True,
-                                "org_id": org["id"],
-                                "org_name": org["org_name"],
-                            }
-                        )
-                    return jsonify(
-                        {
-                            "success": True,
-                            "org_id": org["id"],
-                            "org_name": org["org_name"],
-                        }
-                    )
-
-                if org.get("must_change_password", False):
-                    return redirect(url_for("pres.change_password"))
-                return redirect(url_for("pres.homepage"))
-            else:
-                error_msg = "Incorrect password."
-                if request.accept_mimetypes.best == "application/json":
-                    return jsonify({"success": False, "error": error_msg}), 401
-                flash(error_msg, "danger")
-                return redirect(url_for("pres.pres_login"))
-        else:
+        if not result.data:
             error_msg = "Organization not found."
             if request.accept_mimetypes.best == "application/json":
                 return jsonify({"success": False, "error": error_msg}), 404
             flash(error_msg, "danger")
             return redirect(url_for("pres.pres_login"))
 
+        org = result.data[0]
+
+        # block Archived orgs
+        if org.get("status") == "Archived":
+            error_msg = (
+                "This organization account is archived. Please contact OSAS."
+            )
+            if request.accept_mimetypes.best == "application/json":
+                return jsonify({"success": False, "error": error_msg}), 403
+            flash(error_msg, "danger")
+            return redirect(url_for("pres.pres_login"))
+
+        # wrong password
+        if not check_password_hash(org["password"], password):
+            error_msg = "Incorrect password."
+            if request.accept_mimetypes.best == "application/json":
+                return jsonify({"success": False, "error": error_msg}), 401
+            flash(error_msg, "danger")
+            return redirect(url_for("pres.pres_login"))
+
+        # correct password
+        session["org_id"] = org["id"]
+        session["org_name"] = org["org_name"]
+
+        # NEW USER: must change password first
+        if org.get("must_change_password", False):
+            if request.accept_mimetypes.best == "application/json":
+                return jsonify(
+                    {
+                        "success": True,
+                        "must_change_password": True,
+                        "org_id": org["id"],
+                        "org_name": org["org_name"],
+                    }
+                )
+            return redirect(url_for("pres.change_password"))
+
+        # NORMAL LOGIN
+        session["pres_user"] = True
+
+        if request.accept_mimetypes.best == "application/json":
+            return jsonify(
+                {
+                    "success": True,
+                    "org_id": org["id"],
+                    "org_name": org["org_name"],
+                    "must_change_password": False,
+                }
+            )
+
+        return redirect(url_for("pres.homepage"))
+
+    # GET
     if request.accept_mimetypes.best == "application/json":
         return jsonify({"info": "POST username and password to this endpoint."})
     return render_template("pres_login.html")
@@ -391,11 +398,14 @@ def reset_password_with_code():
 
 @pres.route("/change-password", methods=["GET", "POST"])
 def change_password():
+    # kung may code+email → galing sa forgot-password link
     code = request.args.get("code") if request.method == "GET" else request.form.get("code")
     email = request.args.get("email") if request.method == "GET" else request.form.get("email")
 
-    if request.method == "GET":
+    # kung wala silang code/email → ina-assume natin first-time setup
+    org_id = session.get("org_id") if not code and not email else None
 
+    if request.method == "GET":
         return render_template("change_password.html", code=code, email=email)
 
     new_password = request.form.get("password")
@@ -405,9 +415,22 @@ def change_password():
         flash("Passwords do not match.", "danger")
         return render_template("change_password.html", code=code, email=email)
 
+    hashed_pw = generate_password_hash(new_password)
+
+    if code and email:
+        return redirect(url_for("pres.pres_login"))
+
+    elif org_id:
+        supabase.table("organizations").update(
+            {"password": hashed_pw, "must_change_password": False}
+        ).eq("id", org_id).execute()
+    else:
+        flash("Invalid password change request.", "danger")
+        return render_template("change_password.html", code=None, email=None)
 
     flash("Password updated successfully. You can now log in.", "success")
     return redirect(url_for("pres.pres_login"))
+
 
 
 # -----------------------
@@ -511,11 +534,17 @@ def get_dashboard_summary():
                 total_expenses_all += amt
 
             # filter by current month/year for monthly cards
+            # filter by current month/year for monthly cards
             d_str = tx.get("date_issued")
+            if not d_str:
+                continue
+
             try:
-                d = datetime.fromisoformat(d_str.replace("Z", "+00:00"))
+                # kung 'YYYY-MM-DD' lang, sapat na ito
+                d = datetime.strptime(d_str[:10], "%Y-%m-%d")
             except Exception:
                 continue
+
 
             if d.year == this_year and d.month == this_month:
                 if tx.get("kind") == "income":

@@ -349,6 +349,7 @@ def add_organization():
 
     # --- auto-create initial financial report row ---
     if new_org_id:
+        # --- auto-create initial financial report row ---
         initial_report = {
             "organization_id": new_org_id,
             "status": "Pending Review",
@@ -360,6 +361,16 @@ def add_organization():
             "updated_at": datetime.utcnow().isoformat(),
         }
         supabase.table("financial_reports").insert(initial_report).execute()
+
+        # --- default PRES profile row with LSPU school ---
+        try:
+            supabase.table("profile_users").insert({
+                "organization_id": new_org_id,
+                "school_name": "Laguna State Polytechnic University, Sta. Cruz, Laguna (LSPU-SCC)",
+            }).execute()
+        except Exception as e:
+            # optional: huwag pabagsakin ang add_organization kung mag-fail ito
+            print("Failed to create default PRES profile row:", e)
 
         dept_name = "-"
 
