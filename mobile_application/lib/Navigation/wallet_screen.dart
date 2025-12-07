@@ -95,7 +95,7 @@ class _WalletScreenState extends State<WalletScreen> {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => nextScreen,
+        pageBuilder: (_, _, _) => nextScreen,
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),

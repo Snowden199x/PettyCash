@@ -3,18 +3,22 @@ import 'package:intl/intl.dart';
 import 'transaction_history_screen.dart';
 import 'wallet_screen.dart';
 import 'profile_screen.dart';
-// FIX 1: Correct path to your LoginScreen file.
-// If your LoginScreen is somewhere else, change this path:
 import '../LogIn/log_in_screen.dart';
 
+/// The main home screen shown after login.
+/// Expects the organization name and id from the login response.
 class HomeScreen extends StatefulWidget {
+  /// Name of the logged-in organization (used in the greeting).
   final String orgName;
+
+  /// ID of the logged-in organization (for future data fetching).
   final int orgId;
 
   const HomeScreen({
     super.key,
-    required this.orgName,
-    required this.orgId,
+    // Defaults in case nothing is passed (should normally be overridden).
+    this.orgName = 'Organization',
+    this.orgId = 0,
   });
 
   @override
@@ -23,10 +27,16 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
+  /// Index of the selected bottom navigation item (0 = Home).
   final int _selectedIndex = 0;
+
+  /// Stores the formatted current date string (e.g. "Saturday, December 6").
   late String currentDate;
+
+  /// Animation controller (currently used for the login success overlay timing).
   late AnimationController _animationController;
 
+  /// Paths for bottom navigation icons (active and inactive).
   final iconPaths = {
     'home': {
       'active': 'assets/Icons/navigation_icons/nav_home.png',
@@ -49,11 +59,16 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
+    // Calculate and store the current date for the header.
     _updateDate();
+
+    // Set up the animation controller (can be reused for more animations later).
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 250),
     );
+
+    // After the first frame is built, show the "Log In Successfully" overlay.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showLoginSuccessNotification();
     });
@@ -61,20 +76,24 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
+    // Always dispose animation controllers to avoid memory leaks.
     _animationController.dispose();
     super.dispose();
   }
 
+  /// Updates [currentDate] with a nicely formatted string for the header.
   void _updateDate() {
     final now = DateTime.now();
     currentDate = DateFormat('EEEE, MMMM d').format(now);
   }
 
+  /// Shows a temporary green overlay at the top saying "Log In Successfully".
   void _showLoginSuccessNotification() {
     if (!mounted) return;
-    final overlay = Overlay.of(context);
-    if (overlay == null) return;
 
+    final overlay = Overlay.of(context);
+
+    // This entry is what gets inserted into the overlay.
     final overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
         top: 60,
@@ -115,7 +134,10 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
 
+    // Insert the overlay entry.
     overlay.insert(overlayEntry);
+
+    // Remove it after 1 second.
     Future.delayed(const Duration(seconds: 1)).then((_) {
       if (mounted) {
         overlayEntry.remove();
@@ -123,12 +145,16 @@ class _HomeScreenState extends State<HomeScreen>
     });
   }
 
+  /// Handles taps on the bottom navigation bar items.
   void _onItemTapped(int index) {
+    // If the user taps the already selected tab, do nothing.
     if (index == _selectedIndex) return;
 
+    // Decide which screen to navigate to based on the tapped index.
     Widget nextScreen;
     switch (index) {
       case 0:
+        // Home tab – pass orgName and orgId again to the new HomeScreen.
         nextScreen = HomeScreen(
           orgName: widget.orgName,
           orgId: widget.orgId,
@@ -147,24 +173,28 @@ class _HomeScreenState extends State<HomeScreen>
         return;
     }
 
+    // Replace the current screen without animation.
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => nextScreen,
+        // pageBuilder params are unused, hence the underscores.
+        pageBuilder: (_, _, _) => nextScreen,
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),
     );
   }
 
-  // Handles the Profile / Logout menu choices
+  /// Handles selection from the top-right popup menu (Profile / Logout).
   void _onMenuSelected(String value) {
     if (value == 'profile') {
+      // Go to profile screen on top of the current one.
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
     } else if (value == 'logout') {
+      // Clear navigation stack and go back to login screen.
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -183,13 +213,17 @@ class _HomeScreenState extends State<HomeScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Greeting and header
+              // =======================
+              // Header: greeting + date
+              // =======================
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // Left side: greeting and date.
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Uses widget.orgName passed from login.
                       Text(
                         'Hello, ${widget.orgName}',
                         style: const TextStyle(
@@ -211,7 +245,7 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ],
                   ),
-                  // Avatar with popup menu (Profile + Logout)
+                  // Right side: profile avatar with popup menu.
                   PopupMenuButton<String>(
                     onSelected: _onMenuSelected,
                     offset: const Offset(0, 40),
@@ -238,7 +272,10 @@ class _HomeScreenState extends State<HomeScreen>
                 ],
               ),
               const SizedBox(height: 40),
-              // Overview card
+
+              // =================
+              // Overview card area
+              // =================
               Center(
                 child: Container(
                   width: 356,
@@ -271,7 +308,7 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                       ),
                       const SizedBox(height: 8),
-                      // FIX 2: Remove `const` here because some children may not be fully const
+                      // Grid of small overview cards (balance, income, etc.).
                       Expanded(
                         child: GridView.count(
                           crossAxisCount: 2,
@@ -308,6 +345,10 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               const SizedBox(height: 20),
+
+              // ======================
+              // Transaction history UI
+              // ======================
               const Text(
                 'Transaction History',
                 style: TextStyle(
@@ -353,10 +394,12 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ),
       ),
+      // Bottom navigation bar (Home, History, Wallets, Profile).
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
+  /// Builds the bottom navigation bar container and items.
   Widget _buildBottomNavigationBar() {
     return Container(
       decoration: const BoxDecoration(
@@ -386,6 +429,7 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
+  /// Builds a single BottomNavigationBarItem with custom background and icon color.
   BottomNavigationBarItem _buildNavItem(
       int index, String label, Map<String, String> icons) {
     final isSelected = _selectedIndex == index;
@@ -407,9 +451,15 @@ class _HomeScreenState extends State<HomeScreen>
   }
 }
 
+/// Small card widget used inside the "Overview" grid.
 class _OverviewCard extends StatelessWidget {
+  /// Title text (e.g. "Balance:", "Income this month:").
   final String title;
+
+  /// Optional subtitle (currently unused, but available).
   final String subtitle;
+
+  /// Value text shown at the bottom-right (e.g. "PHP 00.00").
   final String amount;
 
   const _OverviewCard({
@@ -428,6 +478,7 @@ class _OverviewCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
+          // Title and subtitle in the top-left.
           Padding(
             padding: const EdgeInsets.all(10),
             child: Column(
@@ -442,6 +493,7 @@ class _OverviewCard extends StatelessWidget {
               ],
             ),
           ),
+          // Amount in the bottom-right.
           Positioned(
             bottom: 8,
             right: 10,

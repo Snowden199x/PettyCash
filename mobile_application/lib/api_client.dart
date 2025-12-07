@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
-  static const String baseUrl = 'http://192.168.1.62:5000';
+  static const String baseUrl = 'http://192.168.1.12:5000'; // Replace with your server's address or IP for device access
 
   Future<Map<String, dynamic>> postJson(
     String path,

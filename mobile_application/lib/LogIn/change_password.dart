@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
 class NewPasswordScreen extends StatefulWidget {
-  const NewPasswordScreen({super.key});
+  final String orgName;
+  final int orgId;
+
+  const NewPasswordScreen({
+    super.key,
+    this.orgName = 'Organization',
+    this.orgId = 0,
+  });
 
   @override
   State<NewPasswordScreen> createState() => _NewPasswordScreenState();
@@ -32,13 +39,13 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
       vsync: this,
     );
     // Consistent shake effect as in login screen
-    _passShake = TweenSequence([
+    _passShake = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 0.0, end: -4.0), weight: 1),
       TweenSequenceItem(tween: Tween(begin: -4.0, end: 4.0), weight: 2),
       TweenSequenceItem(tween: Tween(begin: 4.0, end: -4.0), weight: 2),
       TweenSequenceItem(tween: Tween(begin: -4.0, end: 0.0), weight: 1),
     ]).animate(_passController);
-    _confirmShake = TweenSequence([
+    _confirmShake = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 0.0, end: -4.0), weight: 1),
       TweenSequenceItem(tween: Tween(begin: -4.0, end: 4.0), weight: 2),
       TweenSequenceItem(tween: Tween(begin: 4.0, end: -4.0), weight: 2),
@@ -56,7 +63,17 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
       _confirmController.forward(from: 0);
       return;
     }
-    Navigator.pushReplacementNamed(context, "/home");
+
+    // todo: call your backend to actually change the password, then:
+    // Go directly to home, passing orgName and orgId so greeting works.
+    Navigator.pushReplacementNamed(
+      context,
+      '/home',
+      arguments: {
+        'orgName': widget.orgName,
+        'orgId': widget.orgId,
+      },
+    );
   }
 
   @override
@@ -131,23 +148,26 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
                                 cursorColor: Colors.black,
                                 decoration: InputDecoration(
                                   border: const OutlineInputBorder(),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(
+                                  enabledBorder: const OutlineInputBorder(
+                                    borderSide: BorderSide(
                                         color: Colors.grey, width: 1),
                                   ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(
+                                  focusedBorder: const OutlineInputBorder(
+                                    borderSide: BorderSide(
                                         color: Color(0xFFE59E2C), width: 1),
                                   ),
-                                  errorBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(
+                                  errorBorder: const OutlineInputBorder(
+                                    borderSide: BorderSide(
                                         color: Colors.red, width: 1),
                                   ),
-                                  focusedErrorBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(
+                                  focusedErrorBorder:
+                                      const OutlineInputBorder(
+                                    borderSide: BorderSide(
                                         color: Color(0xFFE59E2C), width: 1),
                                   ),
-                                  errorText: error ? "Passwords do not match." : null,
+                                  errorText: error
+                                      ? "Passwords do not match."
+                                      : null,
                                 ),
                               ),
                             ),
@@ -172,23 +192,26 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
                                 cursorColor: Colors.black,
                                 decoration: InputDecoration(
                                   border: const OutlineInputBorder(),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(
+                                  enabledBorder: const OutlineInputBorder(
+                                    borderSide: BorderSide(
                                         color: Colors.grey, width: 1),
                                   ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(
+                                  focusedBorder: const OutlineInputBorder(
+                                    borderSide: BorderSide(
                                         color: Color(0xFFE59E2C), width: 1),
                                   ),
-                                  errorBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(
+                                  errorBorder: const OutlineInputBorder(
+                                    borderSide: BorderSide(
                                         color: Colors.red, width: 1),
                                   ),
-                                  focusedErrorBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(
+                                  focusedErrorBorder:
+                                      const OutlineInputBorder(
+                                    borderSide: BorderSide(
                                         color: Color(0xFFE59E2C), width: 1),
                                   ),
-                                  errorText: error ? "Passwords do not match." : null,
+                                  errorText: error
+                                      ? "Passwords do not match."
+                                      : null,
                                 ),
                               ),
                             ),

@@ -6,11 +6,15 @@ import 'home_screen.dart';
 import 'transaction_history_screen.dart';
 import 'wallet_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
-  final int? orgId; // optional
-  const ProfileScreen({super.key, this.orgId});
+class ProfileScreen extends StatefulWidget {
+  final String orgName;
+  final int orgId;
 
-  const ProfileScreen({super.key, required this.orgName, required this.orgId});
+  const ProfileScreen({
+    super.key,
+    this.orgName = 'Organization',
+    this.orgId = 0,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -99,10 +103,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Widget nextScreen;
     switch (index) {
       case 0:
-        nextScreen = HomeScreen(orgName: widget.orgName, orgId: widget.orgId);
+        nextScreen = HomeScreen(
+          orgName: widget.orgName,
+          orgId: widget.orgId,
+        );
         break;
       case 1:
-        nextScreen = const TransactionHistoryScreen();
+        nextScreen = TransactionHistoryScreen(
+          orgName: widget.orgName,
+          orgId: widget.orgId,
+        );
         break;
       case 2:
         nextScreen = const WalletScreen();
@@ -120,7 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => nextScreen,
+        pageBuilder: (_, _, _) => nextScreen,
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),
@@ -598,8 +608,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
 
-              // Body: vertical scroll; wraps entire table row set in another
-              // SingleChildScrollView that reuses the same horizontal controller
+              // Body
               SizedBox(
                 height: 180,
                 child: SingleChildScrollView(
@@ -630,7 +639,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 _DataCellText(officer['position']!, flex: 2),
                                 _DataCellText(officer['start']!),
                                 _DataCellText(officer['end']!),
-                                // status chip
                                 SizedBox(
                                   width: 110,
                                   child: Align(
@@ -656,7 +664,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                   ),
                                 ),
-                                // actions
                                 SizedBox(
                                   width: 140,
                                   child: Row(
