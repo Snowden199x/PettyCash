@@ -53,7 +53,8 @@
         </button>
 
         <div class="notif-menu" id="notifMenu">
-          <div id="notifList"></div>
+          <div class="notif-menu-header">Notifications</div>
+          <div class="notif-list" id="notifList"></div>
         </div>
 
         <div class="profile-dropdown">
@@ -238,7 +239,8 @@
               <span class="loading-spinner"></span> Loading...
             </div>
             <div class="chart-container" id="deptChartContainer">
-              <canvas id="departmentChart" width="300" height="300"></canvas>
+              <canvas id="departmentChart" width="400" heightt="400"></canvas>
+              <div id="deptTooltip" class="chart-tooltip" style="display:none;"></div>
             </div>
             <div class="chart-legend" id="deptLegend"></div>
           </div>
@@ -260,16 +262,27 @@
               <canvas id="statusChart" width="300" height="300"></canvas>
             </div>
             <div id="statusBreakdown">
-              <div class="status-item" data-status="pending">
-                <span class="status-label">Pending Review</span>
+              <div class="status-row" data-status="pending">
+                <span class="status-label">Pending</span>
+                <div class="status-bar">
+                  <div class="status-bar-fill" data-status="pending"></div>
+                </div>
                 <span class="status-count" id="pendingCount">0</span>
               </div>
-              <div class="status-item" data-status="review">
+
+              <div class="status-row" data-status="review">
                 <span class="status-label">In Review</span>
+                <div class="status-bar">
+                  <div class="status-bar-fill" data-status="review"></div>
+                </div>
                 <span class="status-count" id="reviewCount">0</span>
               </div>
-              <div class="status-item" data-status="completed">
+
+              <div class="status-row" data-status="completed">
                 <span class="status-label">Completed</span>
+                <div class="status-bar">
+                  <div class="status-bar-fill" data-status="completed"></div>
+                </div>
                 <span class="status-count" id="completedCount">0</span>
               </div>
             </div>

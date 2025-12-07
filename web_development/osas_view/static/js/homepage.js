@@ -254,66 +254,102 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -- PIE CHART: ORGANIZATIONS BY DEPARTMENT --
-  function drawDepartmentChart() {
-    const canvas = document.getElementById("departmentChart");
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+ let deptSlices = [];
 
-    let orgList = organizations;
-    const selectedDept = departmentFilter ? departmentFilter.value : "";
+function drawDepartmentChart() {
+  const canvas = document.getElementById("departmentChart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
 
-    const deptNamesAll = departments.map((d) => d.name);
-    const colorsAll = [
-      "#3f2166ff",
-      "#66b8eeff",
-      "#f083d5ff",
-      "#ddd258ff",
-      "#5e5e5eff",
-      "#12376aff",
-      "#226c15ff",
-      "#d98d14ff",
-      "#a22d1fff",
-      "#534a6eff",
-      "#0097e6",
-      "#b2bec3",
-    ];
+  let orgList = organizations;
+  const selectedDept = departmentFilter ? departmentFilter.value : "";
 
-    let deptNames;
-    let deptCounts;
-    let colors;
+  const deptNamesAll = departments.map((d) => d.name);
+  const colorsAll = [
+    "#3f2166ff",
+    "#66b8eeff",
+    "#f083d5ff",
+    "#ddd258ff",
+    "#5e5e5eff",
+    "#12376aff",
+    "#226c15ff",
+    "#d98d14ff",
+    "#a22d1fff",
+    "#534a6eff",
+    "#0097e6",
+    "#b2bec3",
+  ];
 
-    if (selectedDept) {
-      orgList = orgList.filter((org) => org.department === selectedDept);
-      const idx = deptNamesAll.indexOf(selectedDept);
-      const colorForDept = colorsAll[idx >= 0 ? idx % colorsAll.length : 0];
+  let deptNames;
+  let deptCounts;
+  let colors;
 
-      deptNames = [selectedDept];
-      deptCounts = [orgList.length];
-      colors = [colorForDept];
-    } else {
-      deptNames = deptNamesAll;
-      deptCounts = deptNames.map(
-        (name) => orgList.filter((org) => org.department === name).length
-      );
-      colors = colorsAll;
-    }
+  if (selectedDept) {
+    orgList = orgList.filter((org) => org.department === selectedDept);
+    const idx = deptNamesAll.indexOf(selectedDept);
+    const colorForDept = colorsAll[idx >= 0 ? idx % colorsAll.length : 0];
 
-    const total = deptCounts.reduce((s, v) => s + v, 0);
-
-    if (total === 0) {
-      drawEmptyPie(ctx);
-      if (selectedDept) {
-        updateLegend("deptLegend", [selectedDept], [colorsAll[0]], [0]);
-      } else {
-        const legend = document.getElementById("deptLegend");
-        if (legend) legend.innerHTML = "";
-      }
-      return;
-    }
-
-    drawPieChart(ctx, deptCounts, colors);
-    updateLegend("deptLegend", deptNames, colors, deptCounts);
+    deptNames = [selectedDept];
+    deptCounts = [orgList.length];
+    colors = [colorForDept];
+  } else {
+    deptNames = deptNamesAll;
+    deptCounts = deptNames.map(
+      (name) => orgList.filter((org) => org.department === name).length
+    );
+    colors = colorsAll;
   }
+
+  const total = deptCounts.reduce((s, v) => s + v, 0);
+
+  const width = canvas.width || 300;
+  const height = canvas.height || 300;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const radius = Math.min(width, height) / 2.1;
+
+  ctx.clearRect(0, 0, width, height);
+  deptSlices = [];
+
+  if (total === 0) {
+    drawEmptyPie(ctx);
+    const legend = document.getElementById("deptLegend");
+    if (legend) legend.innerHTML = "";
+    return;
+  }
+
+  let currentAngle = -Math.PI / 2;
+
+  deptCounts.forEach((value, index) => {
+    const sliceAngle = (value / total) * 2 * Math.PI;
+    const startAngle = currentAngle;
+    const endAngle = currentAngle + sliceAngle;
+
+    // draw slice
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+    ctx.lineTo(centerX, centerY);
+    ctx.fillStyle = colors[index % colors.length];
+    ctx.fill();
+
+    // store slice data for hover
+    deptSlices.push({
+      label: deptNames[index],
+      value,
+      startAngle,
+      endAngle,
+      centerX,
+      centerY,
+      radius,
+    });
+
+    currentAngle = endAngle;
+  });
+
+  updateLegend("deptLegend", deptNames, colors, deptCounts);
+}
+
+
 
   // PIE CHART HELPER
   function drawPieChart(ctx, data, colors) {
@@ -331,19 +367,15 @@ document.addEventListener("DOMContentLoaded", () => {
     data.forEach((value, index) => {
       const sliceAngle = (value / total) * 2 * Math.PI;
       ctx.beginPath();
-      ctx.arc(
-        centerX,
-        centerY,
-        radius,
-        currentAngle,
-        currentAngle + sliceAngle
-      );
+      ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
       ctx.lineTo(centerX, centerY);
       ctx.fillStyle = colors[index % colors.length];
       ctx.fill();
       currentAngle += sliceAngle;
     });
   }
+
+
 
   function updateLegend(elementId, labels, colors, data) {
     const legend = document.getElementById(elementId);
@@ -473,35 +505,41 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Status breakdown: update existing cards only
-  function updateStatusBreakdown(labels, colors, data) {
-    const breakdown = document.getElementById("statusBreakdown");
-    if (!breakdown) return;
+function updateStatusBreakdown(labels, colors, data) {
+  const breakdown = document.getElementById("statusBreakdown");
+  if (!breakdown) return;
 
-    const total = data.reduce((sum, val) => sum + val, 0) || 1;
+  const total = data.reduce((sum, val) => sum + val, 0) || 1;
 
-    const statusMap = {
-      "Pending Review": "pending",
-      "In Review": "review",
-      Completed: "completed",
-    };
+  const statusMap = {
+    "Pending Review": "pending",
+    "In Review": "review",
+    "Completed": "completed",
+  };
 
-    labels.forEach((label, index) => {
-      const key = statusMap[label];
-      if (!key) return;
+  labels.forEach((label, index) => {
+    const key = statusMap[label];
+    if (!key) return;
 
-      const item = breakdown.querySelector(`[data-status="${key}"]`);
-      if (!item) return;
+    const count = data[index] ?? 0;
+    const percentage = Math.round((count / total) * 100);
 
-      const count = data[index] ?? 0;
-      const percentage = Math.round((count / total) * 100);
+    // update count text
+    const row = breakdown.querySelector(`.status-row[data-status="${key}"]`);
+    if (!row) return;
 
-      const countEl = item.querySelector(".status-count");
-      if (countEl) countEl.textContent = count;
+    const countEl = row.querySelector(".status-count");
+    if (countEl) countEl.textContent = count;
 
-      const percentEl = item.querySelector(".status-percent");
-      if (percentEl) percentEl.textContent = `${percentage}%`;
-    });
-  }
+    // update bar width
+    const fill = row.querySelector(
+      `.status-bar-fill[data-status="${key}"]`
+    );
+    if (fill) {
+      fill.style.width = `${percentage}%`;
+    }
+  });
+}
 
   // --- Activity Feed ---
   async function updateActivityFeed() {
@@ -626,18 +664,22 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      notifList.innerHTML = items
-        .map(
-          (n) => `
-      <div class="notif-item ${n.is_read ? "read" : "unread"}"
-           data-id="${n.id}"
-           data-org-id="${n.org_id}"
-           data-report-id="${n.report_id}">
-        <p class="notif-text"><strong>${n.org_name}</strong> ${n.message}</p>
-        <p class="notif-time">${formatNotifTime(n.created_at)}</p>
-      </div>`
-        )
-        .join("");
+      notifList.innerHTML = items.map((n) => `
+        <div class="notif-item ${n.is_read ? "read" : "unread"}"
+            data-id="${n.id}"
+            data-org-id="${n.org_id}"
+            data-report-id="${n.report_id}">
+          <div class="notif-item-content">
+            <div class="notif-item-icon">📄</div>
+            <div class="notif-item-text">
+              <div class="notif-item-title">${n.org_name}</div>
+              <div class="notif-item-message">${n.message}</div>
+              <div class="notif-item-time">${formatNotifTime(n.created_at)}</div>
+            </div>
+          </div>
+        </div>
+      `).join("");
+
 
       notifList.querySelectorAll(".notif-item").forEach((el) => {
         el.addEventListener("click", async () => {
@@ -674,6 +716,50 @@ document.addEventListener("DOMContentLoaded", () => {
       if (notifDot) notifDot.style.display = "none";
     }
   }
+
+const deptCanvas = document.getElementById("departmentChart");
+const deptTooltip = document.getElementById("deptTooltip");
+
+if (deptCanvas && deptTooltip) {
+  deptCanvas.addEventListener("mousemove", (e) => {
+    const rect = deptCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    let found = null;
+
+    for (const slice of deptSlices) {
+      const dx = x - slice.centerX;
+      const dy = y - slice.centerY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist > slice.radius) continue;
+
+      let angle = Math.atan2(dy, dx);
+      if (angle < -Math.PI / 2) angle += 2 * Math.PI;
+
+      if (angle >= slice.startAngle && angle <= slice.endAngle) {
+        found = slice;
+        break;
+      }
+    }
+
+    if (found) {
+      deptTooltip.style.display = "block";
+      deptTooltip.textContent = `${found.label}: ${found.value}`;
+      // position relative to card
+      deptTooltip.style.left = `${e.clientX - rect.left}px`;
+      deptTooltip.style.top = `${e.clientY - rect.top}px`;
+    } else {
+      deptTooltip.style.display = "none";
+    }
+  });
+
+  deptCanvas.addEventListener("mouseleave", () => {
+    deptTooltip.style.display = "none";
+  });
+}
+
 
   // INITIAL LOAD
   loadDashboardDepartments().then(loadDashboardOrganizations);
