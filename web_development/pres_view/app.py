@@ -50,14 +50,33 @@ def generate_reset_code(length=6):
 # -----------------------
 # Helpers
 # -----------------------
-from flask import current_app
+import os
+from datetime import datetime
+
+from flask import current_app, render_template
 from flask_mail import Message
 
-def send_reset_email(to_email, reset_link):
+
+BANNER_URL = os.getenv("BANNER_URL")
+
+
+def send_reset_email(to_email, reset_link, org_name):
     mail = current_app.extensions.get("mail")
     if mail is None:
         current_app.logger.error("Mail extension not initialized")
         return
+
+    # fallback kung walang org_name na naipasa
+    safe_org_name = org_name or "PockiTrack Organization"
+
+    html_body = render_template(
+        "email_reset_password.html",
+        reset_link=reset_link,
+        org_name=safe_org_name,               # e.g. "ITUH"
+        to_email=to_email,
+        requested_at=datetime.now().strftime("%b %d, %Y %I:%M %p"),
+        banner_url=BANNER_URL,
+    )
 
     msg = Message(
         subject="PockiTrack Password Reset",
@@ -69,9 +88,9 @@ def send_reset_email(to_email, reset_link):
         f"Use this link to set a new password (valid for 15 minutes):\n{reset_link}\n\n"
         "If you did not request this, you can ignore this email."
     )
+    msg.html = html_body
+
     mail.send(msg)
-
-
 
 def validate_password(pw: str):
     errors = []
@@ -311,14 +330,29 @@ def pres_forgot_password():
                     ).eq("id", user["id"]).execute()
 
                     reset_link = url_for(
-                         "pres.change_password",
+                        "pres.change_password",
                         code=code,
                         email=email,
                         _external=True,
                     )
 
-                    # send actual email
-                    send_reset_email(email, reset_link)
+                    # --- NEW: kunin org_name galing organizations ---
+                    org_name = "PockiTrack Organization"
+                    org_id = user.get("organization_id")
+                    if org_id:
+                        org_res = (
+                            supabase.table("organizations")
+                            .select("org_name")
+                            .eq("id", org_id)
+                            .limit(1)
+                            .execute()
+                        )
+                        if org_res.data:
+                            org_name = org_res.data[0].get("org_name") or org_name
+                    # -----------------------------------------------
+
+                    # send actual email (may org name na)
+                    send_reset_email(email, reset_link, org_name)
 
                     current_app.logger.info(
                         "PRES reset link for %s: %s (code=%s)",
@@ -341,6 +375,7 @@ def pres_forgot_password():
             return render_template("forgot_password.html"), 500
 
     return render_template("forgot_password.html")
+
 
 @pres.route("/reset-password", methods=["POST"])
 def reset_password_with_code():
