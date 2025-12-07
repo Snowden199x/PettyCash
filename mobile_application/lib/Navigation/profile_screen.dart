@@ -2,9 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'home_screen.dart';
-import 'transaction_history_screen.dart';
-import 'wallet_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String orgName;
@@ -21,9 +18,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final int _selectedIndex = 3;
-
-  // segmented tab index
   int _selectedOrgTabIndex = 0;
 
   // controllers for text fields (Organization Information)
@@ -35,25 +29,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       TextEditingController(text: 'President');
   final TextEditingController _schoolController =
       TextEditingController(text: 'Laguna State Polytechnic University');
-
-  final iconPaths = {
-    'home': {
-      'active': 'assets/Icons/navigation_icons/nav_home.png',
-      'inactive': 'assets/Icons/navigation_icons/nav_home.png',
-    },
-    'history': {
-      'active': 'assets/Icons/navigation_icons/nav_history.png',
-      'inactive': 'assets/Icons/navigation_icons/nav_history.png',
-    },
-    'wallet': {
-      'active': 'assets/Icons/navigation_icons/nav_wallet.png',
-      'inactive': 'assets/Icons/navigation_icons/nav_wallet.png',
-    },
-    'profile': {
-      'active': 'assets/Icons/navigation_icons/nav_profile.png',
-      'inactive': 'assets/Icons/navigation_icons/nav_profile.png',
-    },
-  };
 
   // dummy officers data
   final List<Map<String, String>> _officers = [
@@ -97,46 +72,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  void _onItemTapped(int index) {
-    if (index == _selectedIndex) return;
-
-    Widget nextScreen;
-    switch (index) {
-      case 0:
-        nextScreen = HomeScreen(
-          orgName: widget.orgName,
-          orgId: widget.orgId,
-        );
-        break;
-      case 1:
-        nextScreen = TransactionHistoryScreen(
-          orgName: widget.orgName,
-          orgId: widget.orgId,
-        );
-        break;
-      case 2:
-        nextScreen = const WalletScreen();
-        break;
-      case 3:
-        nextScreen = ProfileScreen(
-          orgName: widget.orgName,
-          orgId: widget.orgId,
-        );
-        break;
-      default:
-        return;
-    }
-
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (_, _, _) => nextScreen,
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-      ),
-    );
-  }
-
   @override
   void dispose() {
     _orgNameController.dispose();
@@ -175,7 +110,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Organization Card
+              // Organization card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -186,7 +121,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Left: circular photo + change button
+                    // Left: photo + button
                     Column(
                       children: [
                         Container(
@@ -234,7 +169,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                     const SizedBox(width: 16),
-                    // Right: organization details (summary)
+                    // Right: details
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,7 +254,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               const SizedBox(height: 16),
 
-              // Segmented options
+              // Segmented tabs
               Container(
                 height: 34,
                 decoration: BoxDecoration(
@@ -361,7 +296,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               const SizedBox(height: 16),
 
-              // Content under segmented control
               Expanded(
                 child: SingleChildScrollView(
                   child: _buildOrgTabContent(),
@@ -371,11 +305,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
-  // builds content depending on selected tab
+  // Content switcher
   Widget _buildOrgTabContent() {
     switch (_selectedOrgTabIndex) {
       case 0:
@@ -511,14 +444,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // OFFICERS SECTION (header + button + synced horizontal scroll)
+  // OFFICERS SECTION
   Widget _buildOfficersSection() {
-    const double tableWidth = 600; // total logical width of columns
+    const double tableWidth = 600;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header + Add Officer button
+        // Header + button
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -534,9 +467,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(
               height: 36,
               child: ElevatedButton(
-                onPressed: () {
-                  // todo: open add officer flow
-                },
+                onPressed: () {},
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFB75A11),
                   foregroundColor: Colors.white,
@@ -561,7 +492,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 12),
 
-        // Card with fixed height; header + body share horizontal controller
+        // Card with table
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
@@ -577,7 +508,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           child: Column(
             children: [
-              // Header row (horizontal scroll controlled)
+              // Header row
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 controller: _officersHorizontalController,
@@ -608,7 +539,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
 
-              // Body
+              // Body rows
               SizedBox(
                 height: 180,
                 child: SingleChildScrollView(
@@ -672,17 +603,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       _SmallActionButton(
                                         label: 'Edit',
                                         color: const Color(0xFF4BA3FF),
-                                        onTap: () {
-                                          // edit action
-                                        },
+                                        onTap: () {},
                                       ),
                                       const SizedBox(width: 6),
                                       _SmallActionButton(
                                         label: 'Delete',
                                         color: const Color(0xFFFF6B6B),
-                                        onTap: () {
-                                          // delete action
-                                        },
+                                        onTap: () {},
                                       ),
                                     ],
                                   ),
@@ -771,59 +698,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(6),
         borderSide: const BorderSide(color: Color(0xFF8B3B08), width: 1.2),
       ),
-    );
-  }
-
-  // bottom nav bar
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.black12, width: 1)),
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF8B3B08),
-        unselectedItemColor: Colors.black,
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        selectedLabelStyle: const TextStyle(
-          fontFamily: 'Poppins',
-          fontWeight: FontWeight.w600,
-          fontSize: 12,
-        ),
-        items: [
-          _buildNavItem(0, 'Home', iconPaths['home']!),
-          _buildNavItem(1, 'History', iconPaths['history']!),
-          _buildNavItem(2, 'Wallets', iconPaths['wallet']!),
-          _buildNavItem(3, 'Profile', iconPaths['profile']!),
-        ],
-      ),
-    );
-  }
-
-  BottomNavigationBarItem _buildNavItem(
-    int index,
-    String label,
-    Map<String, String> icons,
-  ) {
-    final isSelected = _selectedIndex == index;
-    return BottomNavigationBarItem(
-      icon: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF8B3B08) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Image.asset(
-          isSelected ? icons['active']! : icons['inactive']!,
-          height: 28,
-          color: isSelected ? Colors.white : Colors.black,
-        ),
-      ),
-      label: label,
     );
   }
 }

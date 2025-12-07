@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
-import 'transaction_history_screen.dart';
-import 'profile_screen.dart';
 import 'wallet_month.dart';
 
 class WalletScreen extends StatefulWidget {
@@ -12,9 +9,6 @@ class WalletScreen extends StatefulWidget {
 }
 
 class _WalletScreenState extends State<WalletScreen> {
-  final int _selectedIndex = 2; // Highlight Wallet tab
-
-  // Months from August to May
   final List<String> _months = [
     'AUGUST',
     'SEPTEMBER',
@@ -28,28 +22,8 @@ class _WalletScreenState extends State<WalletScreen> {
     'MAY',
   ];
 
-  // Academic Year dropdown (replaces Sort by month/date modified)
   String _selectedAcademicYear = '';
   List<String> _academicYears = const [];
-
-  final iconPaths = {
-    'home': {
-      'active': 'assets/Icons/navigation_icons/nav_home.png',
-      'inactive': 'assets/Icons/navigation_icons/nav_home.png',
-    },
-    'history': {
-      'active': 'assets/Icons/navigation_icons/nav_history.png',
-      'inactive': 'assets/Icons/navigation_icons/nav_history.png',
-    },
-    'wallet': {
-      'active': 'assets/Icons/navigation_icons/nav_wallet.png',
-      'inactive': 'assets/Icons/navigation_icons/nav_wallet.png',
-    },
-    'profile': {
-      'active': 'assets/Icons/navigation_icons/nav_profile.png',
-      'inactive': 'assets/Icons/navigation_icons/nav_profile.png',
-    },
-  };
 
   @override
   void initState() {
@@ -71,37 +45,6 @@ class _WalletScreenState extends State<WalletScreen> {
         years.firstWhere((ay) => ay == '2025–2026', orElse: () => years[0]);
   }
 
-  void _onItemTapped(int index) {
-    if (index == _selectedIndex) return;
-
-    Widget nextScreen;
-    switch (index) {
-      case 0:
-        nextScreen = const HomeScreen(orgName: "Organization");
-        break;
-      case 1:
-        nextScreen = const TransactionHistoryScreen();
-        break;
-      case 2:
-        nextScreen = const WalletScreen();
-        break;
-      case 3:
-        nextScreen = const ProfileScreen();
-        break;
-      default:
-        return;
-    }
-
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (_, _, _) => nextScreen,
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -118,7 +61,6 @@ class _WalletScreenState extends State<WalletScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Wallet title ONLY
               const Text(
                 "Wallet",
                 style: TextStyle(
@@ -130,7 +72,6 @@ class _WalletScreenState extends State<WalletScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              // Compact AY dropdown in place of the old "Sort by" row
               SizedBox(
                 height: 28,
                 child: DropdownButtonHideUnderline(
@@ -138,7 +79,7 @@ class _WalletScreenState extends State<WalletScreen> {
                     value: _selectedAcademicYear.isEmpty
                         ? null
                         : _selectedAcademicYear,
-                    isDense: true, // reduces button height [web:7][web:11]
+                    isDense: true,
                     hint: const Text(
                       'Select AY',
                       style: TextStyle(
@@ -155,8 +96,8 @@ class _WalletScreenState extends State<WalletScreen> {
                               ay,
                               style: const TextStyle(
                                 fontFamily: 'Poppins',
-                                fontSize: 11, // smaller text
-                                height: 1.0,  // tighter line height
+                                fontSize: 11,
+                                height: 1.0,
                                 color: Colors.black,
                               ),
                             ),
@@ -167,7 +108,6 @@ class _WalletScreenState extends State<WalletScreen> {
                       if (value == null) return;
                       setState(() {
                         _selectedAcademicYear = value;
-                        // Todo: filter wallets list by AY if needed
                       });
                     },
                     borderRadius: BorderRadius.circular(6),
@@ -181,7 +121,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       fontSize: 11,
                       color: Colors.black,
                     ),
-                    menuMaxHeight: 200, // optional: smaller menu height [web:12]
+                    menuMaxHeight: 200,
                   ),
                 ),
               ),
@@ -268,59 +208,6 @@ class _WalletScreenState extends State<WalletScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.black12, width: 1)),
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF8B3B08),
-        unselectedItemColor: Colors.black,
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        selectedLabelStyle: const TextStyle(
-          fontFamily: 'Poppins',
-          fontWeight: FontWeight.w600,
-          fontSize: 12,
-        ),
-        items: [
-          _buildNavItem(0, 'Home', iconPaths['home']!),
-          _buildNavItem(1, 'History', iconPaths['history']!),
-          _buildNavItem(2, 'Wallets', iconPaths['wallet']!),
-          _buildNavItem(3, 'Profile', iconPaths['profile']!),
-        ],
-      ),
-    );
-  }
-
-  BottomNavigationBarItem _buildNavItem(
-    int index,
-    String label,
-    Map<String, String> icons,
-  ) {
-    final isSelected = _selectedIndex == index;
-    return BottomNavigationBarItem(
-      icon: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF8B3B08) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Image.asset(
-          isSelected ? icons['active']! : icons['inactive']!,
-          height: 28,
-          color: isSelected ? Colors.white : Colors.black,
-        ),
-      ),
-      label: label,
     );
   }
 }

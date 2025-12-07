@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,31 +15,36 @@ class WalletMonthScreen extends StatefulWidget {
 
 class WalletMonthScreenState extends State<WalletMonthScreen> {
   // Sort state
-  String sortFilter = 'Expense';
-  String sortOrder = 'New to old';
+  String sortFilter = 'All';
   final GlobalKey sortKey = GlobalKey();
 
+  // Popups state
   bool showAddMenu = false;
   bool showAddIncomeForm = false;
   bool showAddExpenseForm = false;
   bool showAddReceiptForm = false;
 
-  // Tabs: 0 Transaction, 1 Reports, 2 Receipts, 3 Archive
+  // Tabs
+  // 0: Transaction, 1: Reports, 2: Receipts, 3: Archive
   int selectedTabIndex = 0;
 
-  // Controllers – Income
+  // In-memory list of transactions
+  final List<TransactionItem> transactions = [];
+
+  // Controllers - Income
   final TextEditingController dateIssuedController = TextEditingController();
   final TextEditingController quantityController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
   String? selectedIncomeType;
+
   final List<String> incomeTypes = const [
     'Income Generating Projects',
     'Registration Fee',
     'Membership Fee',
   ];
 
-  // Controllers – Expense
+  // Controllers - Expense
   final TextEditingController expenseDateController = TextEditingController();
   final TextEditingController expenseQuantityController =
       TextEditingController();
@@ -48,7 +54,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
       TextEditingController();
   final TextEditingController expensePriceController = TextEditingController();
 
-  // Controllers – Receipt
+  // Controllers - Receipt
   final TextEditingController receiptDescriptionController =
       TextEditingController();
   final TextEditingController receiptDateController = TextEditingController();
@@ -73,17 +79,26 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
     // Receipt
     receiptDescriptionController.dispose();
     receiptDateController.dispose();
+
     super.dispose();
   }
 
   // SORT MENU
   void showSortMenu() {
-    final renderBox =
-        sortKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
+    final ctx = sortKey.currentContext;
+    if (ctx == null) return;
+
+    final renderObject = ctx.findRenderObject();
+    if (renderObject is! RenderBox) return;
+    final renderBox = renderObject;
 
     final overlay = Overlay.of(context);
-    final overlayBox = overlay.context.findRenderObject() as RenderBox;
+    
+
+    final overlayRenderObject = overlay.context.findRenderObject();
+    if (overlayRenderObject is! RenderBox) return;
+    final overlayBox = overlayRenderObject;
+
     final position =
         renderBox.localToGlobal(Offset.zero, ancestor: overlayBox);
 
@@ -93,7 +108,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
       builder: (_) => Stack(
         children: [
           GestureDetector(
-            onTap: entry.remove,
+            onTap: () => entry.remove(),
             behavior: HitTestBehavior.translucent,
             child: SizedBox(
               width: overlayBox.size.width,
@@ -118,7 +133,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
   Widget buildSortMenuContent(OverlayEntry entry) {
     return Container(
       width: 163,
-      height: 160,
+      height: 130,
       decoration: BoxDecoration(
         color: const Color(0xFFE8D7AA),
         borderRadius: BorderRadius.circular(10),
@@ -137,34 +152,21 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          buildMenuRow('All', entry, isFilter: true),
-          buildMenuRow('Expense', entry, isFilter: true),
-          buildMenuRow('Income', entry, isFilter: true),
-          const Divider(height: 14, thickness: 1),
-          buildMenuRow('New to old', entry, isFilter: false),
-          buildMenuRow('Old to new', entry, isFilter: false),
+          buildMenuRow('All', entry),
+          buildMenuRow('Expense', entry),
+          buildMenuRow('Income', entry),
         ],
       ),
     );
   }
 
-  Widget buildMenuRow(
-    String label,
-    OverlayEntry entry, {
-    required bool isFilter,
-  }) {
-    final bool selected =
-        isFilter ? sortFilter == label : sortOrder == label;
-
+  Widget buildMenuRow(String label, OverlayEntry entry) {
+    final bool selected = sortFilter == label;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
         setState(() {
-          if (isFilter) {
-            sortFilter = label;
-          } else {
-            sortOrder = label;
-          }
+          sortFilter = label;
         });
         entry.remove();
       },
@@ -259,7 +261,9 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
     );
     if (picked != null) {
       final formatted = DateFormat('yyyy-MM-dd').format(picked);
-      setState(() => dateIssuedController.text = formatted);
+      setState(() {
+        dateIssuedController.text = formatted;
+      });
     }
   }
 
@@ -273,7 +277,9 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
     );
     if (picked != null) {
       final formatted = DateFormat('yyyy-MM-dd').format(picked);
-      setState(() => expenseDateController.text = formatted);
+      setState(() {
+        expenseDateController.text = formatted;
+      });
     }
   }
 
@@ -287,7 +293,9 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
     );
     if (picked != null) {
       final formatted = DateFormat('yyyy-MM-dd').format(picked);
-      setState(() => receiptDateController.text = formatted);
+      setState(() {
+        receiptDateController.text = formatted;
+      });
     }
   }
 
@@ -295,7 +303,101 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
     final XFile? picked =
         await receiptPicker.pickImage(source: ImageSource.gallery);
     if (picked == null) return;
-    setState(() => receiptImage = File(picked.path));
+    setState(() {
+      receiptImage = File(picked.path);
+    });
+  }
+
+  // SAVE INCOME
+  void saveIncome() {
+    if (quantityController.text.isEmpty ||
+        priceController.text.isEmpty ||
+        selectedIncomeType == null) {
+      return;
+    }
+
+    final int qty = int.tryParse(quantityController.text) ?? 0;
+    final double price = double.tryParse(priceController.text) ?? 0;
+    final double total = qty * price;
+
+    final String dateText = dateIssuedController.text.isEmpty
+        ? DateFormat('yyyy-MM-dd').format(DateTime.now())
+        : dateIssuedController.text;
+
+    final item = TransactionItem(
+      date: dateText,
+      monthLabel: widget.month,
+      quantity: qty,
+      price: price,
+      description: descriptionController.text,
+      details: selectedIncomeType ?? '',
+      totalAmount: total,
+      type: 'Income',
+    );
+
+    setState(() {
+      transactions.add(item);
+      dateIssuedController.clear();
+      quantityController.clear();
+      descriptionController.clear();
+      priceController.clear();
+      selectedIncomeType = null;
+      showAddIncomeForm = false;
+      showAddMenu = false;
+    });
+  }
+
+  // SAVE EXPENSE
+  void saveExpense() {
+    if (expenseQuantityController.text.isEmpty ||
+        expensePriceController.text.isEmpty ||
+        expenseParticularsController.text.isEmpty) {
+      return;
+    }
+
+    final int qty = int.tryParse(expenseQuantityController.text) ?? 0;
+    final double price = double.tryParse(expensePriceController.text) ?? 0;
+    final double total = qty * price;
+
+    final String dateText = expenseDateController.text.isEmpty
+        ? DateFormat('yyyy-MM-dd').format(DateTime.now())
+        : expenseDateController.text;
+
+    final String details =
+        '${expenseParticularsController.text} - ${expenseDescriptionController.text}';
+
+    final item = TransactionItem(
+      date: dateText,
+      monthLabel: widget.month,
+      quantity: qty,
+      price: price,
+      description: expenseDescriptionController.text,
+      details: details,
+      totalAmount: total,
+      type: 'Expense',
+    );
+
+    setState(() {
+      transactions.add(item);
+      expenseDateController.clear();
+      expenseQuantityController.clear();
+      expenseParticularsController.clear();
+      expenseDescriptionController.clear();
+      expensePriceController.clear();
+      showAddExpenseForm = false;
+      showAddMenu = false;
+    });
+  }
+
+  List<TransactionItem> get filteredTransactions {
+    if (sortFilter == 'All') return transactions;
+    if (sortFilter == 'Income') {
+      return transactions.where((t) => t.type == 'Income').toList();
+    }
+    if (sortFilter == 'Expense') {
+      return transactions.where((t) => t.type == 'Expense').toList();
+    }
+    return transactions;
   }
 
   @override
@@ -334,7 +436,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // Segmented TABS
+
+                  // Segmented tabs
                   Container(
                     height: 34,
                     decoration: BoxDecoration(
@@ -346,32 +449,45 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                         SegmentTab(
                           label: 'Transaction',
                           isSelected: selectedTabIndex == 0,
-                          onTap: () =>
-                              setState(() => selectedTabIndex = 0),
+                          onTap: () {
+                            setState(() {
+                              selectedTabIndex = 0;
+                            });
+                          },
                         ),
                         SegmentTab(
                           label: 'Reports',
                           isSelected: selectedTabIndex == 1,
-                          onTap: () =>
-                              setState(() => selectedTabIndex = 1),
+                          onTap: () {
+                            setState(() {
+                              selectedTabIndex = 1;
+                            });
+                          },
                         ),
                         SegmentTab(
                           label: 'Receipts',
                           isSelected: selectedTabIndex == 2,
-                          onTap: () =>
-                              setState(() => selectedTabIndex = 2),
+                          onTap: () {
+                            setState(() {
+                              selectedTabIndex = 2;
+                            });
+                          },
                         ),
                         SegmentTab(
                           label: 'Archive',
                           isSelected: selectedTabIndex == 3,
-                          onTap: () =>
-                              setState(() => selectedTabIndex = 3),
+                          onTap: () {
+                            setState(() {
+                              selectedTabIndex = 3;
+                            });
+                          },
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Sort by row ONLY for Transaction tab
+
+                  // Sort row only for Transaction tab
                   if (selectedTabIndex == 0)
                     GestureDetector(
                       key: sortKey,
@@ -397,58 +513,70 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                         ],
                       ),
                     ),
+
                   if (selectedTabIndex == 0) const SizedBox(height: 16),
+
                   // Tab content
                   Expanded(
                     child: Builder(
                       builder: (context) {
                         if (selectedTabIndex == 0) {
-                          // TRANSACTION TAB EMPTY STATE
-                          return Align(
-                            alignment: Alignment.center,
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.only(bottom: 100),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.center,
-                                children: const [
-                                  Image(
-                                    image: AssetImage(
-                                      'assets/Icons/navigation_icons/nav_history.png',
+                          final txs = filteredTransactions;
+                          if (txs.isEmpty) {
+                            return const Align(
+                              alignment: Alignment.center,
+                              child: Padding(
+                                padding: EdgeInsets.only(bottom: 100),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Image(
+                                      image: AssetImage(
+                                          'assets/Icons/navigation_icons/nav_history.png'),
+                                      width: 61,
+                                      height: 61,
+                                      fit: BoxFit.contain,
                                     ),
-                                    width: 61,
-                                    height: 61,
-                                    fit: BoxFit.contain,
-                                  ),
-                                  SizedBox(height: 16),
-                                  Text(
-                                    'No transactions found',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black,
+                                    SizedBox(height: 16),
+                                    Text(
+                                      'No transactions found',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black,
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'There are no transactions for the selected filter',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 12,
-                                      color: Colors.black54,
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'There are no transactions for the selected filter',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 12,
+                                        color: Colors.black54,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
+                            );
+                          }
+
+                          // LIST OF TRANSACTIONS
+                          return ListView.builder(
+                            padding:
+                                const EdgeInsets.only(bottom: 100, top: 0),
+                            itemCount: txs.length,
+                            itemBuilder: (context, index) {
+                              final t = txs[index];
+                              return TransactionCard(item: t);
+                            },
                           );
                         } else if (selectedTabIndex == 1) {
-                          // REPORTS TAB – UPDATED DESIGN
+                          // REPORTS TAB
                           return SingleChildScrollView(
                             padding:
                                 const EdgeInsets.only(bottom: 100),
@@ -480,7 +608,6 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      // reports.png without inner square
                                       Image.asset(
                                         'assets/Icons/reports.png',
                                         width: 52.47,
@@ -488,7 +615,6 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                         fit: BoxFit.contain,
                                       ),
                                       const SizedBox(width: 10),
-                                      // Title, subtitle and button stacked vertically
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment:
@@ -539,7 +665,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                                     borderRadius:
                                                         BorderRadius
                                                             .circular(4),
-                                                    side: const BorderSide(
+                                                    side:
+                                                        const BorderSide(
                                                       color: Colors.black,
                                                       width: 1,
                                                     ),
@@ -562,7 +689,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                     ],
                                   ),
                                 ),
-                                // Summary cards in 2x2 grid like image
+
+                                // Summary cards 2x2 grid
                                 Row(
                                   children: const [
                                     Expanded(
@@ -574,7 +702,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                     SizedBox(width: 12),
                                     Expanded(
                                       child: ReportSummaryCard(
-                                        title: 'Total amount of Income',
+                                        title:
+                                            'Total amount of Income',
                                         amountLabel: 'Php 0.00',
                                       ),
                                     ),
@@ -635,7 +764,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
             ),
           ),
 
-          // Dark overlay
+          // Dark overlay for popups
           if (showAddMenu ||
               showAddIncomeForm ||
               showAddExpenseForm ||
@@ -679,7 +808,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
           if (showAddIncomeForm)
             Center(
               child: Padding(
-                padding: EdgeInsets.only(bottom: keyboardInset + 20),
+                padding:
+                    EdgeInsets.only(bottom: keyboardInset + 20),
                 child: Container(
                   width: 300,
                   height: 461,
@@ -741,8 +871,10 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                               vertical: 8,
                             ),
                             border: OutlineInputBorder(
-                              borderSide:
-                                  BorderSide(color: Colors.black54),
+                              borderSide: BorderSide(
+                                color: Colors.black54,
+                                width: 1,
+                              ),
                             ),
                             isDense: true,
                             suffixIcon: Icon(
@@ -795,7 +927,9 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                               )
                               .toList(),
                           onChanged: (value) {
-                            setState(() => selectedIncomeType = value);
+                            setState(() {
+                              selectedIncomeType = value;
+                            });
                           },
                           decoration: const InputDecoration(
                             contentPadding: EdgeInsets.symmetric(
@@ -803,8 +937,10 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                               vertical: 8,
                             ),
                             border: OutlineInputBorder(
-                              borderSide:
-                                  BorderSide(color: Colors.black54),
+                              borderSide: BorderSide(
+                                color: Colors.black54,
+                                width: 1,
+                              ),
                             ),
                             isDense: true,
                             hintText: 'Select Type',
@@ -821,7 +957,9 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      PopupTextField(controller: descriptionController),
+                      PopupTextField(
+                        controller: descriptionController,
+                      ),
                       const SizedBox(height: 8),
                       const Text(
                         'Price',
@@ -862,10 +1000,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                           ),
                           const SizedBox(width: 8),
                           TextButton(
-                            onPressed: () {
-                              // todo: save income
-                              closeAddMenu();
-                            },
+                            onPressed: saveIncome,
                             style: TextButton.styleFrom(
                               minimumSize: const Size(70, 30),
                               backgroundColor: const Color(0xFF8B3B08),
@@ -894,7 +1029,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
           if (showAddExpenseForm)
             Center(
               child: Padding(
-                padding: EdgeInsets.only(bottom: keyboardInset + 20),
+                padding:
+                    EdgeInsets.only(bottom: keyboardInset + 20),
                 child: Container(
                   width: 300,
                   height: 461,
@@ -956,8 +1092,10 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                               vertical: 8,
                             ),
                             border: OutlineInputBorder(
-                              borderSide:
-                                  BorderSide(color: Colors.black54),
+                              borderSide: BorderSide(
+                                color: Colors.black54,
+                                width: 1,
+                              ),
                             ),
                             isDense: true,
                             suffixIcon: Icon(
@@ -1047,10 +1185,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                           ),
                           const SizedBox(width: 8),
                           TextButton(
-                            onPressed: () {
-                              // todo: save expense
-                              closeAddMenu();
-                            },
+                            onPressed: saveExpense,
                             style: TextButton.styleFrom(
                               minimumSize: const Size(70, 30),
                               backgroundColor: const Color(0xFF8B3B08),
@@ -1075,7 +1210,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
               ),
             ),
 
-          // Add Receipt popup
+          // Add Receipt popup (updated layout)
           if (showAddReceiptForm)
             Center(
               child: Padding(
@@ -1113,9 +1248,11 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                           color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
+
+                      // Receipt Image first
                       const Text(
-                        'Receipt image',
+                        'Receipt Image',
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 13,
@@ -1123,42 +1260,35 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          ElevatedButton(
-                            onPressed: pickReceiptImage,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2F4366),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 10,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                side: const BorderSide(
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-                            child: const Text(
-                              'Upload file',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 13,
-                              ),
+                      GestureDetector(
+                        onTap: pickReceiptImage,
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFFCF5),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: const Color(0xFFE7D9C0),
+                              width: 1,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          if (receiptImage != null)
-                            const Icon(
-                              Icons.check_circle,
-                              color: Colors.green,
-                              size: 20,
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(
+                            receiptImage == null
+                                ? ''
+                                : 'Image selected',
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              color: Colors.black87,
                             ),
-                        ],
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
+
+                      // Description
                       const Text(
                         'Description',
                         style: TextStyle(
@@ -1171,7 +1301,9 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                       PopupTextField(
                         controller: receiptDescriptionController,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
+
+                      // Date
                       const Text(
                         'Date',
                         style: TextStyle(
@@ -1193,14 +1325,16 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                             fontSize: 13,
                           ),
                           decoration: const InputDecoration(
-                            hintText: 'Select date',
+                            hintText: '',
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 8,
                             ),
                             border: OutlineInputBorder(
-                              borderSide:
-                                  BorderSide(color: Colors.black54),
+                              borderSide: BorderSide(
+                                color: Colors.black54,
+                                width: 1,
+                              ),
                             ),
                             isDense: true,
                             suffixIcon: Icon(
@@ -1237,7 +1371,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                           const SizedBox(width: 8),
                           TextButton(
                             onPressed: () {
-                              // todo: save receipt
+                              // todo: Save receipt data if needed
                               closeAddMenu();
                             },
                             style: TextButton.styleFrom(
@@ -1289,8 +1423,173 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
   }
 }
 
-// Reusable widgets
+// In-memory transaction model
+class TransactionItem {
+  final String date;
+  final String monthLabel;
+  final int quantity;
+  final double price;
+  final String description;
+  // income type or expense particulars-description
+  final String details;
+  final double totalAmount;
+  // 'Income' or 'Expense'
+  final String type;
 
+  TransactionItem({
+    required this.date,
+    required this.monthLabel,
+    required this.quantity,
+    required this.price,
+    required this.description,
+    required this.details,
+    required this.totalAmount,
+    required this.type,
+  });
+}
+
+// Card UI for a transaction
+class TransactionCard extends StatelessWidget {
+  final TransactionItem item;
+
+  const TransactionCard({super.key, required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final String topLine = item.monthLabel.toUpperCase();
+    final String middleLine =
+        '${item.quantity} x ${item.price.toStringAsFixed(0)} - ${item.details.isNotEmpty ? item.details : item.description}';
+    final Color amountColor = item.type == 'Expense'
+        ? const Color(0xFFC62828)
+        : const Color(0xFF2E7D32);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFCF5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFF3E6CF),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // First row: month and amount
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  topLine,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              Text(
+                'PHP ${item.totalAmount.toStringAsFixed(0)}',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: amountColor,
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.more_vert,
+                size: 18,
+                color: Colors.black54,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // Middle line
+          Text(
+            middleLine,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 6),
+          // Date
+          Text(
+            item.date,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 11,
+              color: Colors.black54,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Summary card used in Reports tab
+class ReportSummaryCard extends StatelessWidget {
+  final String title;
+  final String amountLabel;
+
+  const ReportSummaryCard({
+    super.key,
+    required this.title,
+    required this.amountLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 70,
+      padding:
+          const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFCF5),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: const Color(0xFFE7D9C0),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 11,
+              color: Colors.black,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            amountLabel,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Reusable text field for popups
 class PopupTextField extends StatelessWidget {
   final TextEditingController controller;
   final TextInputType? keyboardType;
@@ -1319,7 +1618,10 @@ class PopupTextField extends StatelessWidget {
             vertical: 8,
           ),
           border: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.black54),
+            borderSide: BorderSide(
+              color: Colors.black54,
+              width: 1,
+            ),
           ),
           isDense: true,
         ),
@@ -1328,6 +1630,7 @@ class PopupTextField extends StatelessWidget {
   }
 }
 
+// Segmented tab widget
 class SegmentTab extends StatelessWidget {
   final String label;
   final bool isSelected;
@@ -1373,6 +1676,7 @@ class SegmentTab extends StatelessWidget {
   }
 }
 
+// Add menu button widget
 class AddMenuButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
@@ -1403,58 +1707,6 @@ class AddMenuButton extends StatelessWidget {
             fontSize: 13,
             color: Colors.black,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class ReportSummaryCard extends StatelessWidget {
-  final String title;
-  final String amountLabel;
-
-  const ReportSummaryCard({
-    super.key,
-    required this.title,
-    required this.amountLabel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 60, // keep consistent box height
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(12, 12, 2, 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFF3D58D), 
-          width: 1),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment:
-              MainAxisAlignment.spaceBetween, // pushes Php 0.00 to bottom
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 11,
-                color: Colors.black87,
-              ),
-            ),
-            Text(
-              amountLabel,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
-              ),
-            ),
-          ],
         ),
       ),
     );
