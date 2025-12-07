@@ -24,6 +24,11 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
   bool showAddExpenseForm = false;
   bool showAddReceiptForm = false;
 
+  // Report popup and actions
+  bool showReportDetailsForm = false;
+  bool showReportActions = false;
+  bool showGenerateConfirm = false; // NEW: confirmation popup
+
   // Tabs
   // 0: Transaction, 1: Reports, 2: Receipts, 3: Archive
   int selectedTabIndex = 0;
@@ -61,6 +66,25 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
   final ImagePicker receiptPicker = ImagePicker();
   File? receiptImage;
 
+  // Controllers - Report details
+  final TextEditingController reportEventNameController =
+      TextEditingController();
+  final TextEditingController reportDatePreparedController =
+      TextEditingController();
+  final TextEditingController reportNumberController =
+      TextEditingController(text: 'FR-001');
+  final TextEditingController reportBudgetController = TextEditingController();
+  final TextEditingController reportTotalIncomeController =
+      TextEditingController();
+  final TextEditingController reportTotalExpensesController =
+      TextEditingController();
+  final TextEditingController reportReimbursementController =
+      TextEditingController();
+  final TextEditingController reportPreviousFundController =
+      TextEditingController();
+  final TextEditingController reportBudgetInBankController =
+      TextEditingController();
+
   @override
   void dispose() {
     // Income
@@ -80,6 +104,17 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
     receiptDescriptionController.dispose();
     receiptDateController.dispose();
 
+    // Report details
+    reportEventNameController.dispose();
+    reportDatePreparedController.dispose();
+    reportNumberController.dispose();
+    reportBudgetController.dispose();
+    reportTotalIncomeController.dispose();
+    reportTotalExpensesController.dispose();
+    reportReimbursementController.dispose();
+    reportPreviousFundController.dispose();
+    reportBudgetInBankController.dispose();
+
     super.dispose();
   }
 
@@ -93,7 +128,6 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
     final renderBox = renderObject;
 
     final overlay = Overlay.of(context);
-    
 
     final overlayRenderObject = overlay.context.findRenderObject();
     if (overlayRenderObject is! RenderBox) return;
@@ -205,6 +239,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
       showAddIncomeForm = false;
       showAddExpenseForm = false;
       showAddReceiptForm = false;
+      showReportDetailsForm = false;
+      showGenerateConfirm = false;
       showAddMenu = !showAddMenu;
     });
   }
@@ -213,12 +249,16 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
     if (showAddMenu ||
         showAddIncomeForm ||
         showAddExpenseForm ||
-        showAddReceiptForm) {
+        showAddReceiptForm ||
+        showReportDetailsForm ||
+        showGenerateConfirm) {
       setState(() {
         showAddMenu = false;
         showAddIncomeForm = false;
         showAddExpenseForm = false;
         showAddReceiptForm = false;
+        showReportDetailsForm = false;
+        showGenerateConfirm = false;
       });
     }
   }
@@ -229,6 +269,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
       showAddIncomeForm = true;
       showAddExpenseForm = false;
       showAddReceiptForm = false;
+      showReportDetailsForm = false;
+      showGenerateConfirm = false;
     });
   }
 
@@ -238,6 +280,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
       showAddIncomeForm = false;
       showAddExpenseForm = true;
       showAddReceiptForm = false;
+      showReportDetailsForm = false;
+      showGenerateConfirm = false;
     });
   }
 
@@ -247,6 +291,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
       showAddIncomeForm = false;
       showAddExpenseForm = false;
       showAddReceiptForm = true;
+      showReportDetailsForm = false;
+      showGenerateConfirm = false;
     });
   }
 
@@ -521,6 +567,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                     child: Builder(
                       builder: (context) {
                         if (selectedTabIndex == 0) {
+                          // TRANSACTIONS TAB
                           final txs = filteredTransactions;
                           if (txs.isEmpty) {
                             return const Align(
@@ -529,7 +576,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                 padding: EdgeInsets.only(bottom: 100),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.center,
                                   children: [
                                     Image(
                                       image: AssetImage(
@@ -567,8 +615,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
 
                           // LIST OF TRANSACTIONS
                           return ListView.builder(
-                            padding:
-                                const EdgeInsets.only(bottom: 100, top: 0),
+                            padding: const EdgeInsets.only(
+                                bottom: 100, top: 0),
                             itemCount: txs.length,
                             itemBuilder: (context, index) {
                               final t = txs[index];
@@ -581,14 +629,15 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                             padding:
                                 const EdgeInsets.only(bottom: 100),
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
                               children: [
                                 // Gradient Generate Financial Report card
                                 Container(
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(14),
-                                  margin:
-                                      const EdgeInsets.only(bottom: 16),
+                                  margin: const EdgeInsets.only(
+                                      bottom: 16),
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(
                                       colors: [
@@ -598,11 +647,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                       begin: Alignment.centerLeft,
                                       end: Alignment.centerRight,
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: Colors.black,
-                                      width: 1,
-                                    ),
+                                    borderRadius:
+                                        BorderRadius.circular(10),
                                   ),
                                   child: Row(
                                     crossAxisAlignment:
@@ -619,7 +665,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                         child: Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisSize:
+                                              MainAxisSize.min,
                                           children: [
                                             const Text(
                                               'Generate Financial Report',
@@ -640,48 +687,109 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                                 color: Colors.black87,
                                               ),
                                             ),
-                                            const SizedBox(height: 10),
+                                            const SizedBox(height: 6),
                                             SizedBox(
-                                              height: 20,
-                                              child: ElevatedButton(
-                                                onPressed: () {
-                                                  // todo: generate report logic
-                                                },
-                                                style:
-                                                    ElevatedButton.styleFrom(
-                                                  backgroundColor:
-                                                      Colors.white,
-                                                  foregroundColor:
-                                                      Colors.black,
-                                                  elevation: 0,
-                                                  padding:
-                                                      const EdgeInsets
-                                                          .symmetric(
-                                                    horizontal: 5,
-                                                    vertical: 2,
-                                                  ),
-                                                  shape:
-                                                      RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius
-                                                            .circular(4),
-                                                    side:
-                                                        const BorderSide(
-                                                      color: Colors.black,
-                                                      width: 1,
+                                              height: 24,
+                                              child: showReportActions
+                                                  ? Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        _buildReportActionChip(
+                                                          label:
+                                                              'Edit Report',
+                                                          background:
+                                                              const Color(
+                                                                  0xFFFFFFFF),
+                                                          textColor:
+                                                              Colors.black,
+                                                        ),
+                                                        const SizedBox(
+                                                            width: 6),
+                                                        _buildReportActionChip(
+                                                          label: 'Preview',
+                                                          background:
+                                                              const Color(
+                                                                  0xFFFFFFFF),
+                                                          textColor:
+                                                              Colors.black,
+                                                        ),
+                                                        const SizedBox(
+                                                            width: 6),
+                                                        _buildReportActionChip(
+                                                          label: 'Print',
+                                                          background:
+                                                              const Color(
+                                                                  0xFF8B3B08),
+                                                          textColor:
+                                                              Colors.white,
+                                                        ),
+                                                        const SizedBox(
+                                                            width: 6),
+                                                        _buildReportActionChip(
+                                                          label: 'Submit',
+                                                          background:
+                                                              const Color(
+                                                                  0xFF2D8A34),
+                                                          textColor:
+                                                              Colors.white,
+                                                        ),
+                                                      ],
+                                                    )
+                                                  : Align(
+                                                      alignment:
+                                                          Alignment.centerLeft,
+                                                      child: ElevatedButton(
+                                                        onPressed: () {
+                                                          setState(() {
+                                                            showReportDetailsForm =
+                                                                true;
+                                                          });
+                                                        },
+                                                        style: ElevatedButton
+                                                            .styleFrom(
+                                                          backgroundColor:
+                                                              Colors.white,
+                                                          foregroundColor:
+                                                              Colors.black,
+                                                          elevation: 0,
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .symmetric(
+                                                            horizontal: 5,
+                                                            vertical: 2,
+                                                          ),
+                                                          shape:
+                                                              RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        4),
+                                                            side:
+                                                                const BorderSide(
+                                                              color: Color
+                                                                  .fromARGB(
+                                                                      255,
+                                                                      255,
+                                                                      255,
+                                                                      255),
+                                                              width: 1,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        child: const Text(
+                                                          'Generate Report',
+                                                          style: TextStyle(
+                                                            fontFamily:
+                                                                'Poppins',
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                          ),
+                                                        ),
+                                                      ),
                                                     ),
-                                                  ),
-                                                ),
-                                                child: const Text(
-                                                  'Generate Report',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Poppins',
-                                                    fontSize: 12,
-                                                    fontWeight:
-                                                        FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ),
                                             ),
                                           ],
                                         ),
@@ -689,10 +797,9 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                     ],
                                   ),
                                 ),
-
                                 // Summary cards 2x2 grid
-                                Row(
-                                  children: const [
+                                const Row(
+                                  children: [
                                     Expanded(
                                       child: ReportSummaryCard(
                                         title: 'Budget',
@@ -710,8 +817,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 12),
-                                Row(
-                                  children: const [
+                                const Row(
+                                  children: [
                                     Expanded(
                                       child: ReportSummaryCard(
                                         title:
@@ -732,26 +839,88 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                             ),
                           );
                         } else if (selectedTabIndex == 2) {
-                          // RECEIPTS TAB
-                          return const Center(
-                            child: Text(
-                              'No receipts yet',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 14,
-                                color: Colors.black,
+                          // RECEIPTS TAB - updated empty state
+                          return const Align(
+                            alignment: Alignment.center,
+                            child: Padding(
+                              padding: EdgeInsets.only(bottom: 100),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.center,
+                                children: [
+                                  Image(
+                                    image: AssetImage(
+                                        'assets/Icons/receipts.png'),
+                                    width: 61,
+                                    height: 61,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'No receipts yet',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'Upload receipts to keep track of your expenses.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 12,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           );
                         } else {
-                          // ARCHIVE TAB
-                          return const Center(
-                            child: Text(
-                              'No archived items yet',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 14,
-                                color: Colors.black,
+                          // ARCHIVE TAB - updated empty state
+                          return const Align(
+                            alignment: Alignment.center,
+                            child: Padding(
+                              padding: EdgeInsets.only(bottom: 100),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.center,
+                                children: [
+                                  Image(
+                                    image: AssetImage(
+                                        'assets/Icons/navigation_icons/nav_history.png'),
+                                    width: 61,
+                                    height: 61,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'No archives found',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'There are no archived reports for this month.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 12,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           );
@@ -764,16 +933,18 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
             ),
           ),
 
-          // Dark overlay for popups
+          // Dark overlay for ANY popup
           if (showAddMenu ||
               showAddIncomeForm ||
               showAddExpenseForm ||
-              showAddReceiptForm)
+              showAddReceiptForm ||
+              showReportDetailsForm ||
+              showGenerateConfirm)
             Positioned.fill(
               child: GestureDetector(
                 onTap: closeAddMenu,
                 child: Container(
-                  color: Colors.black.withValues(alpha: 0.4),
+                  color: Colors.black.withAlpha(102),
                 ),
               ),
             ),
@@ -1210,11 +1381,12 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
               ),
             ),
 
-          // Add Receipt popup (updated layout)
+          // Add Receipt popup
           if (showAddReceiptForm)
             Center(
               child: Padding(
-                padding: EdgeInsets.only(bottom: keyboardInset + 20),
+                padding:
+                    EdgeInsets.only(bottom: keyboardInset + 20),
                 child: Container(
                   width: 300,
                   height: 380,
@@ -1249,8 +1421,6 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                         ),
                       ),
                       const SizedBox(height: 10),
-
-                      // Receipt Image first
                       const Text(
                         'Receipt Image',
                         style: TextStyle(
@@ -1273,7 +1443,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                             ),
                           ),
                           alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 8),
                           child: Text(
                             receiptImage == null
                                 ? ''
@@ -1287,8 +1458,6 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-
-                      // Description
                       const Text(
                         'Description',
                         style: TextStyle(
@@ -1302,8 +1471,6 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                         controller: receiptDescriptionController,
                       ),
                       const SizedBox(height: 12),
-
-                      // Date
                       const Text(
                         'Date',
                         style: TextStyle(
@@ -1325,7 +1492,6 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                             fontSize: 13,
                           ),
                           decoration: const InputDecoration(
-                            hintText: '',
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 8,
@@ -1371,7 +1537,6 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                           const SizedBox(width: 8),
                           TextButton(
                             onPressed: () {
-                              // todo: Save receipt data if needed
                               closeAddMenu();
                             },
                             style: TextButton.styleFrom(
@@ -1387,6 +1552,396 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                               style: TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+          // REPORT DETAILS POPUP
+          if (showReportDetailsForm)
+            Center(
+              child: Padding(
+                padding:
+                    EdgeInsets.only(bottom: keyboardInset + 20),
+                child: Container(
+                  width: 320,
+                  height: 500,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.black, width: 1),
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Report Details',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              const Text(
+                                'Fill in the details for this financial report.',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              const Text(
+                                'Name of the event',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              PopupTextField(
+                                controller: reportEventNameController,
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Date prepared',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              SizedBox(
+                                height: 40,
+                                child: TextField(
+                                  controller:
+                                      reportDatePreparedController,
+                                  readOnly: true,
+                                  onTap: () async {
+                                    final now = DateTime.now();
+                                    final picked =
+                                        await showDatePicker(
+                                      context: context,
+                                      initialDate: now,
+                                      firstDate: DateTime(2000),
+                                      lastDate: DateTime(2100),
+                                    );
+                                    if (picked != null) {
+                                      final formatted =
+                                          DateFormat('dd/MM/yyyy')
+                                              .format(picked);
+                                      setState(() {
+                                        reportDatePreparedController
+                                            .text = formatted;
+                                      });
+                                    }
+                                  },
+                                  textAlignVertical:
+                                      TextAlignVertical.center,
+                                  style: const TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 13,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    contentPadding:
+                                        EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 8,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.black54,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    isDense: true,
+                                    suffixIcon: Icon(
+                                      Icons.calendar_today_outlined,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Financial report no.',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              PopupTextField(
+                                controller: reportNumberController,
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Budget for the month',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              PopupTextField(
+                                controller: reportBudgetController,
+                                keyboardType: TextInputType.number,
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Total amount of income ()',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              PopupTextField(
+                                controller:
+                                    reportTotalIncomeController,
+                                keyboardType: TextInputType.number,
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Total amount of expenses',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              PopupTextField(
+                                controller:
+                                    reportTotalExpensesController,
+                                keyboardType: TextInputType.number,
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Reimbursement of expenses',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              PopupTextField(
+                                controller:
+                                    reportReimbursementController,
+                                keyboardType: TextInputType.number,
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Previous remaining fund',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              PopupTextField(
+                                controller:
+                                    reportPreviousFundController,
+                                keyboardType: TextInputType.number,
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Budget in bank ()',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              PopupTextField(
+                                controller:
+                                    reportBudgetInBankController,
+                                keyboardType: TextInputType.number,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: closeAddMenu,
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(70, 30),
+                              foregroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: const BorderSide(
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: () {
+                              // Close details, open confirm
+                              setState(() {
+                                showReportDetailsForm = false;
+                                showGenerateConfirm = true;
+                              });
+                            },
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(90, 30),
+                              backgroundColor: const Color(0xFF8B3B08),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: const Text(
+                              'Continue',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+          // GENERATE REPORT CONFIRMATION POPUP
+          if (showGenerateConfirm)
+            Center(
+              child: Padding(
+                padding:
+                    EdgeInsets.only(bottom: keyboardInset + 20),
+                child: Container(
+                  width: 320,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.black, width: 1),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: const [
+                          Expanded(
+                            child: Text(
+                              'Generate Report',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Generate the financial report for this wallet? This may take a moment.',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 12,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                showGenerateConfirm = false;
+                              });
+                            },
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(90, 34),
+                              foregroundColor: Colors.black,
+                              backgroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                side: const BorderSide(
+                                  color: Color(0xFFE0D5C8),
+                                ),
+                              ),
+                            ),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          TextButton(
+                            onPressed: () {
+                              // Confirm generation: show action buttons
+                              setState(() {
+                                showGenerateConfirm = false;
+                                showReportActions = true;
+                              });
+                            },
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(110, 34),
+                              backgroundColor: const Color(0xFF8B3B08),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            child: const Text(
+                              'Yes, generate',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -1421,6 +1976,31 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
       ),
     );
   }
+
+  Widget _buildReportActionChip({
+    required String label,
+    required Color background,
+    required Color textColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.black, width: 1),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: textColor,
+        ),
+      ),
+    );
+  }
 }
 
 // In-memory transaction model
@@ -1430,10 +2010,8 @@ class TransactionItem {
   final int quantity;
   final double price;
   final String description;
-  // income type or expense particulars-description
   final String details;
   final double totalAmount;
-  // 'Income' or 'Expense'
   final String type;
 
   TransactionItem({
@@ -1476,7 +2054,6 @@ class TransactionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // First row: month and amount
           Row(
             children: [
               Expanded(
@@ -1508,7 +2085,6 @@ class TransactionCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          // Middle line
           Text(
             middleLine,
             maxLines: 2,
@@ -1520,7 +2096,6 @@ class TransactionCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          // Date
           Text(
             item.date,
             style: const TextStyle(
