@@ -70,7 +70,7 @@ async function loadDashboardData() {
     }
 
     // 3) Recent transactions
-    const transactionsResponse = await fetch("/pres/api/transactions");
+    const transactionsResponse = await fetch("/pres/api/transactions/recent");
     if (transactionsResponse.ok) {
       const all = await transactionsResponse.json();
       const recent = Array.isArray(all) ? all.slice(0, 5) : [];
@@ -155,12 +155,10 @@ function loadWallets(wallets) {
 }
 
 function loadTransactions(transactions) {
-  const transactionsContainer = document.getElementById(
-    "transactions-container"
-  );
-  if (!transactionsContainer) return;
+  const container = document.getElementById("transactions-container");
+  if (!container) return;
 
-  transactionsContainer.innerHTML = transactions
+  container.innerHTML = transactions
     .map((tx) => {
       const dateObj = new Date(tx.date);
       const formattedDate = dateObj.toLocaleDateString("en-US", {
@@ -169,42 +167,43 @@ function loadTransactions(transactions) {
         day: "numeric",
       });
 
-      // Build middle line:
       const parts = [];
-      // price x quantity
-      parts.push(`Php ${tx.price.toLocaleString()} x ${tx.quantity}`);
+      parts.push(
+        `Php ${Number(tx.price || 0).toLocaleString()} x ${Number(
+          tx.quantity || 0
+        )}`
+      );
 
       if (tx.type === "income" && tx.income_type) {
-        // income: price x qty - type of income - description
         parts.push(tx.income_type);
       } else if (tx.type === "expense" && tx.particulars) {
-        // expense: price x qty - particulars - description
         parts.push(tx.particulars);
       }
 
-      if (tx.description) {
-        parts.push(tx.description);
-      }
+      if (tx.description) parts.push(tx.description);
 
       const middleLine = parts.join(" - ");
-      const totalDisplay = `Php ${tx.total_amount.toLocaleString()}`;
-      const txYear = new Date(tx.date).getFullYear();
+      const totalDisplay = `Php ${Number(
+        tx.total_amount || 0
+      ).toLocaleString()}`;
 
       return `
-      <div class="transaction-item ${tx.type}">
-        <div class="transaction-info">
-          <h5>${tx.wallet_name} ${txYear}</h5>
-          <p>${middleLine}</p>
-          <span class="transaction-date">${formattedDate}</span>
+        <div class="transaction-item ${tx.type}">
+          <div class="transaction-info">
+            <h5>${tx.wallet_name || ""}</h5>
+            <p>${middleLine}</p>
+            <span class="transaction-date">${formattedDate}</span>
+          </div>
+          <div class="transaction-amount ${tx.type}">
+            ${totalDisplay}
+          </div>
         </div>
-        <div class="transaction-amount ${tx.type}">
-          ${totalDisplay}
-        </div>
-      </div>
-    `;
+      `;
     })
     .join("");
 }
+
+
 
 function showEmptyWallets() {
   const walletsContainer = document.getElementById("wallets-container");

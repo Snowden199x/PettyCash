@@ -450,7 +450,7 @@ def pres_logout():
 
 
 # -----------------------
-# Dashboard summary (dummy)
+# Dashboard summary 
 # -----------------------
 
 
@@ -779,17 +779,17 @@ def get_wallet_transactions(folder_id):
 
     try:
         # Get folder to find wallet_id
-        folder_res = (
-            supabase.table("wallet_budgets")
-            .select("wallet_id")
-            .eq("id", folder_id)
+        folder_res = supabase.table("wallet_budgets") \
+            .select("wallet_id") \
+            .eq("id", folder_id) \
+            .single() \
             .execute()
-        )
 
         if not folder_res.data:
-            return jsonify([])
+            return jsonify(error="Wallet folder not found"), 404
 
-        wallet_id = folder_res.data[0]["wallet_id"]
+        wallet_id = folder_res.data["wallet_id"]
+
 
         res = (
             supabase.table("wallet_transactions")
@@ -805,27 +805,44 @@ def get_wallet_transactions(folder_id):
 
         txs = []
         for tx in res.data or []:
-            qty = int(tx.get("quantity", 0))
-            price = float(tx.get("price", 0))
-            total_amount = qty * price
+            try:
+                qty = int(tx.get("quantity", 0))
+                price = float(tx.get("price", 0))
+                try:
+                    qty = int(qty)
+                except (TypeError, ValueError):
+                    qty = 0
 
-            txs.append(
-                {
-                    "id": tx["id"],
-                    "quantity": qty,
-                    "price": price,
-                    "incometype": tx.get("income_type"),
-                    "particulars": tx.get("particulars"),
-                    "description": tx["description"],
-                    "total_amount": total_amount,
-                    "date_issued": tx["date_issued"],
-                    "kind": tx["kind"],
-                }
-            )
+                try:
+                    price = float(price)
+                except (TypeError, ValueError):
+                    price = 0.0
+
+                total_amount = qty * price
+
+                txs.append(
+                    {
+                        "id": tx["id"],
+                        "quantity": qty,
+                        "price": price,
+                        "incometype": tx.get("income_type"),
+                        "particulars": tx.get("particulars"),
+                        "description": tx["description"],
+                        "total_amount": total_amount,
+                        "date_issued": tx["date_issued"],
+                        "kind": tx["kind"],
+                    }
+                )
+            except Exception as e:
+                print("Skipping bad tx row", tx, e)
+                continue
         return jsonify(txs)
     except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({"error": str(e)}), 500
+        import traceback
+        print("Error in getwallettransactions:", repr(e))
+        traceback.print_exc()
+        return jsonify(error=str(e)), 500
+
 
 
 @pres.route("/api/wallets/<int:folder_id>/transactions", methods=["POST"])
@@ -973,7 +990,7 @@ def get_recent_transactions():
     org_id = session.get("org_id")
 
     try:
-        # get all wallets of this org
+        # 1) get all wallets for this org
         wallets_res = (
             supabase.table("wallets")
             .select("id")
@@ -984,9 +1001,25 @@ def get_recent_transactions():
         if not wallet_ids:
             return jsonify([])
 
+        # 2) load all budget folders for those wallets
+        budgets_res = (
+            supabase.table("wallet_budgets")
+            .select("id, wallet_id, months(month_name)")
+            .in_("wallet_id", wallet_ids)
+            .execute()
+        )
+        budgets = budgets_res.data or []
+        # map budget_id -> month name (e.g. JANUARY)
+        budget_name_by_id = {
+            b["id"]: b["months"]["month_name"] for b in budgets if b.get("months")
+        }
+
+        # 3) recent transactions with budget_id
         res = (
             supabase.table("wallet_transactions")
-            .select("id, kind, date_issued, description, quantity, price, particulars")
+            .select(
+                "id, wallet_id, budget_id, kind, date_issued, description, quantity, price, income_type, particulars"
+            )
             .in_("wallet_id", wallet_ids)
             .order("date_issued", desc=True)
             .limit(50)
@@ -998,73 +1031,32 @@ def get_recent_transactions():
             qty = int(tx.get("quantity") or 0)
             price = float(tx.get("price") or 0)
             total_amount = qty * price
+            budget_id = tx.get("budget_id")
+            month_name = budget_name_by_id.get(budget_id, "Wallet")
 
             txs.append(
                 {
                     "id": tx["id"],
                     "type": "income" if tx.get("kind") == "income" else "expense",
-                    "date": tx["date_issued"],
-                    "event": tx.get("particulars") or "Transaction",
+                    "date": tx.get("date_issued"),
                     "description": tx.get("description") or "",
-                    "amount": total_amount if tx.get("kind") == "income" else -total_amount,
+                    "quantity": qty,
+                    "price": price,
+                    "total_amount": total_amount,
+                    "income_type": tx.get("income_type"),
+                    "particulars": tx.get("particulars"),
+                    "wallet_name": month_name,
                 }
             )
 
         return jsonify(txs)
     except Exception as e:
+        import traceback
         print("Error get_recent_transactions:", e)
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 
-
-
-# -----------------------
-# Wallet receipts + Storage (per folder)
-# -----------------------
-
-
-@pres.route("/api/wallets/<int:folder_id>/receipts", methods=["GET"])
-def get_wallet_receipts(folder_id):
-    """Get receipts for wallet"""
-    if not session.get("pres_user"):
-        return jsonify({"error": "Unauthorized"}), 401
-
-    try:
-        # Get folder to find wallet_id
-        folder_res = (
-            supabase.table("wallet_budgets")
-            .select("wallet_id")
-            .eq("id", folder_id)
-            .execute()
-        )
-
-        if not folder_res.data:
-            return jsonify([])
-
-        wallet_id = folder_res.data[0]["wallet_id"]
-
-        res = (
-            supabase.table("wallet_receipts")
-            .select("id, description, receipt_date, file_url")
-            .eq("wallet_id", wallet_id)
-            .eq("budget_id", folder_id)
-            .order("receipt_date", desc=True)
-            .execute()
-        )
-
-        receipts = [
-            {
-                "id": r["id"],
-                "description": r["description"],
-                "receipt_date": r["receipt_date"],
-                "file_url": r["file_url"],
-            }
-            for r in (res.data or [])
-        ]
-        return jsonify(receipts)
-    except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({"error": str(e)}), 500
 
 
 @pres.route("/api/wallets/<int:folder_id>/receipts", methods=["POST"])
