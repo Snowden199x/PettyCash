@@ -116,13 +116,31 @@ async function loadTransactions() {
       (folderTxs || []).forEach((tx) => {
         const qty = Number(tx.quantity || 0);
         const price = Number(tx.price || 0);
-        const total = Number(tx.total_amount || qty * price);
+        const total = Number(tx.totalamount || qty * price);
         const kind = tx.kind; // "income" or "expense"
         const amount =
           kind === "expense" ? -Number(total || 0) : Number(total || 0);
 
-        const dateStr = tx.date_issued; // ISO string
-        const txDate = dateStr ? new Date(dateStr) : null;
+        const dateStr = tx.dateissued;
+        let txDate = null;
+        if (dateStr) {
+          // Try native parse first
+          let d = new Date(dateStr);
+          if (isNaN(d)) {
+            // Fallback if stored as YYYY-MM-DD (no time)
+            const parts = dateStr.split("-");
+            if (parts.length === 3) {
+              d = new Date(
+                Number(parts[0]),
+                Number(parts[1]) - 1,
+                Number(parts[2])
+              );
+            }
+          }
+          txDate = isNaN(d) ? null : d;
+        }
+
+
 
         flat.push({
           id: tx.id,
@@ -201,19 +219,14 @@ async function loadTransactions() {
 const targetMonthIndex = currentMonth.getMonth(); // 0-11
 const targetYear = currentMonth.getFullYear();
 
-// find folderIds whose wallet_budgets.month matches target year+month
-const targetFolderIds = (allWalletsMeta || [])
-  .filter((w) => {
-    const m = w.month || "";        // "yyyy-mm"
-    const y = Number(m.slice(0, 4));
-    const mm = Number(m.slice(5, 7)); // 1-12
-    return y === targetYear && mm === targetMonthIndex + 1;
-  })
-  .map((w) => w.id);
+let filtered = allTransactions.filter((tx) => {
+  if (!tx._dateObj || isNaN(tx._dateObj)) return false;
+  return (
+    tx._dateObj.getFullYear() === targetYear &&
+    tx._dateObj.getMonth() === targetMonthIndex
+  );
+});
 
-let filtered = allTransactions.filter((tx) =>
-  targetFolderIds.includes(tx.folderId)
-);
 
     // Filter by type
     if (currentFilter !== "all") {
