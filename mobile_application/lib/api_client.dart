@@ -8,22 +8,28 @@ class ApiClient {
     String path,
     Map<String, dynamic> body,
   ) async {
-    final res = await http.post(
-      Uri.parse('$baseUrl$path'),
-      headers: const {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: jsonEncode(body),
-    );
+    final res = await http
+        .post(
+          Uri.parse('$baseUrl$path'),
+          headers: const {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 10));
+
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
   Future<Map<String, dynamic>> getJson(String path) async {
-    final res = await http.get(
-      Uri.parse('$baseUrl$path'),
-      headers: const {'Accept': 'application/json'},
-    );
+    final res = await http
+        .get(
+          Uri.parse('$baseUrl$path'),
+          headers: const {'Accept': 'application/json'},
+        )
+        .timeout(const Duration(seconds: 10));
+
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 }

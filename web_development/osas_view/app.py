@@ -734,298 +734,149 @@ def get_single_financial_report(report_id):
     return jsonify(result.data[0])
 
 
-@osas.route(
-    "/api/financial_reports/<int:org_id>/months/<string:month_key>/download",
-    methods=["GET"],
-)
-def download_monthly_report(org_id, month_key):
+@osas.route("/reports/<int:org_id>/months/<string:month_key>/print", methods=["GET"])
+def osas_print_monthly_report(org_id, month_key):
     if "osas_admin" not in session:
-        return "Not authorized", 401
+        return redirect(url_for("osas.osas_login"))
 
-    try:
-        # 1. Hanapin PRES financial_reports row para sa buwang iyon
-        pres_res = (
-            supabase.table("financial_reports")
-            .select("*")
-            .eq("organization_id", org_id)
-            .eq("report_month", month_key.lower())
-            .not_.is_("wallet_id", None)
-            .not_.is_("budget_id", None)
-            .order("created_at", desc=True)
-            .limit(1)
-            .execute()
-        )
-        if not pres_res.data:
-            return "Report not found", 404
+    # 1. Hanapin PRES financial_reports row para sa buwang iyon
+    pres_res = (
+        supabase.table("financial_reports")
+        .select("*")
+        .eq("organization_id", org_id)
+        .eq("report_month", month_key.lower())
+        .not_.is_("wallet_id", None)
+        .not_.is_("budget_id", None)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    if not pres_res.data:
+        return "No report", 404
 
-        rep = pres_res.data[0]
-        wallet_id = rep["wallet_id"]
-        budget_id = rep["budget_id"]
+    rep = pres_res.data[0]
+    wallet_id = rep["wallet_id"]
+    budget_id = rep["budget_id"]
 
-        # 2. Org + college name (pareho sa PRES)
-        org_res = (
-            supabase.table("organizations")
-            .select("org_name, department_id")
-            .eq("id", org_id)
+    # 2. Org + college (pareho ng PRES)
+    org_res = (
+        supabase.table("organizations")
+        .select("org_name, department_id")
+        .eq("id", org_id)
+        .single()
+        .execute()
+    )
+    org_data = org_res.data or {}
+    org_name = org_data.get("org_name") or ""
+
+    college_name = "COLLEGE"
+    dept_id = org_data.get("department_id")
+    if dept_id is not None:
+        dept_res = (
+            supabase.table("departments")
+            .select("dept_name")
+            .eq("id", dept_id)
             .single()
             .execute()
         )
-        org_data = org_res.data or {}
-        org_name = org_data.get("org_name") or ""
+        if dept_res.data:
+            college_name = dept_res.data["dept_name"].upper()
 
-        college_name = "COLLEGE"
-        dept_id = org_data.get("department_id")
-        if dept_id is not None:
-            dept_res = (
-                supabase.table("departments")
-                .select("dept_name")
-                .eq("id", dept_id)
-                .single()
-                .execute()
+    # 3. Month text (wallet_budgets + months)
+    wb_res = (
+        supabase.table("wallet_budgets")
+        .select("year, month_id, months (month_name)")
+        .eq("id", budget_id)
+        .single()
+        .execute()
+    )
+    report_month_text = ""
+    if wb_res.data:
+        y = wb_res.data["year"]
+        mname = wb_res.data["months"]["month_name"]
+        report_month_text = f"{mname} {y}".upper()
+
+    # 4. Numeric fields (main totals)
+    budget_val = float(rep.get("budget") or 0)
+    total_expense = float(rep.get("total_expense") or 0)
+    reimb = float(rep.get("reimbursement") or 0)
+    prev_fund = float(rep.get("previous_fund") or 0)
+    remaining = budget_val - total_expense - reimb + prev_fund
+    total_income = float(rep.get("total_income") or 0)
+    budget_in_the_bank = float(rep.get("budget_in_the_bank") or 0)
+
+    # 5. Expenses table data (per row + line_total)
+    tx_res = (
+        supabase.table("wallet_transactions")
+        .select("date_issued, quantity, particulars, description, price, kind")
+        .eq("wallet_id", wallet_id)
+        .eq("budget_id", budget_id)
+        .eq("kind", "expense")
+        .order("date_issued")
+        .execute()
+    )
+    txs = tx_res.data or []
+    for tx in txs:
+        qty = float(tx.get("quantity") or 0)
+        price = float(tx.get("price") or 0)
+        tx["line_total"] = qty * price
+
+    # 6. Income table data
+    inc_res = (
+        supabase.table("wallet_transactions")
+        .select("date_issued, quantity, income_type, description, price, kind")
+        .eq("wallet_id", wallet_id)
+        .eq("budget_id", budget_id)
+        .eq("kind", "income")
+        .order("date_issued")
+        .execute()
+    )
+    incomes = inc_res.data or []
+    for inc in incomes:
+        inc["amount"] = float(inc.get("price") or 0)
+
+    # 7. Receipts with public URL (APPENDIX A)
+    rc_res = (
+        supabase.table("wallet_receipts")
+        .select("description, file_url, receipt_date")
+        .eq("wallet_id", wallet_id)
+        .eq("budget_id", budget_id)
+        .order("receipt_date")
+        .execute()
+    )
+    receipts = rc_res.data or []
+    for r in receipts:
+        try:
+            public_url = supabase.storage.from_("Receipts").get_public_url(
+                r["file_url"]
             )
-            if dept_res.data:
-                college_name = dept_res.data["dept_name"].upper()
+            if isinstance(public_url, dict):
+                r["file_url"] = public_url.get("publicUrl") or public_url.get(
+                    "signedURL"
+                )
+            else:
+                r["file_url"] = public_url
+        except Exception:
+            r["file_url"] = ""
 
-        # 3. Month text (wallet_budgets + months)
-        wb_res = (
-            supabase.table("wallet_budgets")
-            .select("year, month_id, months (month_name)")
-            .eq("id", budget_id)
-            .single()
-            .execute()
-        )
-        report_month_text = ""
-        if wb_res.data:
-            y = wb_res.data["year"]
-            mname = wb_res.data["months"]["month_name"]
-            report_month_text = f"{mname} {y}".upper()
-
-        # 4. Load DOCX template (same as PRES)
-        base_dir = os.path.dirname(__file__)
-        template_path = os.path.join(
-            base_dir,
-            "templates",
-            "osas",
-            "finance_report_template.docx",
-        )
-        doc = Document(template_path)
-
-        def replace_all(old: str, new: str):
-            if new is None:
-                new = ""
-            for p in doc.paragraphs:
-                if old in p.text:
-                    for run in p.runs:
-                        run.text = run.text.replace(old, new)
-            for table in doc.tables:
-                for row in table.rows:
-                    for cell in row.cells:
-                        if old in cell.text:
-                            for p in cell.paragraphs:
-                                for run in p.runs:
-                                    run.text = run.text.replace(old, new)
-
-        # 5. Numeric fields
-        budget_val = float(rep.get("budget") or 0)
-        total_expense = float(rep.get("total_expense") or 0)
-        reimb = float(rep.get("reimbursement") or 0)
-        prev_fund = float(rep.get("previous_fund") or 0)
-        remaining = budget_val - total_expense - reimb + prev_fund
-        total_income = float(rep.get("total_income") or 0)
-        budget_in_the_bank = float(rep.get("budget_in_the_bank") or 0)
-
-        # 6. Header placeholders
-        replace_all("{{TOTAL_INCOME}}", f"PHP {total_income:,.2f}")
-        replace_all("{{BUDGET_IN_THE_BANK}}", f"PHP {budget_in_the_bank:,.2f}")
-        replace_all("{{COLLEGE_NAME}}", college_name)
-        replace_all("{{ORG_NAME}}", org_name)
-        replace_all("{{EVENT_NAME}}", rep.get("event_name") or "")
-        replace_all("{{REPORT_MONTH}}", report_month_text)
-        replace_all("{{DATE_PREPARED}}", str(rep.get("date_prepared") or ""))
-        replace_all("{{REPORT_NO}}", rep.get("report_no") or "")
-        replace_all("{{BUDGET}}", f"PHP {budget_val:,.2f}")
-        replace_all("{{TOTAL_EXPENSE}}", f"PHP {total_expense:,.2f}")
-        replace_all("{{REIMBURSEMENT}}", f"PHP {reimb:,.2f}")
-        replace_all("{{PREVIOUS_FUND}}", f"PHP {prev_fund:,.2f}")
-        replace_all("{{TOTAL_REMAINING}}", f"PHP {remaining:,.2f}")
-
-        # 7. INCOME transactions (same as PRES)
-        income_res = (
-            supabase.table("wallet_transactions")
-            .select("date_issued, quantity, income_type, description, price, kind")
-            .eq("wallet_id", wallet_id)
-            .eq("budget_id", budget_id)
-            .eq("kind", "income")
-            .order("date_issued")
-            .execute()
-        )
-        incomes = income_res.data or []
-
-        income_table = None
-        for table in doc.tables:
-            if len(table.rows) < 2:
-                continue
-            header_row = table.rows[1]
-            header_text = " ".join(cell.text for cell in header_row.cells).upper()
-            if "TYPE OF INCOME" in header_text and "DATE ISSUED" in header_text:
-                income_table = table
-                break
-
-        # 8. EXPENSE transactions (same as PRES)
-        tx_res = (
-            supabase.table("wallet_transactions")
-            .select("date_issued, quantity, particulars, description, price, kind")
-            .eq("wallet_id", wallet_id)
-            .eq("budget_id", budget_id)
-            .eq("kind", "expense")
-            .order("date_issued")
-            .execute()
-        )
-        txs = tx_res.data or []
-
-        expenses_table = None
-        for table in doc.tables:
-            if len(table.rows) < 2:
-                continue
-            header_row = table.rows[1]
-            first_row_text = "".join(cell.text for cell in header_row.cells).upper()
-            if "DATE ISSUED" in first_row_text and "PARTICULARS" in first_row_text:
-                expenses_table = table
-                break
-
-        # 9. Fill EXPENSES table (header row 1, summary row 2)
-        if expenses_table:
-            while len(expenses_table.rows) > 3:
-                expenses_table._tbl.remove(expenses_table.rows[2]._tr)
-
-            from datetime import datetime as dtlocal
-
-            def fmtdate(d):
-                try:
-                    return dtlocal.fromisoformat(d).strftime("%Y-%m-%d")
-                except Exception:
-                    return d or ""
-
-            lastdate = None
-            summaryrow = expenses_table.rows[2]  # row 2 = Total Amount of Expenses
-
-            for tx in txs:
-                newrow = expenses_table.add_row()
-                expenses_table._tbl.remove(newrow._tr)
-                summaryrow._tr.addprevious(newrow._tr)
-
-                datecell, qtycell, partcell, desccell, totalcell = newrow.cells
-
-                datestr = tx.get("date_issued")
-                showdate = fmtdate(datestr)
-                if datestr == lastdate:
-                    datecell.text = ""
-                else:
-                    datecell.text = showdate
-                    lastdate = datestr
-
-                qtycell.text = str(tx.get("quantity") or "")
-                partcell.text = tx.get("particulars") or ""
-                desccell.text = tx.get("description") or ""
-
-                qty = float(tx.get("quantity") or 0)
-                price = float(tx.get("price") or 0)
-                linetotal = qty * price
-                totalcell.text = f"PHP {linetotal:,.2f}"
-
-            summaryrow.cells[-1].text = f"PHP {total_expense:,.2f}"
-
-        # 10. Fill INCOME table (header row 1, summary row 2)
-        if income_table:
-            while len(income_table.rows) > 3:
-                income_table._tbl.remove(income_table.rows[2]._tr)
-
-            from datetime import datetime as _dt_local
-
-            def fmt_date_income(d):
-                try:
-                    return _dt_local.fromisoformat(d).strftime("%Y-%m-%d")
-                except Exception:
-                    return d or ""
-
-            last_date_inc = None
-            summary_row_inc = income_table.rows[2]  # row 2 = Total Amount of Income
-
-            for tx in incomes:
-                new_row = income_table.add_row()
-                income_table._tbl.remove(new_row._tr)
-                summary_row_inc._tr.addprevious(new_row._tr)
-
-                date_cell, qty_cell, type_cell, desc_cell, price_cell = new_row.cells
-
-                date_str = tx.get("date_issued")
-                show_date = fmt_date_income(date_str)
-                if date_str == last_date_inc:
-                    date_cell.text = ""
-                else:
-                    date_cell.text = show_date
-                    last_date_inc = date_str
-
-                qty_cell.text = str(tx.get("quantity") or "")
-                type_cell.text = tx.get("income_type") or ""
-                desc_cell.text = tx.get("description") or ""
-
-                price = float(tx.get("price") or 0)
-                price_cell.text = f"PHP {price:,.2f}"
-
-            summary_row_inc.cells[-1].text = f"PHP {total_income:,.2f}"
-
-        # 11. Receipts appendix with pictures
-        rc_res = (
-            supabase.table("wallet_receipts")
-            .select("description, file_url, receipt_date")
-            .eq("wallet_id", wallet_id)
-            .eq("budget_id", budget_id)
-            .order("receipt_date")
-            .execute()
-        )
-        receipts = rc_res.data or []
-
-        if receipts:
-            from docx.shared import Inches
-
-            doc.add_page_break()
-            title_p = doc.add_paragraph()
-            title_run = title_p.add_run("APPENDIX A - RECEIPTS")
-            title_run.bold = True
-
-            for r in receipts:
-                file_path = r["file_url"]
-                try:
-                    file_bytes = supabase.storage.from_("Receipts").download(file_path)
-                except Exception:
-                    continue
-
-                # caption
-                capp = doc.add_paragraph()
-                capp.add_run(f"{r['receipt_date']} - {r['description']}")
-
-                # image
-                img_stream = BytesIO(file_bytes)
-                doc.add_picture(img_stream, width=Inches(4))
-                doc.add_paragraph()  # spacer
-
-        # 12. Send DOCX
-        buf = BytesIO()
-        doc.save(buf)
-        buf.seek(0)
-        filename = f"financial_report_{month_key}.docx"
-        return send_file(
-            buf,
-            as_attachment=True,
-            download_name=filename,
-            mimetype=(
-                "application/vnd.openxmlformats-officedocument."
-                "wordprocessingml.document"
-            ),
-        )
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    # 8. PURE PRINT VIEW – render HTML na may tables at appendix
+    return render_template(
+        "osas/print_report.html",
+        report=rep,
+        budget=budget_val,
+        totalexpense=total_expense,
+        reimbursement=reimb,
+        previous_fund=prev_fund,
+        remaining=remaining,
+        total_income=total_income,
+        budget_in_the_bank=budget_in_the_bank,
+        transactions=txs,
+        incomes=incomes,
+        org_name=org_name,
+        college_name=college_name,
+        report_month_text=report_month_text,
+        receipts=receipts,
+    )
 
 
 # ========== ADMIN/SETTINGS ===========

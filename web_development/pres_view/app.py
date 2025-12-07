@@ -20,6 +20,11 @@ from docx import Document
 from docx.shared import Inches
 from io import BytesIO
 from datetime import datetime as dt
+import secrets
+import string
+from datetime import datetime, timedelta, timezone
+from flask import current_app
+from flask_mail import Message
 
 pres = Blueprint(
     "pres",
@@ -30,6 +35,7 @@ pres = Blueprint(
 
 load_dotenv()
 
+
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -37,9 +43,34 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 BUCKET_RECEIPTS = "Receipts"
 
 
+
+def generate_reset_code(length=6):
+    return ''.join(secrets.choice(string.digits) for _ in range(length))
+
 # -----------------------
 # Helpers
 # -----------------------
+from flask import current_app
+from flask_mail import Message
+
+def send_reset_email(to_email, reset_link):
+    mail = current_app.extensions.get("mail")
+    if mail is None:
+        current_app.logger.error("Mail extension not initialized")
+        return
+
+    msg = Message(
+        subject="PockiTrack PRES Password Reset",
+        recipients=[to_email],
+        sender=current_app.config.get("MAIL_DEFAULT_SENDER"),
+    )
+    msg.body = (
+        "You requested a password reset for your PockiTrack PRES account.\n\n"
+        f"Use this link to set a new password (valid for 15 minutes):\n{reset_link}\n\n"
+        "If you did not request this, you can ignore this email."
+    )
+    mail.send(msg)
+
 
 
 def validate_password(pw: str):
@@ -123,7 +154,6 @@ def health():
 # -----------------------
 # Login / auth
 # -----------------------
-
 
 @pres.route("/login/pres", methods=["GET", "POST"])
 def pres_login():
@@ -213,79 +243,176 @@ def pres_auth_status():
 
 
 # -----------------------
-# Forgot / change password
+# Forgot / change password (PRES)
 # -----------------------
-
 
 @pres.route("/forgot-password", methods=["GET", "POST"])
 def pres_forgot_password():
     if request.method == "POST":
-        username = request.form.get("username")
-        # TODO: real reset flow
-        flash("Password reset instructions sent!", "success")
+        try:
+            identifier = request.form.get("email") or (
+                request.json.get("email") if request.is_json else None
+            )
+            if not identifier:
+                msg = "Username or email is required."
+                if request.accept_mimetypes.best == "application/json":
+                    return jsonify({"success": False, "error": msg}), 400
+                flash(msg, "danger")
+                return render_template("forgot_password.html")
+
+            # 1) Try by email in profile_users (PRES users)
+            res = (
+                supabase.table("profile_users")
+                .select("id, organization_id, email")
+                .eq("email", identifier)
+                .limit(1)
+                .execute()
+            )
+
+            # 2) If not found, try by org username (organizations table)
+            if not res.data:
+                org_res = (
+                    supabase.table("organizations")
+                    .select("id, username")
+                    .eq("username", identifier)
+                    .limit(1)
+                    .execute()
+                )
+                if org_res.data:
+                    org = org_res.data[0]
+                    res = (
+                        supabase.table("profile_users")
+                        .select("id, organization_id, email")
+                        .eq("organization_id", org["id"])
+                        .limit(1)
+                        .execute()
+                    )
+
+            # Kung may matching PRES profile user
+            if res.data:
+                user = res.data[0]
+                email = user.get("email")
+                if email:
+                    code = generate_reset_code()
+                    expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
+
+                    supabase.table("profile_users").update(
+                        {
+                            "reset_code": code,
+                            "reset_code_expires_at": expires_at.isoformat(),
+                        }
+                    ).eq("id", user["id"]).execute()
+
+                    reset_link = url_for(
+                         "pres.change_password",
+                        code=code,
+                        email=email,
+                        _external=True,
+                    )
+
+                    # send actual email
+                    send_reset_email(email, reset_link)
+
+                    current_app.logger.info(
+                        "PRES reset link for %s: %s (code=%s)",
+                        email,
+                        reset_link,
+                        code,
+                    )
+
+            success_msg = "If this account exists, a reset link has been sent."
+            if request.accept_mimetypes.best == "application/json":
+                return jsonify({"success": True, "message": success_msg})
+            flash(success_msg, "success")
+            return render_template("forgot_password.html")
+
+        except Exception as e:
+            current_app.logger.exception("Error in pres_forgot_password: %s", e)
+            if request.accept_mimetypes.best == "application/json":
+                return jsonify({"success": False, "error": "Server error."}), 500
+            flash("Server error. Please try again.", "danger")
+            return render_template("forgot_password.html"), 500
+
     return render_template("forgot_password.html")
 
+@pres.route("/reset-password", methods=["POST"])
+def reset_password_with_code():
+    data = request.get_json() or {}
+    email = data.get("email")
+    code = data.get("code")
+    new_pw = data.get("new_password")
+    confirm_pw = data.get("confirm_password")
+
+    if not all([email, code, new_pw, confirm_pw]):
+        return jsonify({"success": False, "error": "All fields are required."}), 400
+
+    if new_pw != confirm_pw:
+        return jsonify({"success": False, "error": "Passwords do not match."}), 400
+
+    errors = validate_password(new_pw)
+    if errors:
+        return jsonify({"success": False, "errors": errors}), 400
+
+    # hanapin profile_users row by email + valid code
+    res = (
+        supabase.table("profile_users")
+        .select("id, organization_id, reset_code, reset_code_expires_at")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
+    if not res.data:
+        return jsonify({"success": False, "error": "Invalid code or email."}), 400
+
+    user = res.data[0]
+    if user.get("reset_code") != code:
+        return jsonify({"success": False, "error": "Invalid code or email."}), 400
+
+    expires_at = user.get("reset_code_expires_at")
+    if expires_at and datetime.now(timezone.utc) > datetime.fromisoformat(expires_at):
+        return jsonify({"success": False, "error": "Code has expired."}), 400
+
+    org_id = user.get("organization_id")
+    if not org_id:
+        return jsonify({"success": False, "error": "Organization account not found."}), 400
+
+    hashed_pw = generate_password_hash(new_pw)
+
+    # update organizations password + clear reset_code
+    supabase.table("organizations").update(
+        {"password": hashed_pw, "must_change_password": False}
+    ).eq("id", org_id).execute()
+
+    supabase.table("profile_users").update(
+        {"reset_code": None, "reset_code_expires_at": None}
+    ).eq("id", user["id"]).execute()
+
+    return jsonify({"success": True, "message": "Password reset successfully."})
 
 @pres.route("/change-password", methods=["GET", "POST"])
 def change_password():
-    if not session.get("pres_user"):
-        return redirect(url_for("pres.pres_login"))
-    if "org_id" not in session:
-        flash("Session expired. Please log in again.", "danger")
-        return redirect(url_for("pres.pres_login"))
+    code = request.args.get("code") if request.method == "GET" else request.form.get("code")
+    email = request.args.get("email") if request.method == "GET" else request.form.get("email")
 
-    if request.method == "POST":
-        new_pw = request.form.get("new_password") or (
-            request.json.get("new_password") if request.is_json else None
-        )
-        confirm_pw = request.form.get("confirm_password") or (
-            request.json.get("confirm_password") if request.is_json else None
-        )
+    if request.method == "GET":
 
-        if not new_pw or not confirm_pw:
-            error_msg = "Please fill out all fields."
-            if request.accept_mimetypes.best == "application/json":
-                return jsonify({"success": False, "error": error_msg}), 400
-            flash(error_msg, "danger")
-            return render_template("change_password.html")
+        return render_template("change_password.html", code=code, email=email)
 
-        if new_pw != confirm_pw:
-            error_msg = "Passwords do not match."
-            if request.accept_mimetypes.best == "application/json":
-                return jsonify({"success": False, "error": error_msg}), 400
-            flash(error_msg, "danger")
-            return render_template("change_password.html")
+    new_password = request.form.get("password")
+    confirm = request.form.get("confirm_password")
 
-        errors = validate_password(new_pw)
-        if errors:
-            if request.accept_mimetypes.best == "application/json":
-                return jsonify({"success": False, "errors": errors}), 400
-            for e in errors:
-                flash(e, "danger")
-            return render_template("change_password.html")
+    if not new_password or new_password != confirm:
+        flash("Passwords do not match.", "danger")
+        return render_template("change_password.html", code=code, email=email)
 
-        org_id = session.get("org_id")
-        hashed_pw = generate_password_hash(new_pw)
-        supabase.table("organizations").update(
-            {"password": hashed_pw, "must_change_password": False}
-        ).eq("id", org_id).execute()
-        session["pres_user"] = True
 
-        if request.accept_mimetypes.best == "application/json":
-            return jsonify({"success": True, "message": "Password changed"})
-        flash("Password changed successfully!", "success")
-        return redirect(url_for("pres.homepage"))
-
-    if request.accept_mimetypes.best == "application/json":
-        return jsonify({"info": "POST new_password and confirm_password"})
-    return render_template("change_password.html")
+    flash("Password updated successfully. You can now log in.", "success")
+    return redirect(url_for("pres.pres_login"))
 
 
 # -----------------------
 # Basic pages
 # -----------------------
-
-
 @pres.route("/homepage")
 def homepage():
     if not session.get("pres_user"):
@@ -2249,7 +2376,7 @@ def get_profile():
         # PRES-only profile row
         prof_res = (
             supabase.table("profile_users")
-            .select("org_short_name, campus, school_name, profile_photo_url")
+            .select("org_short_name, campus, school_name, profile_photo_url, email")
             .eq("organization_id", org_id)
             .limit(1)
             .execute()
@@ -2286,6 +2413,7 @@ def get_profile():
             "department": dept_name,
             "department_id": org.get("department_id"),
             "school": prof.get("school_name"),
+             "email": prof.get("email"), 
             "profile_photo_url": photo_url,
             "accreditation": {
                 "date_of_accreditation": org.get("accreditation_date"),
@@ -2319,10 +2447,10 @@ def update_profile():
         # PRES profile fields (profile_users table)
         if "org_short_name" in data:
             prof_update["org_short_name"] = data["org_short_name"]
-        if "school" in data:
-            prof_update["school_name"] = data["school"]
         if "campus" in data:
             prof_update["campus"] = data["campus"]
+        if "email" in data:
+            prof_update["email"] = data["email"]
 
         # Update organizations
         if org_update:
@@ -2348,6 +2476,8 @@ def update_profile():
                         "organization_id", org_id
                     ).execute()
                 else:
+                    if "school_name" not in prof_update:
+                        prof_update["school_name"] = "Laguna State Polytechnic University, Sta. Cruz, Laguna (LSPU-SCC)"
                     prof_update["organization_id"] = org_id
                     supabase.table("profile_users").insert(prof_update).execute()
             except Exception as e:
@@ -2441,6 +2571,61 @@ def upload_profile_picture():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@pres.route("/api/profile/send-reset-code", methods=["POST"])
+def send_profile_reset_code():
+    """
+    Body (JSON):
+    {
+      "email": "org@example.com"
+    }
+    """
+    data = request.get_json() or {}
+    email = data.get("email")
+    if not email:
+        return jsonify({"success": False, "error": "Email is required."}), 400
+
+    # hanapin profile_users by unique email (profile_email_key)
+    res = (
+        supabase.table("profile_users")
+        .select("id, email")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
+
+    # huwag mag-leak kung existing ba o hindi ang email
+    if not res.data:
+        return jsonify(
+            {
+                "success": True,
+                "message": "If this email exists, a reset code has been sent.",
+            }
+        )
+
+    user = res.data[0]
+    code = generate_reset_code()
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
+
+    # i-save ang code + expiry
+    supabase.table("profile_users").update(
+        {
+            "reset_code": code,
+            "reset_code_expires_at": expires_at.isoformat(),
+        }
+    ).eq("id", user["id"]).execute()
+
+    # TODO: palitan ito ng totoong email sender (SMTP / Supabase, etc.)
+    # send_reset_code_email(email, code)
+
+    # temporary: log lang muna sa server
+    current_app.logger.info("Password reset code for %s: %s", email, code)
+
+    return jsonify(
+        {
+            "success": True,
+            "message": "If this email exists, a reset code has been sent.",
+        }
+    )
 
 # -----------------------
 # Officers APIs
