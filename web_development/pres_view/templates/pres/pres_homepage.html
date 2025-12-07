@@ -19,51 +19,49 @@
     />
   </head>
   <body>
+    <!-- Top bar -->
     <div class="top-bar">
-  <div class="top-bar-left">
-    <a href="{{ url_for('pres.homepage') }}" class="logo">
-  <img
-    src="{{ url_for('pres.static', filename='images/pocki_logo.png') }}"
-    alt="PockiTrack Logo"
-  />
-  <span class="logo_name">PockiTrack</span>
-</a>
-  </div>
+      <div class="top-bar-left">
+        <a href="{{ url_for('pres.homepage') }}" class="logo">
+          <img
+            src="{{ url_for('pres.static', filename='images/pocki_logo.png') }}"
+            alt="PockiTrack Logo"
+          />
+          <span class="logo_name">PockiTrack</span>
+        </a>
+      </div>
 
-  <div class="top-bar-right">
-    <div class="search-bar">
-      <input
-        type="text"
-        id="header-search"
-        placeholder="Search wallets or transactions..."
-      />
-    </div>
+      <div class="top-bar-right">
+        <div class="search-bar">
+          <input
+            type="text"
+            id="header-search"
+            placeholder="Search wallets..."
+          />
+        </div>
 
-    <div class="profile-dropdown">
-      <button class="profile-btn" id="profile-dropdown-toggle">
-  <img
-    src="{{ profile_picture or url_for('pres.static', filename='images/default_profile.png') }}"
-    alt="Profile"
-    class="profile-avatar"
-  />
-  <span class="profile-name">{{ session['org_name'] }}</span>
-  <span class="profile-caret">▼</span>
-</button>
-      <div class="profile-menu" id="profile-menu">
-        <a href="{{ url_for('pres.profile') }}">Profile</a>
-        <a href="{{ url_for('pres.pres_logout') }}">Logout</a>
+        <div class="profile-dropdown">
+          <button class="profile-btn" id="profile-dropdown-toggle">
+            <img
+              src="{{ profile_picture or url_for('pres.static', filename='images/default_profile.png') }}"
+              alt="Profile"
+              class="profile-avatar"
+            />
+            <span class="profile-name">{{ session['org_name'] }}</span>
+            <span class="profile-caret">▼</span>
+          </button>
+          <div class="profile-menu" id="profile-menu">
+            <a href="{{ url_for('pres.profile') }}">Profile</a>
+            <a href="{{ url_for('pres.pres_logout') }}">Logout</a>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
+
     <div class="container">
       <!-- Sidebar -->
       <aside class="sidebar">
-
-        <!-- Sidebar content below logo -->
         <div class="sidebar-content">
-
-          <!-- Navigation Menu -->
           <nav class="nav-menu">
             <a href="{{ url_for('pres.homepage') }}" class="nav-item active">
               <img
@@ -98,20 +96,18 @@
             </a>
           </nav>
         </div>
-
       </aside>
 
       <!-- Main Content -->
       <main class="main-content">
         <div class="content-box">
-
-          <!-- header ALWAYS visible -->
+          <!-- Header -->
           <section class="header">
             <h3>Hello, <span id="username">{{ session['org_name'] }}</span></h3>
             <p class="date-text"></p>
           </section>
 
-          <!-- LOADING OVERLAY (centered in the remaining area) -->
+          <!-- Loader -->
           <div id="dashboard-loader">
             <div class="loading-card">
               <img src="/pres/static/images/nav_home.png" alt="Loading icon" />
@@ -120,48 +116,49 @@
             </div>
           </div>
 
-          <!-- DASHBOARD CONTENT (HIDDEN AT FIRST) -->
+          <!-- Dashboard content -->
           <div id="dashboard-content" style="display: none;">
-
+            <!-- Summary cards -->
             <div class="summary-wrapper">
               <div class="summary">
                 <div class="card">
-                  <p>Total balance</p>
+                  <p>Total Balance</p>
                   <h2 id="total-balance">Php 0.00</h2>
                 </div>
 
                 <div class="card">
-                  <p>Reports Submitted</p>
+                  <p>Reports submitted</p>
                   <h2 id="reports-submitted">0</h2>
                 </div>
 
                 <div class="card">
-                  <p>Income this month</p>
+                  <p id="income-month-label">Income this month</p>
                   <h2 id="income-month">Php 0.00</h2>
                 </div>
 
                 <div class="card">
-                  <p>Expenses this month</p>
+                  <p id="expenses-month-label">Expenses this month</p>
                   <h2 id="expenses-month">Php 0.00</h2>
                 </div>
               </div>
             </div>
-          </section>
 
-          <div class="overview">
-            <div class="wallets">
-              <h4>Wallets Overview</h4>
-              <div class="overview-box">
-                <div id="wallets-container"></div>
+            <!-- Overview -->
+            <div class="overview">
+              <div class="wallets">
+                <h4>Wallets Overview</h4>
+                <div class="overview-box">
+                  <div id="wallets-container"></div>
+                </div>
+              </div>
+
+              <div class="transactions">
+                <h4>Transaction History</h4>
+                <div class="overview-box">
+                  <div id="transactions-container"></div>
+                </div>
               </div>
             </div>
-
-          <div class="transactions">
-              <h4>Transaction History</h4>
-              <div class="overview-box">
-                <div id="transactions-container"></div>
-              </div>
-          </div>
           </div>
         </div>
       </main>

@@ -3,7 +3,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   const dateElement = document.querySelector(".date-text");
   const today = new Date();
   const options = { weekday: "long", month: "long", day: "numeric" };
-  dateElement.textContent = today.toLocaleDateString("en-US", options);
+  if (dateElement) {
+    dateElement.textContent = today.toLocaleDateString("en-US", options);
+  }
+  const monthName = today.toLocaleDateString("en-US", { month: "long" });
+  const incomeLabelEl = document.getElementById("income-month-label");
+  const expensesLabelEl = document.getElementById("expenses-month-label");
+  if (incomeLabelEl) {
+    incomeLabelEl.textContent = `Income this ${monthName}`;
+  }
+  if (expensesLabelEl) {
+    expensesLabelEl.textContent = `Expenses this ${monthName}`;
+  }
 
   // Sidebar active nav handling
   const navItems = document.querySelectorAll(".nav-item");
@@ -14,7 +25,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // NEW: load org profile for top-right avatar
+  // Load org profile for top-right avatar
   try {
     const res = await fetch("/pres/api/profile");
     if (res.ok) {
@@ -22,6 +33,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const avatarImg = document.querySelector(".profile-avatar");
       const nameSpan = document.querySelector(".profile-name");
 
+      // default avatar na galing sa HTML, papalitan lang kung may na-save na photo
       if (avatarImg && profile.profile_photo_url) {
         avatarImg.src = profile.profile_photo_url;
       }
@@ -93,29 +105,38 @@ async function loadDashboardData() {
   }
 }
 
-
 function updateSummaryCards(summary) {
-  document.getElementById(
-    "total-balance"
-  ).textContent = `Php ${summary.total_balance.toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-  })}`;
-  document.getElementById("reports-submitted").textContent =
-    summary.reports_submitted;
-  document.getElementById(
-    "income-month"
-  ).textContent = `Php ${summary.income_month.toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-  })}`;
-  document.getElementById(
-    "expenses-month"
-  ).textContent = `Php ${summary.expenses_month.toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-  })}`;
+  const totalBalanceEl = document.getElementById("total-balance");
+  const reportsEl = document.getElementById("reports-submitted");
+  const incomeEl = document.getElementById("income-month");
+  const expensesEl = document.getElementById("expenses-month");
+
+  if (totalBalanceEl) {
+    totalBalanceEl.textContent = `Php ${summary.total_balance.toLocaleString(
+      "en-PH",
+      { minimumFractionDigits: 2 }
+    )}`;
+  }
+  if (reportsEl) {
+    reportsEl.textContent = summary.reports_submitted;
+  }
+  if (incomeEl) {
+    incomeEl.textContent = `Php ${summary.income_month.toLocaleString(
+      "en-PH",
+      { minimumFractionDigits: 2 }
+    )}`;
+  }
+  if (expensesEl) {
+    expensesEl.textContent = `Php ${summary.expenses_month.toLocaleString(
+      "en-PH",
+      { minimumFractionDigits: 2 }
+    )}`;
+  }
 }
 
 function loadWallets(wallets) {
   const walletsContainer = document.getElementById("wallets-container");
+  if (!walletsContainer) return;
 
   walletsContainer.innerHTML = wallets
     .map((folder) => {
@@ -124,32 +145,32 @@ function loadWallets(wallets) {
       const progress = totalBudget > 0 ? (used / totalBudget) * 100 : 0;
 
       return `
-      <div class="wallet-card">
-        <div class="wallet-icon">
-          <img src="/pres/static/images/wallet.png"
-               alt="Wallet"
-               onerror="this.style.display='none'" />
-        </div>
-        <div class="wallet-details">
-          <h5>${folder.name}</h5>
-          <p class="budget-text">Budget Used</p>
-          <p class="budget-amount">
-            Php ${used.toLocaleString()}/Php ${totalBudget.toLocaleString()}
-          </p>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: ${progress}%"></div>
+        <div class="wallet-card">
+          <div class="wallet-icon">
+            <img src="/pres/static/images/wallet.png"
+                 alt="Wallet"
+                 onerror="this.style.display='none'" />
           </div>
-          <div class="wallet-stats">
-            <span class="income-stat">
-              Income: Php ${(folder.total_income || 0).toLocaleString()}
-            </span>
-            <span class="expense-stat">
-              Expenses: Php ${(folder.total_expenses || 0).toLocaleString()}
-            </span>
+          <div class="wallet-details">
+            <h5>${folder.name}</h5>
+            <p class="budget-text">Budget Used</p>
+            <p class="budget-amount">
+              Php ${used.toLocaleString()}/Php ${totalBudget.toLocaleString()}
+            </p>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${progress}%"></div>
+            </div>
+            <div class="wallet-stats">
+              <span class="income-stat">
+                Income: Php ${(folder.total_income || 0).toLocaleString()}
+              </span>
+              <span class="expense-stat">
+                Expenses: Php ${(folder.total_expenses || 0).toLocaleString()}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
-    `;
+      `;
     })
     .join("");
 }
@@ -203,10 +224,10 @@ function loadTransactions(transactions) {
     .join("");
 }
 
-
-
 function showEmptyWallets() {
   const walletsContainer = document.getElementById("wallets-container");
+  if (!walletsContainer) return;
+
   walletsContainer.innerHTML = `
     <div class="empty-card">
       <img src="/pres/static/images/nav_wallet.png" alt="Wallet Icon" />
@@ -220,6 +241,8 @@ function showEmptyTransactions() {
   const transactionsContainer = document.getElementById(
     "transactions-container"
   );
+  if (!transactionsContainer) return;
+
   transactionsContainer.innerHTML = `
     <div class="empty-card">
       <img src="/pres/static/images/nav_history.png" alt="History Icon" />
@@ -252,6 +275,7 @@ function setupProfileDropdown() {
   });
 }
 
+// Header search: live filter + Enter → wallets page
 function setupHeaderSearch() {
   const input = document.getElementById("header-search");
   const walletsContainer = document.getElementById("wallets-container");
@@ -260,6 +284,7 @@ function setupHeaderSearch() {
   );
   if (!input || !walletsContainer || !transactionsContainer) return;
 
+  // live filter sa homepage
   input.addEventListener("input", () => {
     const term = input.value.toLowerCase().trim();
 
@@ -274,5 +299,17 @@ function setupHeaderSearch() {
         const text = item.textContent.toLowerCase();
         item.style.display = text.includes(term) ? "" : "none";
       });
+  });
+
+  // Enter → redirect to wallets page with query
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const term = input.value.trim();
+      if (!term) return;
+      window.location.href = `/pres/wallets?search=${encodeURIComponent(
+        term
+      )}`;
+    }
   });
 }

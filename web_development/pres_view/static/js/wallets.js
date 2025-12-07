@@ -115,10 +115,134 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   let deleteAction = null; // function to run on confirm
-
   const toastContainer = document.getElementById("toast-container");
+  // INITIAL search galing homepage (?search=...)
+  const params = new URLSearchParams(window.location.search);
+  const initialSearch = params.get("search");
+
+  if (initialSearch && walletSearchInput) {
+    walletSearchInput.value = initialSearch;
+  }
+
+  // normal filters for manual search
+  walletSearchInput.addEventListener("input", applyWalletFilters);
+  walletYearFilter.addEventListener("change", applyWalletFilters);
+
+  if (initialSearch) {
+    // i‑filter muna gamit existing logic (text + year)
+    applyWalletFilters();
+
+    const parsed = parseMonthFromSearch(initialSearch);
+    if (parsed) {
+      openWalletByMonth(parsed.monthIndex, parsed.year);
+    }
+  }
 
   // ===== Helpers =====
+  function parseMonthFromSearch(term) {
+    const lower = term.toLowerCase();
+
+    const monthNames = [
+      "january",
+      "february",
+      "march",
+      "april",
+      "may",
+      "june",
+      "july",
+      "august",
+      "september",
+      "october",
+      "november",
+      "december",
+    ];
+
+    let monthIndex = null;
+
+    monthNames.forEach((name, idx) => {
+      if (lower.includes(name)) {
+        monthIndex = idx; // 0‑based
+      }
+    });
+
+    if (monthIndex === null) {
+      const short = [
+        "jan",
+        "feb",
+        "mar",
+        "apr",
+        "may",
+        "jun",
+        "jul",
+        "aug",
+        "sep",
+        "oct",
+        "nov",
+        "dec",
+      ];
+      short.forEach((s, idx) => {
+        if (lower.includes(s)) {
+          monthIndex = idx;
+        }
+      });
+    }
+
+    if (monthIndex === null) return null;
+
+    const yearMatch = lower.match(/\b(20\d{2})\b/);
+    const year = yearMatch ? parseInt(yearMatch[1], 10) : null;
+
+    return { monthIndex, year }; // 0–11, optional year
+  }
+
+  function openWalletByMonth(monthIndex, year) {
+    // convert 0–11 → "01".."12"
+    const monthToNumber = [
+      "01",
+      "02",
+      "03",
+      "04",
+      "05",
+      "06",
+      "07",
+      "08",
+      "09",
+      "10",
+      "11",
+      "12",
+    ];
+    const targetMonthNum = monthToNumber[monthIndex];
+
+    // 1) set year filter kung may year sa search
+    const yearFilter = document.getElementById("wallet-year-filter");
+    if (yearFilter && year) {
+      Array.from(yearFilter.options).forEach((opt) => {
+        if (
+          opt.value.includes(year.toString()) ||
+          opt.text.includes(year.toString())
+        ) {
+          yearFilter.value = opt.value;
+        }
+      });
+    }
+
+    // 2) re‑apply filters para ma‑update walletsFiltered
+    if (typeof applyWalletFilters === "function") {
+      applyWalletFilters();
+    }
+
+    // 3) hanapin sa walletsFiltered yung month na tumutugma
+    const targetWallet = (walletsFiltered || []).find((w) => {
+      if (!w.month) return false; // w.month e.g. "2025-12-01"
+      const m = w.month.slice(5, 7); // "12"
+      return m === targetMonthNum;
+    });
+
+    if (!targetWallet) return;
+
+    // 4) gamit na existing function para buksan yung wallet
+    showWalletDetail(targetWallet.id);
+  }
 
   function showToast(message, isError = false) {
     const toast = document.createElement("div");
@@ -150,22 +274,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!res.ok) throw new Error("Request failed");
     return res.json();
   }
-  // helper na nadagdag na kanina
-  async function checkSubmissionStatus() {
-    if (!currentWallet) return false;
-
-    try {
-      const res = await apiGet(
-        `/pres/api/wallets/${currentWallet.walletId}/budgets/${currentWallet.id}/submit`
-      );
-      return !!res.submitted;
-    } catch (err) {
-      console.error(err);
-      return false;
-    }
-  }
-
-
 
   function showDeleteModal({ title, message, onConfirm }) {
     confirmDeleteTitle.textContent = title || "Delete";
@@ -390,11 +498,10 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) {
       console.error(err);
       showToast("Failed to load wallets.", true);
+    } finally {
+      if (loadingEl) loadingEl.style.display = "none";
+      if (gridEl) gridEl.style.display = "grid"; // or "block" if you use block layout
     }
-     finally {
-    if (loadingEl) loadingEl.style.display = "none";
-    if (gridEl) gridEl.style.display = "grid";  // or "block" if you use block layout
-  }
   }
 
   // ===== Wallet list & filters =====
@@ -1124,7 +1231,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ].forEach(clearFieldError);
 
     reportDetailsOverlay.classList.add("active");
-    await prefillReportFields(currentWallet);
   });
 
   function hideReportDetailsModal() {
@@ -1279,19 +1385,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function hideSubmitModal() {
     confirmSubmitOverlay.classList.remove("active");
   }
-  submitReportBtn.addEventListener('click', async () => {
-  if (!currentWallet || reportGeneratedForFolderId !== currentWallet.id) {
-    showToast('Generate the report first for this month.', true);
-    return;
-  }
-
-  const alreadySubmitted = await checkSubmissionStatus();
-  if (alreadySubmitted) {
-    showToast('You already submitted a report for this month.', true);
-    return;
-  }
-
-  confirmSubmitOverlay.classList.add('active');
+  submitReportBtn.addEventListener("click", async () => {
+    if (!currentWallet || reportGeneratedForFolderId !== currentWallet.id) {
+      showToast("Generate the report first for this month.", true);
+      return;
+    }
+    confirmSubmitOverlay.classList.add("active");
   });
 
   closeSubmitModal.addEventListener("click", hideSubmitModal);
@@ -1328,10 +1427,8 @@ document.addEventListener("DOMContentLoaded", () => {
       generateReportBtn.title =
         "You already submitted a report for this month.";
 
-
       // clear in-memory report state
       currentReportDetails = null;
-     
 
       // clear report detail fields in the form
       repEventName.value = "";
@@ -1343,19 +1440,6 @@ document.addEventListener("DOMContentLoaded", () => {
       repReimb.value = "";
       repPrevFund.value = "";
       repBudgetBank.value = "";
-
-      // reset current wallet stats and UI if that's your intended behavior
-      currentWallet.beginningCash = 0;
-      currentWallet.totalIncome = 0;
-      currentWallet.totalExpenses = 0;
-      currentWallet.endingCash = 0;
-
-      walletTransactions[currentWallet.id] = [];
-      walletReceipts[currentWallet.id] = [];
-
-      updateStatsUI();
-      renderWalletTransactions();
-      renderReceipts();
 
       // reload archives so the new submitted report appears there
       await loadWalletArchives(currentWallet.id);
@@ -1369,39 +1453,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-
   // ===== Detail view functions =====
 
   async function showWalletDetail(folderId) {
     currentWallet = wallets.find((w) => w.id === folderId);
     if (!currentWallet) return;
 
-    const monthKey = currentWallet.month; // DAPAT ito ang ginagamit sa status API
+    const monthKey = currentWallet.month; // optional na lang
 
     try {
       const res = await apiGet(
-        `/pres/api/wallets/reports/status?month=${encodeURIComponent(monthKey)}`
+        `/pres/api/wallets/reports/status?wallet_id=${currentWallet.walletId}&budget_id=${currentWallet.id}`
       );
 
       if (res.submitted) {
-      generateReportBtn.disabled = true;
-      generateReportBtn.classList.add('disabled');
-      generateReportBtn.title = 'You already submitted a report for this month.';
-      // also lock submit
-      submitReportBtn.disabled = true;
-      submitReportBtn.classList.add('disabled');
-      submitReportBtn.title = 'You already submitted a report for this month.';
-    } else {
-      generateReportBtn.disabled = false;
-      generateReportBtn.classList.remove('disabled');
-      generateReportBtn.title = '';
-      submitReportBtn.disabled = false;
-      submitReportBtn.classList.remove('disabled');
-      submitReportBtn.title = '';
+        generateReportBtn.disabled = true;
+        generateReportBtn.classList.add("disabled");
+        generateReportBtn.title =
+          "You already submitted a report for this month.";
+        submitReportBtn.disabled = true;
+        submitReportBtn.classList.add("disabled");
+        submitReportBtn.title =
+          "You already submitted a report for this month.";
+      } else {
+        generateReportBtn.disabled = false;
+        generateReportBtn.classList.remove("disabled");
+        generateReportBtn.title = "";
+        submitReportBtn.disabled = false;
+        submitReportBtn.classList.remove("disabled");
+        submitReportBtn.title = "";
+      }
+    } catch (e) {
+      console.error("Failed to load report status", e);
     }
-  } catch (e) {
-    console.error('Failed to load report status', e);
-  }
 
     document.getElementById("wallet-name").textContent = currentWallet.name;
     document.getElementById("wallets-view").classList.remove("active");
@@ -1509,8 +1593,8 @@ document.addEventListener("DOMContentLoaded", () => {
       walletReceipts[folderId] = data.map((r) => ({
         id: r.id,
         name: r.description,
-        date: r.receipt_date,
-        file_url: r.file_url,
+        date: r.receiptdate,
+        fileurl: r.fileurl,
       }));
     } catch (err) {
       console.error(err);
@@ -1523,16 +1607,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await apiGet(`/pres/api/wallets/${folderId}/archives`);
       walletArchives[folderId] = (data || []).map((a) => ({
         id: a.id,
-        report_id: a.report_id,
-        report_no: a.report_no,
-        event_name: a.event_name,
-        date_prepared: a.date_prepared,
+        report_id: a.reportid,
+        report_no: a.reportno,
+        event_name: a.eventname,
+        date_prepared: a.dateprepared,
         budget: a.budget,
-        total_expense: a.total_expense,
+        total_expense: a.totalexpense,
         reimbursement: a.reimbursement,
-        previous_fund: a.previous_fund,
+        previous_fund: a.previousfund,
         remaining: a.remaining,
-        file_url: a.file_url,
+        file_url: a.fileurl,
       }));
     } catch (err) {
       console.error(err);
