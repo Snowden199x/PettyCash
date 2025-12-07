@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'home_screen.dart';
-import 'wallet_screen.dart';
-import 'profile_screen.dart';
 
 class TransactionHistoryScreen extends StatefulWidget {
   final String orgName;
@@ -20,62 +17,10 @@ class TransactionHistoryScreen extends StatefulWidget {
 }
 
 class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
-  final int _selectedIndex = 1;
   DateTime _selectedDate = DateTime(2025, 2);
   bool isIncomeSelected = true;
 
-  final iconPaths = {
-    'home': {
-      'active': 'assets/Icons/navigation_icons/nav_home.png',
-      'inactive': 'assets/Icons/navigation_icons/nav_home.png',
-    },
-    'history': {
-      'active': 'assets/Icons/navigation_icons/nav_history.png',
-      'inactive': 'assets/Icons/navigation_icons/nav_history.png',
-    },
-    'wallet': {
-      'active': 'assets/Icons/navigation_icons/nav_wallet.png',
-      'inactive': 'assets/Icons/navigation_icons/nav_wallet.png',
-    },
-    'profile': {
-      'active': 'assets/Icons/navigation_icons/nav_profile.png',
-      'inactive': 'assets/Icons/navigation_icons/nav_profile.png',
-    },
-  };
-
-  void _onItemTapped(int index) {
-    if (index == _selectedIndex) return;
-
-    Widget nextScreen;
-    switch (index) {
-      case 0:
-        nextScreen = HomeScreen(orgName: widget.orgName, orgId: widget.orgId);
-        break;
-      case 1:
-        nextScreen = TransactionHistoryScreen(
-          orgName: widget.orgName,
-          orgId: widget.orgId,
-        );
-        break;
-      case 2:
-        nextScreen = const WalletScreen(); // kung di kailangan orgId dito
-        break;
-      case 3:
-        nextScreen = const ProfileScreen(); // same here
-        break;
-      default:
-        return;
-    }
-
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (_, _, _) => nextScreen,
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-      ),
-    );
-  }
+  String get formattedMonthYear => DateFormat.yMMMM().format(_selectedDate);
 
   void _changeMonth(int offset) {
     setState(() {
@@ -114,8 +59,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     }
   }
 
-  String get formattedMonthYear => DateFormat.yMMMM().format(_selectedDate);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,7 +67,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
-        toolbarHeight: 0, // hide bar, like Wallet screen
+        toolbarHeight: 0,
       ),
       body: SafeArea(
         child: Padding(
@@ -144,8 +87,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-
-                // Month Selector
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -175,10 +116,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 15),
-
-                // Income / Expense Toggle
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -221,10 +159,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 150),
-
-                // Empty state with custom asset icon
                 Center(
                   child: Column(
                     children: [
@@ -262,60 +197,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.black12, width: 1)),
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF8B3B08),
-        unselectedItemColor: Colors.black,
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        selectedLabelStyle: const TextStyle(
-          fontFamily: 'Poppins',
-          fontWeight: FontWeight.w600,
-          fontSize: 12,
-        ),
-        items: [
-          _buildNavItem(0, 'Home', iconPaths['home']!),
-          _buildNavItem(1, 'History', iconPaths['history']!),
-          _buildNavItem(2, 'Wallets', iconPaths['wallet']!),
-          _buildNavItem(3, 'Profile', iconPaths['profile']!),
-        ],
-      ),
-    );
-  }
-
-  BottomNavigationBarItem _buildNavItem(
-    int index,
-    String label,
-    Map<String, String> icons,
-  ) {
-    final isSelected = _selectedIndex == index;
-
-    return BottomNavigationBarItem(
-      icon: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF8B3B08) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Image.asset(
-          isSelected ? icons['active']! : icons['inactive']!,
-          height: 28,
-          color: isSelected ? Colors.white : Colors.black,
-        ),
-      ),
-      label: label,
     );
   }
 }
