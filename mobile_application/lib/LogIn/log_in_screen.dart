@@ -18,11 +18,15 @@ class _LoginScreenState extends State<LoginScreen>
   bool passwordError = false;
   bool loading = false;
 
+  // Controls password visibility (eye icon).
+  bool _passwordVisible = false;
+
   late AnimationController _emailController;
   late AnimationController _passwordController;
   late Animation<double> _emailShake;
   late Animation<double> _passwordShake;
 
+  // HTTP client that talks to your Flask backend.
   final _api = ApiClient();
 
   @override
@@ -54,6 +58,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Future<void> _validateAndLogin() async {
+    // Local validation for empty fields.
     setState(() {
       emailError = emailController.text.isEmpty;
       passwordError = passwordController.text.isEmpty;
@@ -65,15 +70,22 @@ class _LoginScreenState extends State<LoginScreen>
 
     setState(() => loading = true);
     try {
+      // Call Flask login endpoint.
       final data = await _api.postJson('/pres/login/pres', {
         'username': emailController.text.trim(),
         'password': passwordController.text,
       });
 
+      // After await, always check mounted before using context.
+      if (!mounted) return;
+
       if (data['success'] == true) {
+        // These values come from your Flask response.
         final orgName = data['org_name'] as String? ?? 'Organization';
         final orgId = data['org_id'];
 
+        // If backend says password must be changed, go to new-password,
+        // otherwise go to home. Both routes receive orgName & orgId.
         if (data['must_change_password'] == true) {
           Navigator.pushReplacementNamed(
             context,
@@ -89,16 +101,20 @@ class _LoginScreenState extends State<LoginScreen>
         }
       } else {
         final msg = data['error']?.toString() ?? 'Login failed';
+        // mounted already checked above.
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg)),
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Network error: $e')),
       );
     } finally {
-      if (mounted) setState(() => loading = false);
+      if (mounted) {
+        setState(() => loading = false);
+      }
     }
   }
 
@@ -166,7 +182,7 @@ class _LoginScreenState extends State<LoginScreen>
                             BorderSide(color: Color(0xFFE59E2C), width: 1),
                       ),
                       errorText: emailError
-                          ? "Incorrect username. Please try again"
+                          ? "PLease enter your username"
                           : null,
                     ),
                   ),
@@ -187,7 +203,8 @@ class _LoginScreenState extends State<LoginScreen>
                   },
                   child: TextField(
                     controller: passwordController,
-                    obscureText: true,
+                    // false -> hidden (bullets); true -> visible
+                    obscureText: !_passwordVisible,
                     cursorColor: Colors.black,
                     decoration: InputDecoration(
                       border: const OutlineInputBorder(),
@@ -206,8 +223,22 @@ class _LoginScreenState extends State<LoginScreen>
                             BorderSide(color: Color(0xFFE59E2C), width: 1),
                       ),
                       errorText: passwordError
-                          ? "Incorrect password. Please try again"
+                          ? "Please enter your password"
                           : null,
+                      // when hidden: crossed eye; when visible: normal eye
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _passwordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
+                      ),
                     ),
                   ),
                 ),
