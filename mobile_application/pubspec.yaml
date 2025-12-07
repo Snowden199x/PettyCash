@@ -9,9 +9,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  intl: ^0.20.2   # ✅ Updated for latest null-safety and DateFormat support
+  intl: ^0.20.2
   image_picker: ^1.2.1
   http: ^1.2.0
+
+  # For generating Word (.docx) from a template
+  docx_template: ^0.4.0
 
 dev_dependencies:
   flutter_test:
@@ -19,7 +22,6 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
 
-# ✅ Custom app icon configuration
 flutter_icons:
   android: true
   ios: true
@@ -40,8 +42,8 @@ flutter:
     - assets/profile_pictures/ituh_logo.jpg
     - assets/Icons/dropdown.png
     - assets/Fonts/
-
-
+    - assets/Icons/receipts.png
+    - assets/docs/finance_report_template.docx
 
   fonts:
     - family: Poppins
@@ -56,4 +58,4 @@ flutter:
         - asset: assets/Fonts/PlayFair/PlayFairDisplay-Regular.ttf
           weight: 400
         - asset: assets/Fonts/PlayFair/PlayFairDisplay-Italic.ttf
-          style: italic   # ✅ Added style for italic variant
+          style: italic
