@@ -1,7 +1,4 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 import '../api_client.dart';
 import 'wallet_month.dart';
@@ -14,9 +11,6 @@ class WalletScreen extends StatefulWidget {
 }
 
 class _WalletScreenState extends State<WalletScreen> {
-  // You can still use ApiClient elsewhere
-  
-
   // Loaded from API
   List<WalletFolder> _folders = [];
   bool _isLoading = false;
@@ -32,9 +26,11 @@ class _WalletScreenState extends State<WalletScreen> {
     _loadWalletFolders();
   }
 
+  /// Initialize academic years list (e.g., "2023–2024", "2024–2025", etc.)
   void _initAcademicYears() {
-    const int startYear = 2020;
+    const int startYear = 2023;
     const int count = 50;
+    
     final years = List.generate(count, (index) {
       final int y1 = startYear + index;
       final int y2 = y1 + 1;
@@ -42,10 +38,15 @@ class _WalletScreenState extends State<WalletScreen> {
     });
 
     _academicYears = years;
-    _selectedAcademicYear =
-        years.firstWhere((ay) => ay == '2025–2026', orElse: () => years[0]);
+    
+    // Set default to 2025–2026
+    _selectedAcademicYear = years.firstWhere(
+      (ay) => ay == '2025–2026',
+      orElse: () => years[0],
+    );
   }
 
+  /// Load wallet folders, optionally filtered by Academic Year
   Future<void> _loadWalletFolders() async {
     setState(() {
       _isLoading = true;
@@ -53,28 +54,41 @@ class _WalletScreenState extends State<WalletScreen> {
     });
 
     try {
-      // Direct call so we can inspect status/body
-      final uri = Uri.parse('${ApiClient.baseUrl}/pres/api/wallets');
-      final res = await http
-          .get(
-            uri,
-            headers: const {'Accept': 'application/json'},
-          )
-          .timeout(const Duration(seconds: 10));
-
-      debugPrint('GET /pres/api/wallets -> ${res.statusCode} ${res.body}');
-
-      if (res.statusCode != 200) {
-        setState(() {
-          _errorMessage = 'Server returned ${res.statusCode}.';
-        });
-        return;
+      final apiClient = ApiClient();
+      final data = await apiClient.getJsonList('/pres/api/wallets');
+      
+      List<WalletFolder> folders = [];
+      for (var item in data) {
+        folders.add(WalletFolder.fromJson(item as Map<String, dynamic>));
       }
 
-      final data = jsonDecode(res.body) as List<dynamic>;
-      final folders = data
-          .map((e) => WalletFolder.fromJson(e as Map<String, dynamic>))
-          .toList();
+      // Filter by academic year (Aug-May)
+      final monthOrder = ['08', '09', '10', '11', '12', '01', '02', '03', '04', '05'];
+      final parts = _selectedAcademicYear.split('–');
+      
+      if (parts.length == 2) {
+        final startYear = int.parse(parts[0]);
+        final endYear = int.parse(parts[1]);
+        
+        folders = folders.where((w) {
+          final year = int.parse(w.month.substring(0, 4));
+          final month = w.month.substring(5, 7);
+          
+          if (!monthOrder.contains(month)) return false;
+          
+          if (int.parse(month) >= 8 && int.parse(month) <= 12) {
+            return year == startYear;
+          } else {
+            return year == endYear;
+          }
+        }).toList();
+        
+        folders.sort((a, b) {
+          final aMonth = a.month.substring(5, 7);
+          final bMonth = b.month.substring(5, 7);
+          return monthOrder.indexOf(aMonth).compareTo(monthOrder.indexOf(bMonth));
+        });
+      }
 
       setState(() {
         _folders = folders;
@@ -121,6 +135,8 @@ class _WalletScreenState extends State<WalletScreen> {
                 ),
               ),
               const SizedBox(height: 8),
+              
+              // Academic Year Dropdown - SYNCED WITH WEB
               SizedBox(
                 height: 28,
                 child: DropdownButtonHideUnderline(
@@ -158,7 +174,9 @@ class _WalletScreenState extends State<WalletScreen> {
                       setState(() {
                         _selectedAcademicYear = value;
                       });
-                      // Optional: filter by AY if backend supports it
+                      // Reload wallets when AY changes
+                      // This will filter results to match selected AY
+                      _loadWalletFolders();
                     },
                     borderRadius: BorderRadius.circular(6),
                     icon: const Icon(
@@ -214,10 +232,11 @@ class _WalletScreenState extends State<WalletScreen> {
     }
 
     if (_folders.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          'No wallet folders found.',
-          style: TextStyle(
+          'No wallet folders found for AY $_selectedAcademicYear.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
             fontFamily: 'Poppins',
             fontSize: 13,
             color: Colors.black,
@@ -315,7 +334,7 @@ class WalletFolder {
   final int id; // wallet_budgets.id
   final int walletId;
   final String name; // month name (e.g. "DECEMBER")
-  final String month; // "2025-12"
+  final String month; // "2025-12" (YYYY-MM format)
   final double beginningCash;
 
   WalletFolder({

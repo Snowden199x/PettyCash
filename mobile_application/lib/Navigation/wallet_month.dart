@@ -3,6 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:open_file/open_file.dart';
+import 'wallet_month_db_helper.dart';
+import '../api_client.dart';
 
 enum ActivePopup {
   none,
@@ -38,11 +42,10 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
   // Tabs: 0 Transaction, 1 Reports, 2 Receipts, 3 Archive
   int selectedTabIndex = 0;
 
-  // In-memory list of transactions
-  final List<TransactionItem> transactions = [];
-
-  // In-memory list of receipts
-  final List<ReceiptItem> receipts = [];
+  // Database-synced lists
+  List<TransactionItem> transactions = [];
+  List<ReceiptItem> receipts = [];
+  bool _isLoadingData = false;
 
   // Controllers - Income
   final TextEditingController dateIssuedController = TextEditingController();
@@ -80,6 +83,67 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
   final TextEditingController reportReimbursementController = TextEditingController();
   final TextEditingController reportPreviousFundController = TextEditingController();
   final TextEditingController reportBudgetInBankController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoadingData = true);
+    try {
+      await Future.wait([
+        _loadTransactions(),
+        _loadReceipts(),
+      ]);
+    } finally {
+      if (mounted) setState(() => _isLoadingData = false);
+    }
+  }
+
+  Future<void> _loadTransactions() async {
+    try {
+      final data = await WalletMonthDbHelper.loadTransactions(widget.folderId);
+      if (mounted) {
+        setState(() {
+          transactions = data.map((e) {
+            final kind = e['kind'] ?? 'expense';
+            final type = kind == 'income' ? 'Income' : 'Expense';
+            return TransactionItem(
+              date: e['date_issued'] ?? e['date'] ?? '',
+              monthLabel: widget.month,
+              quantity: e['quantity'] ?? 0,
+              price: (e['price'] ?? 0).toDouble(),
+              description: e['description'] ?? '',
+              details: e['particulars'] ?? e['incometype'] ?? e['income_type'] ?? '',
+              totalAmount: (e['total_amount'] ?? 0).toDouble(),
+              type: type,
+            );
+          }).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading transactions: $e');
+    }
+  }
+
+  Future<void> _loadReceipts() async {
+    try {
+      final data = await WalletMonthDbHelper.loadReceipts(widget.folderId);
+      if (mounted) {
+        setState(() {
+          receipts = data.map((e) => ReceiptItem(
+            description: e['description'] ?? '',
+            date: e['date'] ?? '',
+            imagePath: e['image_url'] ?? '',
+          )).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading receipts: $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -311,7 +375,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
 
   // ---------- Transaction saving ----------
 
-  void saveIncome() {
+  Future<void> saveIncome() async {
     if (quantityController.text.isEmpty ||
         priceController.text.isEmpty ||
         selectedIncomeType == null) {
@@ -320,35 +384,46 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
 
     final int qty = int.tryParse(quantityController.text) ?? 0;
     final double price = double.tryParse(priceController.text) ?? 0;
-    final double total = qty * price;
 
     final String dateText = dateIssuedController.text.isEmpty
         ? DateFormat('yyyy-MM-dd').format(DateTime.now())
         : dateIssuedController.text;
 
-    final item = TransactionItem(
-      date: dateText,
-      monthLabel: widget.month,
-      quantity: qty,
-      price: price,
-      description: descriptionController.text,
-      details: selectedIncomeType ?? '',
-      totalAmount: total,
-      type: 'Income',
-    );
+    try {
+      await WalletMonthDbHelper.saveIncome(
+        widget.folderId,
+        {
+          'date': dateText,
+          'quantity': qty,
+          'income_type': selectedIncomeType!,
+          'description': descriptionController.text,
+          'price': price,
+        },
+      );
 
-    setState(() {
-      transactions.add(item);
-      dateIssuedController.clear();
-      quantityController.clear();
-      descriptionController.clear();
-      priceController.clear();
-      selectedIncomeType = null;
-      activePopup = ActivePopup.none;
-    });
+      await _loadTransactions();
+
+      if (mounted) {
+        setState(() {
+          dateIssuedController.clear();
+          quantityController.clear();
+          descriptionController.clear();
+          priceController.clear();
+          selectedIncomeType = null;
+          activePopup = ActivePopup.none;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error saving income: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save income: $e')),
+        );
+      }
+    }
   }
 
-  void saveExpense() {
+  Future<void> saveExpense() async {
     if (expenseQuantityController.text.isEmpty ||
         expensePriceController.text.isEmpty ||
         expenseParticularsController.text.isEmpty) {
@@ -357,35 +432,43 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
 
     final int qty = int.tryParse(expenseQuantityController.text) ?? 0;
     final double price = double.tryParse(expensePriceController.text) ?? 0;
-    final double total = qty * price;
 
     final String dateText = expenseDateController.text.isEmpty
         ? DateFormat('yyyy-MM-dd').format(DateTime.now())
         : expenseDateController.text;
 
-    final String details =
-        '${expenseParticularsController.text} - ${expenseDescriptionController.text}';
+    try {
+      await WalletMonthDbHelper.saveExpense(
+        widget.folderId,
+        {
+          'date': dateText,
+          'quantity': qty,
+          'particulars': expenseParticularsController.text,
+          'description': expenseDescriptionController.text,
+          'price': price,
+        },
+      );
 
-    final item = TransactionItem(
-      date: dateText,
-      monthLabel: widget.month,
-      quantity: qty,
-      price: price,
-      description: expenseDescriptionController.text,
-      details: details,
-      totalAmount: total,
-      type: 'Expense',
-    );
+      await _loadTransactions();
 
-    setState(() {
-      transactions.add(item);
-      expenseDateController.clear();
-      expenseQuantityController.clear();
-      expenseParticularsController.clear();
-      expenseDescriptionController.clear();
-      expensePriceController.clear();
-      activePopup = ActivePopup.none;
-    });
+      if (mounted) {
+        setState(() {
+          expenseDateController.clear();
+          expenseQuantityController.clear();
+          expenseParticularsController.clear();
+          expenseDescriptionController.clear();
+          expensePriceController.clear();
+          activePopup = ActivePopup.none;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error saving expense: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save expense: $e')),
+        );
+      }
+    }
   }
 
   Future<void> pickReceiptImage() async {
@@ -397,26 +480,39 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
     });
   }
 
-  void saveReceipt() {
+  Future<void> saveReceipt() async {
     if (receiptDescriptionController.text.isEmpty ||
         receiptDateController.text.isEmpty ||
         receiptImage == null) {
       return;
     }
 
-    final item = ReceiptItem(
-      description: receiptDescriptionController.text,
-      date: receiptDateController.text,
-      imagePath: receiptImage!.path,
-    );
+    try {
+      await WalletMonthDbHelper.uploadReceipt(
+        widget.folderId,
+        receiptImage!,
+        receiptDescriptionController.text,
+        receiptDateController.text,
+      );
 
-    setState(() {
-      receipts.add(item);
-      receiptDescriptionController.clear();
-      receiptDateController.clear();
-      receiptImage = null;
-      activePopup = ActivePopup.none;
-    });
+      await _loadReceipts();
+
+      if (mounted) {
+        setState(() {
+          receiptDescriptionController.clear();
+          receiptDateController.clear();
+          receiptImage = null;
+          activePopup = ActivePopup.none;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error saving receipt: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save receipt: $e')),
+        );
+      }
+    }
   }
 
   List<TransactionItem> get filteredTransactions {
@@ -554,6 +650,9 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                       builder: (context) {
                         if (selectedTabIndex == 0) {
                           // TRANSACTIONS TAB
+                          if (_isLoadingData) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
                           final txs = filteredTransactions;
                           if (txs.isEmpty) {
                             return const Align(
@@ -614,6 +713,9 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                           return _buildReportsTab();
                         } else if (selectedTabIndex == 2) {
                           // RECEIPTS TAB
+                          if (_isLoadingData) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
                           if (receipts.isEmpty) {
                             return const Align(
                               alignment: Alignment.center,
@@ -731,10 +833,17 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                       ),
                                     );
                                   },
-                                  onDelete: () {
-                                    setState(() {
-                                      receipts.removeAt(index);
-                                    });
+                                  onDelete: () async {
+                                    try {
+                                      await WalletMonthDbHelper.deleteReceipt(r.imagePath);
+                                      await _loadReceipts();
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Failed to delete: $e')),
+                                        );
+                                      }
+                                    }
                                   },
                                 ),
                               );
@@ -1150,10 +1259,34 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                   actions: [
                     _buildCancelButton(closeAllPopups),
                     const SizedBox(width: 8),
-                    _buildPrimaryButton('Generate', () {
-                      setState(() {
-                        activePopup = ActivePopup.reportConfirm;
-                      });
+                    _buildPrimaryButton('Generate', () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      try {
+                        await WalletMonthDbHelper.generateReport(
+                          widget.folderId,
+                          {
+                            'event_name': reportEventNameController.text,
+                            'date_prepared': reportDatePreparedController.text,
+                            'report_no': reportNumberController.text,
+                            'budget': double.tryParse(reportBudgetController.text) ?? 0,
+                            'total_income': double.tryParse(reportTotalIncomeController.text) ?? 0,
+                            'total_expense': double.tryParse(reportTotalExpensesController.text) ?? 0,
+                            'reimbursement': double.tryParse(reportReimbursementController.text) ?? 0,
+                            'previous_fund': double.tryParse(reportPreviousFundController.text) ?? 0,
+                            'budget_in_the_bank': double.tryParse(reportBudgetInBankController.text) ?? 0,
+                          },
+                        );
+                        if (mounted) {
+                          setState(() {
+                            showReportActions = true;
+                            activePopup = ActivePopup.none;
+                          });
+                        }
+                      } catch (e) {
+                        messenger.showSnackBar(
+                          SnackBar(content: Text('Failed to generate report: $e')),
+                        );
+                      }
                     }),
                   ],
                   child: SingleChildScrollView(
@@ -1391,11 +1524,72 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                     textColor: Colors.black,
                                   ),
                                   const SizedBox(width: 6),
-                                  _buildReportActionChip(
-                                    label: 'Preview',
-                                    background:
-                                        const Color(0xFFFFFFFF),
-                                    textColor: Colors.black,
+                                  GestureDetector(
+                                    onTap: () async {
+                                      final messenger = ScaffoldMessenger.of(context);
+                                      try {
+                                        debugPrint('Preview button clicked');
+                                        messenger.showSnackBar(
+                                          const SnackBar(content: Text('Downloading report...')),
+                                        );
+                                        
+                                        final url = await WalletMonthDbHelper.getPreviewUrl(widget.folderId);
+                                        debugPrint('Preview URL: $url');
+                                        
+                                        final response = await http.get(Uri.parse(url), headers: ApiClient.getHeaders());
+                                        debugPrint('Response status: ${response.statusCode}');
+                                        debugPrint('Response body length: ${response.bodyBytes.length}');
+                                        
+                                        if (response.statusCode == 200) {
+                                          final dir = Directory('/storage/emulated/0/Download');
+                                          debugPrint('Download dir: ${dir.path}');
+                                          debugPrint('Dir exists: ${await dir.exists()}');
+                                          
+                                          if (!await dir.exists()) {
+                                            await dir.create(recursive: true);
+                                            debugPrint('Created directory');
+                                          }
+                                          
+                                          final fileName = 'financial_report_${DateTime.now().millisecondsSinceEpoch}.docx';
+                                          final file = File('${dir.path}/$fileName');
+                                          debugPrint('File path: ${file.path}');
+                                          
+                                          await file.writeAsBytes(response.bodyBytes);
+                                          debugPrint('File written successfully');
+                                          
+                                          // Open file with available apps
+                                          final result = await OpenFile.open(file.path);
+                                          debugPrint('Open file result: ${result.message}');
+                                          
+                                          messenger.showSnackBar(
+                                            SnackBar(
+                                              content: Text('Opening: $fileName'),
+                                              duration: const Duration(seconds: 2),
+                                            ),
+                                          );
+                                        } else {
+                                          debugPrint('HTTP error: ${response.statusCode}');
+                                          messenger.showSnackBar(
+                                            SnackBar(content: Text('Server error: ${response.statusCode}')),
+                                          );
+                                        }
+                                      } catch (e, stackTrace) {
+                                        debugPrint('Error downloading: $e');
+                                        debugPrint('Stack trace: $stackTrace');
+                                        messenger.showSnackBar(
+                                          SnackBar(
+                                            content: Text('Error: $e'),
+                                            duration: const Duration(seconds: 5),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: _buildReportActionChip(
+                                      label: 'Preview',
+                                      background:
+                                          const Color(0xFFFFFFFF),
+                                      textColor: Colors.black,
+                                    ),
                                   ),
                                   const SizedBox(width: 6),
                                   _buildReportActionChip(
@@ -2063,4 +2257,4 @@ class LabeledField extends StatelessWidget {
       ],
     );
   }
-}
+} 
