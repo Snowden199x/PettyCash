@@ -61,27 +61,32 @@ async function loadDashboardData() {
   if (content) content.style.display = "none";
 
   try {
-    const res = await fetch("/pres/api/dashboard/full");
-    if (!res.ok) {
-      throw new Error("Failed to load dashboard data");
+    // Get summary data
+    const summaryRes = await fetch("/pres/api/dashboard/summary");
+    if (!summaryRes.ok) {
+      throw new Error("Failed to load dashboard summary");
     }
+    const summary = await summaryRes.json();
 
-    const data = await res.json();
-    const summary = data.summary || {
-      total_balance: 0,
-      reports_submitted: 0,
-      income_month: 0,
-      expenses_month: 0,
-    };
-    const wallets = Array.isArray(data.wallets) ? data.wallets : [];
-    const recent = Array.isArray(data.recent_transactions)
-      ? data.recent_transactions
-      : [];
+    // Get wallets from /pres/api/wallets/overview
+    // This returns wallets with transactions, sorted by most recent activity
+    const walletsRes = await fetch("/pres/api/wallets/overview");
+    if (!walletsRes.ok) {
+      throw new Error("Failed to load wallets overview");
+    }
+    const wallets = await walletsRes.json() || [];
+
+    // Get recent transactions
+    const txRes = await fetch("/pres/api/transactions/recent");
+    if (!txRes.ok) {
+      throw new Error("Failed to load recent transactions");
+    }
+    const recent = await txRes.json() || [];
 
     // Summary cards
     updateSummaryCards(summary);
 
-    // Wallets
+    // Wallets (now from /wallets/overview, only those with transactions)
     if (wallets.length > 0) {
       loadWallets(wallets);
     } else {
