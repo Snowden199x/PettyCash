@@ -128,16 +128,6 @@ document.addEventListener("DOMContentLoaded", () => {
   walletSearchInput.addEventListener("input", applyWalletFilters);
   walletYearFilter.addEventListener("change", applyWalletFilters);
 
-  if (initialSearch) {
-    // i‑filter muna gamit existing logic (text + year)
-    applyWalletFilters();
-
-    const parsed = parseMonthFromSearch(initialSearch);
-    if (parsed) {
-      openWalletByMonth(parsed.monthIndex, parsed.year);
-    }
-  }
-
   // ===== Helpers =====
   function parseMonthFromSearch(term) {
     const lower = term.toLowerCase();
@@ -478,6 +468,16 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         walletsFiltered = [...wallets];
       }
+
+      // after walletsFiltered is computed (either with year filter or default)
+      if (initialSearch) {
+        applyWalletFilters(); // now wallets is populated, so this will filter correctly
+
+        const parsed = parseMonthFromSearch(initialSearch);
+        if (parsed) {
+          openWalletByMonth(parsed.monthIndex, parsed.year);
+        }
+      } 
 
       renderWalletsList();
 

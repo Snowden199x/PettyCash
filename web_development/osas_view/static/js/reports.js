@@ -436,33 +436,34 @@ document.addEventListener("DOMContentLoaded", () => {
       const received = checklist[key] === true;
       const hasNoteOnly = received && monthNotes[key];
 
-      const btnLabel = !received
-        ? "Receive"
-        : hasNoteOnly
-        ? "View note"
-        : "View report";
-
       const rowClass = received ? "month-row received" : "month-row";
+
+      // If report not submitted, show "N/A" as text, not a button
+      const actionContent = received
+        ? `<button
+            type="button"
+            class="month-btn ${hasNoteOnly ? "secondary" : "primary"}"
+            data-month="${key}"
+            data-received="1"
+          >
+            ${hasNoteOnly ? "View note" : "View report"}
+          </button>`
+        : '<span class="month-action-na">N/A</span>';
 
       return `
         <div class="${rowClass}" data-month="${key}">
           <span class="month-label">${MONTH_LABELS[key]}</span>
-          <button
-            type="button"
-            class="month-btn ${received ? "secondary" : "primary"}"
-            data-month="${key}"
-            data-received="${received ? "1" : "0"}"
-          >
-            ${btnLabel}
-          </button>
+          ${actionContent}
         </div>
       `;
     }).join("");
 
+    // Only attach click handlers to actual buttons (not N/A spans)
     monthsList.querySelectorAll(".month-btn").forEach((btn) => {
       btn.addEventListener("click", () => handleMonthAction(report, btn));
     });
   }
+
 
   async function handleMonthAction(report, button) {
     const monthKey = button.dataset.month;
