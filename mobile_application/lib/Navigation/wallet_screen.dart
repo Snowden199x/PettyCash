@@ -245,15 +245,18 @@ class _WalletScreenState extends State<WalletScreen> {
       );
     }
 
-    return GridView.builder(
-      itemCount: _folders.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 150.74 / 128.13,
-      ),
-      itemBuilder: (context, index) {
+    return RefreshIndicator(
+      onRefresh: _loadWalletFolders,
+      child: GridView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: _folders.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 150.74 / 128.13,
+        ),
+        itemBuilder: (context, index) {
         final folder = _folders[index];
         final name = folder.name;
 
@@ -324,7 +327,8 @@ class _WalletScreenState extends State<WalletScreen> {
             ),
           ),
         );
-      },
+        },
+      ),
     );
   }
 }

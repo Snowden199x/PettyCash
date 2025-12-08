@@ -15,6 +15,7 @@ enum ActivePopup {
   receipt,
   reportDetails,
   reportConfirm,
+  budget,
 }
 
 class WalletMonthScreen extends StatefulWidget {
@@ -84,6 +85,10 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
   final TextEditingController reportPreviousFundController = TextEditingController();
   final TextEditingController reportBudgetInBankController = TextEditingController();
 
+  // Controller - Budget
+  final TextEditingController budgetAmountController = TextEditingController();
+  double? currentBudget;
+
   @override
   void initState() {
     super.initState();
@@ -96,9 +101,41 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
       await Future.wait([
         _loadTransactions(),
         _loadReceipts(),
+        _loadBudget(),
       ]);
     } finally {
       if (mounted) setState(() => _isLoadingData = false);
+    }
+  }
+
+  Future<void> _loadBudget() async {
+    try {
+      final data = await WalletMonthDbHelper.loadBudget(widget.folderId);
+      if (mounted && data != null) {
+        setState(() {
+          currentBudget = (data['budget'] ?? 0).toDouble();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading budget: $e');
+    }
+  }
+
+  Future<void> _saveBudget(double amount) async {
+    try {
+      await WalletMonthDbHelper.saveBudget(widget.folderId, amount);
+      if (mounted) {
+        setState(() {
+          currentBudget = amount;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error saving budget: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save budget: $e')),
+        );
+      }
     }
   }
 
@@ -174,6 +211,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
     reportReimbursementController.dispose();
     reportPreviousFundController.dispose();
     reportBudgetInBankController.dispose();
+    budgetAmountController.dispose();
 
     super.dispose();
   }
@@ -368,6 +406,13 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
     setState(() {
       showAddMenu = false;
       activePopup = popup;
+      
+      // Auto-populate report fields when opening report details
+      if (popup == ActivePopup.reportDetails) {
+        reportBudgetController.text = (currentBudget ?? 0.0).toStringAsFixed(2);
+        reportTotalIncomeController.text = totalIncome.toStringAsFixed(2);
+        reportTotalExpensesController.text = totalExpenses.toStringAsFixed(2);
+      }
     });
   }
 
@@ -526,6 +571,23 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
     return transactions;
   }
 
+  double get totalIncome {
+    return transactions
+        .where((t) => t.type == 'Income')
+        .fold(0.0, (sum, t) => sum + t.totalAmount);
+  }
+
+  double get totalExpenses {
+    return transactions
+        .where((t) => t.type == 'Expense')
+        .fold(0.0, (sum, t) => sum + t.totalAmount.abs());
+  }
+
+  double get endingCash {
+    final budget = currentBudget ?? 0.0;
+    return budget + totalIncome - totalExpenses;
+  }
+
   // ---------- Build ----------
 
   @override
@@ -552,16 +614,44 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Month text
-                  Text(
-                    widget.month,
-                    style: const TextStyle(
-                      fontStyle: FontStyle.italic,
-                      fontFamily: 'PlayfairDisplay',
-                      fontSize: 32,
-                      fontWeight: FontWeight.w300,
-                      color: Colors.black,
-                    ),
+                  // Month text and Budget button row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        widget.month,
+                        style: const TextStyle(
+                          fontStyle: FontStyle.italic,
+                          fontFamily: 'PlayfairDisplay',
+                          fontSize: 32,
+                          fontWeight: FontWeight.w300,
+                          color: Colors.black,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => openPopup(ActivePopup.budget),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: const Color(0xFFD4C5A9), width: 1),
+                          ),
+                          child: Text(
+                            currentBudget == null 
+                                ? 'Add budget for this month'
+                                : 'Budget: Php ${currentBudget!.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
 
@@ -699,14 +789,17 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                           }
 
                           // LIST OF TRANSACTIONS
-                          return ListView.builder(
-                            padding:
-                                const EdgeInsets.only(bottom: 100, top: 0),
-                            itemCount: txs.length,
-                            itemBuilder: (context, index) {
-                              final t = txs[index];
-                              return TransactionCard(item: t);
-                            },
+                          return RefreshIndicator(
+                            onRefresh: _loadData,
+                            child: ListView.builder(
+                              padding:
+                                  const EdgeInsets.only(bottom: 100, top: 0),
+                              itemCount: txs.length,
+                              itemBuilder: (context, index) {
+                                final t = txs[index];
+                                return TransactionCard(item: t);
+                              },
+                            ),
                           );
                         } else if (selectedTabIndex == 1) {
                           // REPORTS TAB
@@ -760,12 +853,14 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                             );
                           }
 
-                          return ListView.builder(
-                            padding:
-                                const EdgeInsets.only(bottom: 100, top: 0),
-                            itemCount: receipts.length,
-                            itemBuilder: (context, index) {
-                              final r = receipts[index];
+                          return RefreshIndicator(
+                            onRefresh: _loadData,
+                            child: ListView.builder(
+                              padding:
+                                  const EdgeInsets.only(bottom: 100, top: 0),
+                              itemCount: receipts.length,
+                              itemBuilder: (context, index) {
+                                final r = receipts[index];
                               return Padding(
                                 padding:
                                     const EdgeInsets.only(bottom: 12.0),
@@ -847,7 +942,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                   },
                                 ),
                               );
-                            },
+                              },
+                            ),
                           );
                         } else {
                           // ARCHIVE TAB
@@ -1430,6 +1526,50 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                 ),
               ),
             ),
+
+          if (activePopup == ActivePopup.budget)
+            Center(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: keyboardInset + 20),
+                child: FormPopupShell(
+                  width: 300,
+                  height: 240,
+                  title: 'Add Budget',
+                  subtitle: 'Set or update the budget for this month.',
+                  actions: [
+                    _buildCancelButton(closeAllPopups),
+                    const SizedBox(width: 8),
+                    _buildPrimaryButton('Save', () async {
+                      if (budgetAmountController.text.isNotEmpty) {
+                        final amount = double.tryParse(budgetAmountController.text);
+                        if (amount != null) {
+                          final messenger = ScaffoldMessenger.of(context);
+                          await _saveBudget(amount);
+                          if (mounted) {
+                            setState(() {
+                              budgetAmountController.clear();
+                              activePopup = ActivePopup.none;
+                            });
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text('Budget saved: PHP ${amount.toStringAsFixed(2)}'),
+                              ),
+                            );
+                          }
+                        }
+                      }
+                    }),
+                  ],
+                  child: LabeledField(
+                    label: 'Budget (PHP)',
+                    field: PopupTextField(
+                      controller: budgetAmountController,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -1611,10 +1751,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                 alignment: Alignment.centerLeft,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    setState(() {
-                                      activePopup =
-                                          ActivePopup.reportDetails;
-                                    });
+                                    openPopup(ActivePopup.reportDetails);
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.white,
@@ -1657,37 +1794,37 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
           ),
 
           // Summary cards 2x2 grid
-          const Row(
+          Row(
             children: [
               Expanded(
                 child: ReportSummaryCard(
                   title: 'Budget',
-                  amountLabel: 'Php 0.00',
+                  amountLabel: 'Php ${(currentBudget ?? 0.0).toStringAsFixed(2)}',
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: ReportSummaryCard(
                   title: 'Total amount of Income',
-                  amountLabel: 'Php 0.00',
+                  amountLabel: 'Php ${totalIncome.toStringAsFixed(2)}',
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          const Row(
+          Row(
             children: [
               Expanded(
                 child: ReportSummaryCard(
                   title: 'Total amount of expenses',
-                  amountLabel: 'Php 0.00',
+                  amountLabel: 'Php ${totalExpenses.toStringAsFixed(2)}',
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: ReportSummaryCard(
                   title: 'Ending Cash',
-                  amountLabel: 'Php 0.00',
+                  amountLabel: 'Php ${endingCash.toStringAsFixed(2)}',
                 ),
               ),
             ],
@@ -1751,17 +1888,101 @@ class TransactionItem {
 }
 
 // Card UI for a transaction
-class TransactionCard extends StatelessWidget {
+class TransactionCard extends StatefulWidget {
   final TransactionItem item;
 
   const TransactionCard({super.key, required this.item});
 
   @override
+  State<TransactionCard> createState() => _TransactionCardState();
+}
+
+class _TransactionCardState extends State<TransactionCard> {
+  final GlobalKey _menuKey = GlobalKey();
+
+  void _showMenu() {
+    final ctx = _menuKey.currentContext;
+    if (ctx == null) return;
+
+    final renderBox = ctx.findRenderObject() as RenderBox;
+    final overlay = Overlay.of(context);
+    final overlayBox = overlay.context.findRenderObject() as RenderBox;
+    final position = renderBox.localToGlobal(Offset.zero, ancestor: overlayBox);
+
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (_) => Stack(
+        children: [
+          GestureDetector(
+            onTap: () => entry.remove(),
+            behavior: HitTestBehavior.translucent,
+            child: Container(color: Colors.transparent),
+          ),
+          Positioned(
+            left: position.dx - 80,
+            top: position.dy + renderBox.size.height,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                width: 100,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.black, width: 1),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        entry.remove();
+                        // todo: Implement edit
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.edit, size: 16),
+                            SizedBox(width: 8),
+                            Text('Edit', style: TextStyle(fontFamily: 'Poppins', fontSize: 13)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    InkWell(
+                      onTap: () {
+                        entry.remove();
+                        // todo: Implement delete
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.delete, size: 16, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Delete', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    overlay.insert(entry);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final String topLine = item.monthLabel.toUpperCase();
+    final String topLine = widget.item.monthLabel.toUpperCase();
     final String middleLine =
-        '${item.quantity} x ${item.price.toStringAsFixed(0)} - ${item.details.isNotEmpty ? item.details : item.description}';
-    final Color amountColor = item.type == 'Expense'
+        '${widget.item.quantity} x ${widget.item.price.toStringAsFixed(0)} - ${widget.item.details.isNotEmpty ? widget.item.details : widget.item.description}';
+    final Color amountColor = widget.item.type == 'Expense'
         ? const Color(0xFFC62828)
         : const Color(0xFF2E7D32);
 
@@ -1769,31 +1990,43 @@ class TransactionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF5),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFFF3E6CF),
+          color: const Color(0xFFECDDC6),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // First row: month and amount
+          // First row: month only
+          Text(
+            topLine,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 4),
+          // Second row: details, amount, and menu
           Row(
             children: [
               Expanded(
                 child: Text(
-                  topLine,
+                  middleLine,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
+                    fontSize: 12,
+                    color: Colors.black87,
                   ),
                 ),
               ),
               Text(
-                'PHP ${item.totalAmount.toStringAsFixed(0)}',
+                '${widget.item.type == 'Expense' ? '-' : ''}PHP ${widget.item.totalAmount.abs().toStringAsFixed(0)}',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 13,
@@ -1802,29 +2035,21 @@ class TransactionCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 4),
-              const Icon(
-                Icons.more_vert,
-                size: 18,
-                color: Colors.black54,
+              GestureDetector(
+                key: _menuKey,
+                onTap: _showMenu,
+                child: const Icon(
+                  Icons.more_vert,
+                  size: 18,
+                  color: Colors.black54,
+                ),
               ),
             ],
-          ),
-          const SizedBox(height: 4),
-          // Middle line
-          Text(
-            middleLine,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 12,
-              color: Colors.black87,
-            ),
           ),
           const SizedBox(height: 6),
           // Date
           Text(
-            item.date,
+            widget.item.date,
             style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 11,
@@ -2005,10 +2230,10 @@ class ReportSummaryCard extends StatelessWidget {
       height: 70,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF5),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: const Color(0xFFE7D9C0),
+          color: const Color(0xFFECDDC6),
           width: 1,
         ),
       ),
