@@ -889,7 +889,7 @@ def get_wallet_transactions(folder_id):
                         "id": tx["id"],
                         "quantity": qty,
                         "price": price,
-                        "incometype": tx.get("income_type"),
+                        "income_type": tx.get("income_type"),
                         "particulars": tx.get("particulars"),
                         "description": tx["description"],
                         "total_amount": total_amount,
