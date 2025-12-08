@@ -78,9 +78,16 @@ class _HomeScreenState extends State<HomeScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            setState(() {
+              _updateDate();
+            });
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
@@ -308,6 +315,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
             ],
+            ),
           ),
         ),
       ),

@@ -51,6 +51,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _orgNameController.text = widget.orgName;
+  }
+
+  @override
   void dispose() {
     _orgNameController.dispose();
     _shortNameController.dispose();
@@ -528,20 +534,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            "Organization Name",
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
                           Text(
-                            _orgNameController.text.isEmpty
-                                ? '-'
-                                : _orgNameController.text,
+                            widget.orgName,
                             style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 18,
@@ -655,8 +649,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 16),
 
               Expanded(
-                child: SingleChildScrollView(
-                  child: _buildOrgTabContent(),
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    // Refresh profile data
+                    setState(() {});
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: _buildOrgTabContent(),
+                  ),
                 ),
               ),
             ],

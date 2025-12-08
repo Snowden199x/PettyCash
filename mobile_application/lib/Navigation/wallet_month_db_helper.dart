@@ -103,4 +103,21 @@ class WalletMonthDbHelper {
     if (walletId == null) throw Exception('Wallet not found');
     return '${ApiClient.baseUrl}/pres/reports/$walletId/budgets/$folderId/preview';
   }
+
+  static Future<Map<String, dynamic>?> loadBudget(int folderId) async {
+    final apiClient = ApiClient();
+    try {
+      final data = await apiClient.getJson('/pres/api/wallets/$folderId/budget/current-month');
+      return data;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<void> saveBudget(int folderId, double amount) async {
+    final apiClient = ApiClient();
+    await apiClient.postJson('/pres/api/wallets/$folderId/budget', {
+      'budget': amount,
+    });
+  }
 }
