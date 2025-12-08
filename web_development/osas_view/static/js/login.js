@@ -4,11 +4,12 @@ document.addEventListener("DOMContentLoaded", function () {
   const passwordInput = document.getElementById("password");
   const usernameError = document.getElementById("usernameError");
   const passwordError = document.getElementById("passwordError");
+  const togglePassword = document.getElementById("togglePassword");
 
+  // existing validation...
   form.addEventListener("submit", function (e) {
     let valid = true;
 
-    // Reset errors
     usernameError.style.display = "none";
     passwordError.style.display = "none";
     usernameInput.classList.remove("shake");
@@ -31,15 +32,27 @@ document.addEventListener("DOMContentLoaded", function () {
       valid = false;
     }
 
-    // Remove shake class after animation ends
     setTimeout(() => {
       usernameInput.classList.remove("shake");
       passwordInput.classList.remove("shake");
     }, 500);
 
     if (!valid) {
-      e.preventDefault(); // ❌ Prevent submit kung may error
+      e.preventDefault();
     }
-    // Kung valid, auto-submit na sa Flask
   });
+
+  // toggle show/hide password with image
+  if (togglePassword) {
+    const showSrc = togglePassword.getAttribute("data-show-src");
+    const hideSrc = togglePassword.getAttribute("data-hide-src");
+
+    togglePassword.addEventListener("click", function () {
+      const isHidden = passwordInput.type === "password";
+
+      passwordInput.type = isHidden ? "text" : "password";
+      this.src = isHidden ? hideSrc : showSrc;
+      this.alt = isHidden ? "Hide password" : "Show password";
+    });
+  }
 });

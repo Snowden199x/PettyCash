@@ -49,7 +49,17 @@
 
           <!-- Password -->
           <label for="password">Password</label>
-          <input type="password" id="password" name="password" />
+          <div class="password-wrapper">
+            <input type="password" id="password" name="password" />
+            <img
+              id="togglePassword"
+              class="password-icon"
+              src="{{ url_for('pres.static', filename='images/show_password.png') }}"
+              data-show-src="{{ url_for('pres.static', filename='images/show_password.png') }}"
+              data-hide-src="{{ url_for('pres.static', filename='images/hide_password.png') }}"
+              alt="Show password"
+            />
+          </div>
           <p id="passwordError" class="error-message"></p>
 
           <!-- FIXED -->

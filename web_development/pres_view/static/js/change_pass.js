@@ -5,7 +5,27 @@ document.addEventListener("DOMContentLoaded", () => {
   const popup = document.getElementById("popup");
   const submitBtn = document.getElementById("submit-btn");
 
-  // kunin email at code galing sa link sa email
+  const togglePassword = document.getElementById("togglePassword");
+  const toggleConfirmPassword = document.getElementById("toggleConfirmPassword");
+
+  // ---- SHOW / HIDE PASSWORD HELPERS ----
+  function setupToggle(iconEl, inputEl) {
+    if (!iconEl || !inputEl) return;
+    const showSrc = iconEl.getAttribute("data-show-src");
+    const hideSrc = iconEl.getAttribute("data-hide-src");
+
+    iconEl.addEventListener("click", function () {
+      const isHidden = inputEl.type === "password";
+      inputEl.type = isHidden ? "text" : "password";
+      this.src = isHidden ? hideSrc : showSrc;
+      this.alt = isHidden ? "Hide password" : "Show password";
+    });
+  }
+
+  setupToggle(togglePassword, passwordInput);
+  setupToggle(toggleConfirmPassword, confirmPasswordInput);
+
+  // ---- existing code below (unchanged) ----
   const params = new URLSearchParams(window.location.search);
   const emailFromUrl = params.get("email");
   const codeFromUrl = params.get("code");
@@ -34,12 +54,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(value);
     const hasLength = value.length >= 8;
 
-    document
-      .querySelector(".lowercase")
-      .classList.toggle("checked", hasLowercase);
-    document
-      .querySelector(".uppercase")
-      .classList.toggle("checked", hasUppercase);
+    document.querySelector(".lowercase").classList.toggle("checked", hasLowercase);
+    document.querySelector(".uppercase").classList.toggle("checked", hasUppercase);
     document.querySelector(".number").classList.toggle("checked", hasNumber);
     document.querySelector(".special").classList.toggle("checked", hasSpecial);
     document.querySelector(".length").classList.toggle("checked", hasLength);
@@ -50,7 +66,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // submit → depende kung first-time setup o reset link
   submitBtn.addEventListener("click", async (e) => {
     e.preventDefault();
 
@@ -79,13 +94,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // FIRST-TIME NEW USER: walang email/code → regular form submit sa /change-password
     if (isFirstTimeSetup) {
       document.getElementById("changePassForm").submit();
       return;
     }
 
-    // FORGOT PASSWORD FLOW: kailangan may email + code
     if (!emailFromUrl || !codeFromUrl) {
       showPopup("Invalid or expired reset link.");
       return;
@@ -115,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       showPopup("Password reset successfully.", true);
       setTimeout(() => {
-        window.location.href = "/pres"; // PRES root → auto-redirect to login
+        window.location.href = "/pres";
       }, 2000);
     } catch (err) {
       showPopup("Network error. Please try again.");
