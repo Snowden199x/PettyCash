@@ -2,7 +2,7 @@ from flask import Flask, redirect, url_for, session, jsonify, request
 from supabase import create_client
 import os
 from dotenv import load_dotenv
-from flask_mail import Mail 
+from flask_mail import Mail
 
 # Blueprints
 from osas_view.app import osas

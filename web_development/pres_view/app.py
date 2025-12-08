@@ -43,9 +43,9 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 BUCKET_RECEIPTS = "Receipts"
 
 
-
 def generate_reset_code(length=6):
-    return ''.join(secrets.choice(string.digits) for _ in range(length))
+    return "".join(secrets.choice(string.digits) for _ in range(length))
+
 
 # -----------------------
 # Helpers
@@ -72,7 +72,7 @@ def send_reset_email(to_email, reset_link, org_name):
     html_body = render_template(
         "email_reset_password.html",
         reset_link=reset_link,
-        org_name=safe_org_name,               # e.g. "ITUH"
+        org_name=safe_org_name,  # e.g. "ITUH"
         to_email=to_email,
         requested_at=datetime.now().strftime("%b %d, %Y %I:%M %p"),
         banner_url=BANNER_URL,
@@ -91,6 +91,7 @@ def send_reset_email(to_email, reset_link, org_name):
     msg.html = html_body
 
     mail.send(msg)
+
 
 def validate_password(pw: str):
     errors = []
@@ -174,6 +175,7 @@ def health():
 # Login / auth
 # -----------------------
 
+
 @pres.route("/login/pres", methods=["GET", "POST"])
 def pres_login():
     if request.method == "POST":
@@ -202,9 +204,7 @@ def pres_login():
 
         # block Archived orgs
         if org.get("status") == "Archived":
-            error_msg = (
-                "This organization account is archived. Please contact OSAS."
-            )
+            error_msg = "This organization account is archived. Please contact OSAS."
             if request.accept_mimetypes.best == "application/json":
                 return jsonify({"success": False, "error": error_msg}), 403
             flash(error_msg, "danger")
@@ -271,6 +271,7 @@ def pres_auth_status():
 # -----------------------
 # Forgot / change password (PRES)
 # -----------------------
+
 
 @pres.route("/forgot-password", methods=["GET", "POST"])
 def pres_forgot_password():
@@ -416,7 +417,10 @@ def reset_password_with_code():
 
     org_id = user.get("organization_id")
     if not org_id:
-        return jsonify({"success": False, "error": "Organization account not found."}), 400
+        return (
+            jsonify({"success": False, "error": "Organization account not found."}),
+            400,
+        )
 
     hashed_pw = generate_password_hash(new_pw)
 
@@ -431,11 +435,20 @@ def reset_password_with_code():
 
     return jsonify({"success": True, "message": "Password reset successfully."})
 
+
 @pres.route("/change-password", methods=["GET", "POST"])
 def change_password():
     # kung may code+email → galing sa forgot-password link
-    code = request.args.get("code") if request.method == "GET" else request.form.get("code")
-    email = request.args.get("email") if request.method == "GET" else request.form.get("email")
+    code = (
+        request.args.get("code")
+        if request.method == "GET"
+        else request.form.get("code")
+    )
+    email = (
+        request.args.get("email")
+        if request.method == "GET"
+        else request.form.get("email")
+    )
 
     # kung wala silang code/email → ina-assume natin first-time setup
     org_id = session.get("org_id") if not code and not email else None
@@ -465,7 +478,6 @@ def change_password():
 
     flash("Password updated successfully. You can now log in.", "success")
     return redirect(url_for("pres.pres_login"))
-
 
 
 # -----------------------
@@ -508,7 +520,7 @@ def pres_logout():
 
 
 # -----------------------
-# Dashboard summary 
+# Dashboard summary
 # -----------------------
 
 
@@ -557,7 +569,7 @@ def get_dashboard_summary():
         total_income_all = 0.0
         total_expenses_all = 0.0
 
-        for tx in (tx_res.data or []):
+        for tx in tx_res.data or []:
             qty = int(tx.get("quantity") or 0)
             price = float(tx.get("price") or 0)
             amt = qty * price
@@ -579,7 +591,6 @@ def get_dashboard_summary():
                 d = datetime.strptime(d_str[:10], "%Y-%m-%d")
             except Exception:
                 continue
-
 
             if d.year == this_year and d.month == this_month:
                 if tx.get("kind") == "income":
@@ -620,20 +631,228 @@ def get_dashboard_summary():
         )
     except Exception as e:
         print("Error get_dashboard_summary:", e)
+        return (
+            jsonify(
+                {
+                    "total_balance": 0,
+                    "reports_submitted": 0,
+                    "income_month": 0,
+                    "expenses_month": 0,
+                    "error": str(e),
+                }
+            ),
+            500,
+        )
+
+
+@pres.route("/api/dashboard/full", methods=["GET"])
+def get_dashboard_full():
+    """
+    One-shot dashboard data:
+    - summary (same as /api/dashboard/summary)
+    - wallets overview (same as /api/wallets/overview)
+    - recent transactions (same as /api/transactions/recent)
+    """
+    if not session.get("pres_user"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    org_id = session.get("org_id")
+
+    from datetime import datetime
+
+    try:
+        # 1) get all wallets for this org
+        wallets_res = (
+            supabase.table("wallets")
+            .select("id, name")
+            .eq("organization_id", org_id)
+            .execute()
+        )
+        wallets = wallets_res.data or []
+        wallet_ids = [w["id"] for w in wallets]
+
+        # If walang wallets, return empty + zero summary
+        if not wallet_ids:
+            return jsonify(
+                {
+                    "summary": {
+                        "total_balance": 0,
+                        "reports_submitted": 0,
+                        "income_month": 0,
+                        "expenses_month": 0,
+                    },
+                    "wallets": [],
+                    "recent_transactions": [],
+                }
+            )
+
+        # 2) all transactions for those wallets (for summary + recent)
+        tx_res = (
+            supabase.table("wallet_transactions")
+            .select(
+                "id, wallet_id, kind, date_issued, quantity, price, "
+                "income_type, particulars, description"
+            )
+            .in_("wallet_id", wallet_ids)
+            .execute()
+        )
+        txs = tx_res.data or []
+
+        now = datetime.now()
+        this_year = now.year
+        this_month = now.month
+
+        income_month = 0.0
+        expenses_month = 0.0
+        total_income_all = 0.0
+        total_expenses_all = 0.0
+
+        # also build recent transactions data for frontend
+        recent_tx = []
+
+        for tx in txs:
+            qty = int(tx.get("quantity") or 0)
+            price = float(tx.get("price") or 0)
+            amt = qty * price
+
+            if tx.get("kind") == "income":
+                total_income_all += amt
+            elif tx.get("kind") == "expense":
+                total_expenses_all += amt
+
+            d_str = tx.get("date_issued")
+            if d_str:
+                try:
+                    d = datetime.strptime(d_str[:10], "%Y-%m-%d")
+                except Exception:
+                    d = None
+            else:
+                d = None
+
+            if d and d.year == this_year and d.month == this_month:
+                if tx.get("kind") == "income":
+                    income_month += amt
+                elif tx.get("kind") == "expense":
+                    expenses_month += amt
+
+            # prepare for recent list
+            if d:
+                recent_tx.append(
+                    {
+                        "id": tx.get("id"),
+                        "wallet_id": tx.get("wallet_id"),
+                        "type": tx.get("kind"),
+                        "date": d_str,
+                        "quantity": qty,
+                        "price": price,
+                        "income_type": tx.get("income_type"),
+                        "particulars": tx.get("particulars"),
+                        "description": tx.get("description"),
+                        "total_amount": amt,
+                    }
+                )
+
+        # sort recent_tx by date desc, then take top 5
+        recent_tx.sort(key=lambda r: r["date"], reverse=True)
+        recent_tx = recent_tx[:5]
+
+        # 3) budgets for all wallets
+        budgets_res = (
+            supabase.table("wallet_budgets")
+            .select("amount, wallet_id")
+            .in_("wallet_id", wallet_ids)
+            .execute()
+        )
+        budgets = budgets_res.data or []
+        beginning_total = sum(float(b.get("amount") or 0) for b in budgets)
+
+        total_balance = beginning_total + total_income_all - total_expenses_all
+
+        # 4) reports submitted
+        reports_res = (
+            supabase.table("financial_reports")
+            .select("id", count="exact")
+            .eq("organization_id", org_id)
+            .in_("status", ["Submitted", "Approved"])
+            .execute()
+        )
+        reports_submitted = reports_res.count or 0
+
+        # 5) wallets overview (similar to /wallets/overview)
+        #    compute total_income and total_expenses per wallet
+        wallet_map = {w["id"]: w for w in wallets}
+        wallet_stats = {w_id: {"income": 0.0, "expense": 0.0} for w_id in wallet_ids}
+        for tx in txs:
+            w_id = tx.get("wallet_id")
+            if w_id not in wallet_stats:
+                continue
+            qty = int(tx.get("quantity") or 0)
+            price = float(tx.get("price") or 0)
+            amt = qty * price
+            if tx.get("kind") == "income":
+                wallet_stats[w_id]["income"] += amt
+            elif tx.get("kind") == "expense":
+                wallet_stats[w_id]["expense"] += amt
+
+        # budgets per wallet
+        budget_per_wallet = {
+            b["wallet_id"]: float(b.get("amount") or 0) for b in budgets
+        }
+
+        wallets_overview = []
+        for w_id in wallet_ids:
+            w = wallet_map.get(w_id) or {}
+            inc = wallet_stats[w_id]["income"]
+            exp = wallet_stats[w_id]["expense"]
+            bud = budget_per_wallet.get(w_id, 0.0)
+            wallets_overview.append(
+                {
+                    "id": w_id,
+                    "name": w.get("name") or "",
+                    "budget": bud,
+                    "total_income": inc,
+                    "total_expenses": exp,
+                }
+            )
+
+        summary = {
+            "total_balance": total_balance,
+            "reports_submitted": reports_submitted,
+            "income_month": income_month,
+            "expenses_month": expenses_month,
+        }
+
         return jsonify(
             {
-                "total_balance": 0,
-                "reports_submitted": 0,
-                "income_month": 0,
-                "expenses_month": 0,
-                "error": str(e),
+                "summary": summary,
+                "wallets": wallets_overview,
+                "recent_transactions": recent_tx,
             }
-        ), 500
+        )
+    except Exception as e:
+        print("Error get_dashboard_full:", e)
+        return (
+            jsonify(
+                {
+                    "summary": {
+                        "total_balance": 0,
+                        "reports_submitted": 0,
+                        "income_month": 0,
+                        "expenses_month": 0,
+                    },
+                    "wallets": [],
+                    "recent_transactions": [],
+                    "error": str(e),
+                }
+            ),
+            500,
+        )
 
 
 # -----------------------
 # API: wallets -> month folders
 # -----------------------
+
 
 @pres.route("/api/wallets", methods=["GET"])
 def get_wallets():
@@ -690,7 +909,8 @@ def get_wallets():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
-    
+
+
 @pres.route("/api/wallets/overview", methods=["GET"])
 def get_wallets_overview():
     if not session.get("pres_user"):
@@ -738,8 +958,8 @@ def get_wallets_overview():
             by_folder[fid] = {
                 "id": fid,
                 "wallet_id": b["wallet_id"],
-                "name": b["months"]["month_name"],          # title, e.g. DECEMBER
-                "budget": float(b.get("amount") or 0),      # budget for that month
+                "name": b["months"]["month_name"],  # title, e.g. DECEMBER
+                "budget": float(b.get("amount") or 0),  # budget for that month
                 "total_income": 0.0,
                 "total_expenses": 0.0,
                 "last_activity": None,
@@ -771,7 +991,8 @@ def get_wallets_overview():
 
         # keep only folders that have any transaction
         items = [
-            v for v in by_folder.values()
+            v
+            for v in by_folder.values()
             if v["total_income"] > 0 or v["total_expenses"] > 0
         ]
 
@@ -785,8 +1006,6 @@ def get_wallets_overview():
     except Exception as e:
         print("Error get_wallets_overview:", e)
         return jsonify({"error": str(e)}), 500
-
-
 
 
 # ----------------------
@@ -843,17 +1062,18 @@ def get_wallet_transactions(folder_id):
 
     try:
         # Get folder to find wallet_id
-        folder_res = supabase.table("wallet_budgets") \
-            .select("wallet_id") \
-            .eq("id", folder_id) \
-            .single() \
+        folder_res = (
+            supabase.table("wallet_budgets")
+            .select("wallet_id")
+            .eq("id", folder_id)
+            .single()
             .execute()
+        )
 
         if not folder_res.data:
             return jsonify(error="Wallet folder not found"), 404
 
         wallet_id = folder_res.data["wallet_id"]
-
 
         res = (
             supabase.table("wallet_transactions")
@@ -903,10 +1123,10 @@ def get_wallet_transactions(folder_id):
         return jsonify(txs)
     except Exception as e:
         import traceback
+
         print("Error in getwallettransactions:", repr(e))
         traceback.print_exc()
         return jsonify(error=str(e)), 500
-
 
 
 @pres.route("/api/wallets/<int:folder_id>/transactions", methods=["POST"])
@@ -1045,7 +1265,8 @@ def delete_wallet_transaction(folder_id, tx_id):
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+
 @pres.route("/api/transactions/recent", methods=["GET"])
 def get_recent_transactions():
     if not session.get("pres_user"):
@@ -1116,11 +1337,10 @@ def get_recent_transactions():
         return jsonify(txs)
     except Exception as e:
         import traceback
+
         print("Error get_recent_transactions:", e)
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
-
 
 
 @pres.route("/api/wallets/<int:folder_id>/receipts", methods=["POST"])
@@ -1204,6 +1424,7 @@ def upload_wallet_receipt(folder_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @pres.route("/api/wallets/<int:folder_id>/receipts", methods=["GET"])
 def get_wallet_receipts(folder_id):
     if not session.get("pres_user"):
@@ -1237,6 +1458,7 @@ def get_wallet_receipts(folder_id):
         return jsonify(out)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @pres.route("/api/receipts/<int:receipt_id>/url", methods=["GET"])
 def get_receipt_public_url(receipt_id):
@@ -1395,6 +1617,7 @@ def generate_report():
         return jsonify({"success": True, "id": rep_id})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @pres.route("/api/wallets/reports/status", methods=["GET"])
 def wallets_report_status():
@@ -1628,8 +1851,7 @@ def preview_report_for_budget(wallet_id, budget_id):
     for table in doc.tables:
         if len(table.rows) < 2:
             continue
-        header_row = table.rows[1]
-        header_text = " ".join(cell.text for cell in header_row.cells).upper()
+        header_text = " ".join(c.text for c in table.rows[1].cells).upper()
         if "TYPE OF INCOME" in header_text and "DATE ISSUED" in header_text:
             income_table = table
             break
@@ -2319,7 +2541,7 @@ def download_archive(archive_id):
         replace_all("{{PREVIOUS_FUND}}", f"PHP {prev_fund:,.2f}")
         replace_all("{{TOTAL_REMAINING}}", f"PHP {remaining:,.2f}")
 
-        # 7) expenses table rows galing sa financial_report_archive_transactions
+        # 7) expenses table rows
         tx_res = (
             supabase.table("financial_report_archive_transactions")
             .select("date_issued, quantity, particulars, description, price, kind")
@@ -2341,8 +2563,11 @@ def download_archive(archive_id):
                 break
 
         if expenses_table:
+            # clear detail rows (keep header + total row)
             while len(expenses_table.rows) > 3:
                 expenses_table._tbl.remove(expenses_table.rows[2]._tr)
+
+            from datetime import datetime as _dt
 
             def fmt_date(d):
                 try:
@@ -2379,18 +2604,99 @@ def download_archive(archive_id):
 
             summary_row.cells[-1].text = f"PHP {total_expense:,.2f}"
 
-        # 8) receipts appendix galing sa financial_report_archive_receipts
+               # 8) incomes table rows + total income
+        inc_res = (
+            supabase.table("financial_report_archive_transactions")
+            .select("date_issued, quantity, description, price, kind")
+            .eq("archive_id", archive_id)
+            .eq("kind", "income")
+            .order("date_issued")
+            .execute()
+        )
+        incomes = inc_res.data or []
+
+        total_income = 0.0
+        for inc in incomes:
+            qty = int(inc.get("quantity") or 0)
+            price = float(inc.get("price") or 0)
+            total_income += qty * price
+
+        # Optional: fill income detail table if may template ka
+        income_table = None
+        for table in doc.tables:
+            if len(table.rows) < 2:
+                continue
+            header_text = " ".join(c.text for c in table.rows[1].cells).upper()
+            if "TYPE OF INCOME" in header_text or "INCOME" in header_text:
+                income_table = table
+                break
+
+        if income_table and len(income_table.rows) >= 3 and incomes:
+            # last row is total row
+            sum_row = income_table.rows[-1]
+
+            # clear detail rows (keep header + total row)
+            while len(income_table.rows) > 3:
+                income_table._tbl.remove(income_table.rows[2]._tr)
+
+            from datetime import datetime as _dt
+
+            def fmt_date2(d):
+                try:
+                    return _dt.fromisoformat(d).strftime("%Y-%m-%d")
+                except Exception:
+                    return d or ""
+
+            for inc in incomes:
+                row = income_table.add_row()
+                income_table._tbl.remove(row._tr)
+                sum_row._tr.addprevious(row._tr)
+
+                dcell, qtycell, typecell, desccell, pricecell = row.cells
+                dcell.text = fmt_date2(inc.get("date_issued") or "")
+                qtycell.text = str(inc.get("quantity") or "")
+                # walang income_type column sa archive table, so blank or reuse description
+                typecell.text = ""    # or inc.get("description") or ""
+                desccell.text = inc.get("description") or ""
+                amt = (inc.get("quantity") or 0) * (inc.get("price") or 0)
+                pricecell.text = f"PHP {amt:,.2f}"
+
+            sum_row.cells[-1].text = f"PHP {total_income:,.2f}"
+
+
+        # 9) budget in the bank
+        budget_in_the_bank = (
+            prev_fund + budget_val + total_income - total_expense - reimb
+        )
+
+        replace_all("{{TOTAL_INCOME}}", f"PHP {total_income:,.2f}")
+        replace_all("{{BUDGET_IN_THE_BANK}}", f"PHP {budget_in_the_bank:,.2f}")
+
+        # 10) receipts appendix table (no raw URL)
         rc_res = (
             supabase.table("financial_report_archive_receipts")
-            .select("description, file_url, receipt_date")
+            .select("description, receipt_date, file_url")
             .eq("archive_id", archive_id)
             .order("receipt_date")
             .execute()
         )
         receipts = rc_res.data or []
 
+        appendix_table = None
+        for table in doc.tables:
+            if "APPENDIX" in table.cell(0, 0).text.upper():
+                appendix_table = table
+                break
+
+        if appendix_table and receipts:
+            for rc in receipts:
+                row = appendix_table.add_row()
+                row.cells[0].text = str(rc.get("receipt_date") or "")
+                row.cells[1].text = rc.get("description") or ""
+                # URL intentionally not printed
+
+        # 11) image appendix: wala nang extra page break
         if receipts:
-            doc.add_page_break()
             title_p = doc.add_paragraph()
             title_run = title_p.add_run("APPENDIX: RECEIPTS")
             title_run.bold = True
@@ -2411,19 +2717,24 @@ def download_archive(archive_id):
                 doc.add_picture(img_stream, width=Inches(4))
                 doc.add_paragraph()
 
+        # 12) return file
         buf = BytesIO()
         doc.save(buf)
         buf.seek(0)
 
-        download_name = arch.get("report_no") or "financial_report.docx"
+        download_name = arch.get("report_no") or "financial_report_template.docx"
         return send_file(
             buf,
             as_attachment=True,
-            mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            mimetype=(
+                "application/vnd.openxmlformats-officedocument."
+                "wordprocessingml.document"
+            ),
             download_name=download_name,
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 # -----------------------
 # Profile APIs
@@ -2442,10 +2753,7 @@ def get_profile():
         # main org row (OSAS table)
         org_res = (
             supabase.table("organizations")
-            .select(
-                "id, org_name, department_id, "
-                "accreditation_date, status"
-            )
+            .select("id, org_name, department_id, " "accreditation_date, status")
             .eq("id", org_id)
             .limit(1)
             .execute()
@@ -2487,7 +2795,9 @@ def get_profile():
             photo_url = public.get("publicUrl") if isinstance(public, dict) else public
 
         # accreditation info purely from OSAS organizations table
-        status_text = "Accredited" if org.get("status") == "Active" else org.get("status")
+        status_text = (
+            "Accredited" if org.get("status") == "Active" else org.get("status")
+        )
 
         profile = {
             "org_name": org.get("org_name"),
@@ -2495,7 +2805,7 @@ def get_profile():
             "department": dept_name,
             "department_id": org.get("department_id"),
             "school": prof.get("school_name"),
-             "email": prof.get("email"), 
+            "email": prof.get("email"),
             "profile_photo_url": photo_url,
             "accreditation": {
                 "date_of_accreditation": org.get("accreditation_date"),
@@ -2542,7 +2852,7 @@ def update_profile():
             if "org_name" in data:
                 session["org_name"] = data["org_name"]
 
-               # Upsert profile_users
+            # Upsert profile_users
         if prof_update:
             existing = (
                 supabase.table("profile_users")
@@ -2559,7 +2869,9 @@ def update_profile():
                     ).execute()
                 else:
                     if "school_name" not in prof_update:
-                        prof_update["school_name"] = "Laguna State Polytechnic University, Sta. Cruz, Laguna (LSPU-SCC)"
+                        prof_update["school_name"] = (
+                            "Laguna State Polytechnic University, Sta. Cruz, Laguna (LSPU-SCC)"
+                        )
                     prof_update["organization_id"] = org_id
                     supabase.table("profile_users").insert(prof_update).execute()
             except Exception as e:
@@ -2585,7 +2897,10 @@ def update_profile():
                     )
 
                 # Fallback for any 23505 not matched above
-                if "duplicate key value violates unique constraint" in msg or "23505" in msg:
+                if (
+                    "duplicate key value violates unique constraint" in msg
+                    or "23505" in msg
+                ):
                     return (
                         jsonify(
                             success=False,
@@ -2593,12 +2908,13 @@ def update_profile():
                         ),
                         400,
                     )
-                return jsonify({"success": False, "error": "Failed to update profile."}), 500
+                return (
+                    jsonify({"success": False, "error": "Failed to update profile."}),
+                    500,
+                )
 
         if org_update or prof_update:
-            return jsonify(
-                {"success": True, "message": "Profile updated successfully"}
-            )
+            return jsonify({"success": True, "message": "Profile updated successfully"})
 
         return jsonify({"error": "No valid fields to update"}), 400
 
@@ -2645,9 +2961,9 @@ def upload_profile_picture():
             .execute()
         )
         if existing.data:
-            supabase.table("profile_users").update(
-                {"profile_photo_url": path}
-            ).eq("organization_id", org_id).execute()
+            supabase.table("profile_users").update({"profile_photo_url": path}).eq(
+                "organization_id", org_id
+            ).execute()
         else:
             supabase.table("profile_users").insert(
                 {
@@ -2670,6 +2986,7 @@ def upload_profile_picture():
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @pres.route("/api/profile/send-reset-code", methods=["POST"])
 def send_profile_reset_code():
@@ -2726,6 +3043,7 @@ def send_profile_reset_code():
             "message": "If this email exists, a reset code has been sent.",
         }
     )
+
 
 # -----------------------
 # Officers APIs
