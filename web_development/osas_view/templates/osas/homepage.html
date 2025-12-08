@@ -46,14 +46,19 @@
           <span class="search-icon"></span>
         </div>
 
-        <!-- Notification button -->
+        <!-- Notification button with count badge -->
         <button class="notif-btn" id="notifBtn" aria-label="Notifications">
           <span class="notif-icon">🔔</span>
-          <span class="notif-dot" id="notifDot" style="display: none"></span>
+          <span class="notif-count" style="display: none">0</span>
         </button>
 
         <div class="notif-menu" id="notifMenu">
-          <div class="notif-menu-header">Notifications</div>
+          <div class="notif-header">
+            <h3>Notifications</h3>
+            <button class="mark-all-read-btn" id="markAllReadBtn">
+              Mark all as Read
+            </button>
+          </div>
           <div class="notif-list" id="notifList"></div>
         </div>
 
@@ -240,7 +245,11 @@
             </div>
             <div class="chart-container" id="deptChartContainer">
               <canvas id="departmentChart" width="400" heightt="400"></canvas>
-              <div id="deptTooltip" class="chart-tooltip" style="display:none;"></div>
+              <div
+                id="deptTooltip"
+                class="chart-tooltip"
+                style="display: none"
+              ></div>
             </div>
             <div class="chart-legend" id="deptLegend"></div>
           </div>

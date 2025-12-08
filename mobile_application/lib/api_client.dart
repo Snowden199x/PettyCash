@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
-  // Change this if your Flask server IP/port changes
-  static const String baseUrl = 'http://192.168.1.12:5000';
+  static const String baseUrl = 'http://10.216.33.26:5000'; // Replace with your server's address or IP for device access
 
   Future<Map<String, dynamic>> postJson(
     String path,
