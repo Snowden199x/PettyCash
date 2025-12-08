@@ -4,13 +4,14 @@
 body {
   margin: 0;
   font-family: Poppins;
-  background-color: #f5f1e8;
+  background-color: #F5F1E8;
   color: #000000;
   padding-top: 80px; /* Space for fixed header */
 }
 
+
 /* =========================================
-   HEADER (Fixed at Top) - SINGLE DEFINITION
+   HEADER (Fixed at Top)
 ========================================= */
 .admin-header {
   position: fixed;
@@ -20,13 +21,14 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(to bottom, #ffffff, #ecddc6);
+  background: linear-gradient(to bottom, #FFFFFF, #ECDDC6);
   padding: 10px 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   height: 60px;
   margin-left: 0 !important; /* CRITICAL: Never shift */
 }
+
 
 .logo {
   display: flex;
@@ -36,14 +38,17 @@ body {
   transition: opacity 0.2s ease;
 }
 
+
 .logo:hover {
   opacity: 0.8;
 }
+
 
 .logo img {
   width: 60px;
   height: 60px;
 }
+
 
 .logo_name {
   font-weight: 500;
@@ -51,100 +56,37 @@ body {
   color: #000000;
 }
 
+
 /* =========================================
-   PAGE HEADER (Fixed below admin header) - UPDATED
+   PAGE HEADER (Fixed below admin header)
 ========================================= */
 .page-header {
   position: fixed;
   top: 60px;
   left: 0;
   right: 0;
-  background-color: #f5f1e8;
-  padding: 12px 40px;
+  background-color: #F5F1E8;
+  padding: 20px 30px;
   z-index: 999;
   box-sizing: border-box;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  margin-left: 60px; /* Matches collapsed sidebar */
+  margin-left: 90px;
   transition: margin-left 0.25s ease;
 }
 
-/* When sidebar hovers, page-header shifts too */
 .sidebar.hover-sidebar:hover ~ .page-header {
-  margin-left: 260px;
+  margin-left: 290px;
 }
+
 
 /* =========================================
-   SIDEBAR STYLING
-========================================= */
-.sidebar {
-  position: fixed;
-  left: 0;
-  top: 80px;
-  width: 60px;
-  height: calc(100vh - 80px);
-  background-color: #f5f1e8;
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
-  transition: width 0.25s ease;
-  z-index: 999;
-  overflow: hidden;
-}
-
-.sidebar.hover-sidebar:hover {
-  width: 260px;
-}
-
-.nav-menu {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 15px 20px;
-  text-decoration: none;
-  color: #333;
-  transition: background-color 0.2s ease;
-  white-space: nowrap;
-  font-size: 15px;
-}
-
-.nav-item:hover {
-  background-color: rgba(139, 59, 8, 0.1);
-}
-
-.nav-item.active {
-  background-color: rgba(139, 59, 8, 0.2);
-  border-left: 4px solid #8b3b08;
-  padding-left: 16px;
-}
-
-.nav-icon-img {
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-}
-
-.nav-label {
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-
-.sidebar.hover-sidebar:hover .nav-label {
-  opacity: 1;
-}
-
-/* =========================================
-   MAIN DASHBOARD - CLEAN VERSION
+   MAIN DASHBOARD
 ========================================= */
 .dashboard {
   padding: 20px 40px;
   box-sizing: border-box;
-  margin-left: 60px; /* Matches collapsed sidebar */
+  margin-left: 60px;
   transition: margin-left 0.25s ease;
-  min-height: calc(100vh - 80px);
+  margin-top: 100px;
 }
 
 .dashboard.with-sidebar {
@@ -152,10 +94,10 @@ body {
   transition: margin-left 0.25s ease;
 }
 
-/* ONLY dashboard shifts on sidebar hover, NOT header */
 .sidebar.hover-sidebar:hover ~ .dashboard.with-sidebar {
   margin-left: 260px;
 }
+
 
 /* =========================================
    ACCREDITED ORGANIZATIONS SECTION
@@ -163,7 +105,7 @@ body {
 .organizations {
   width: 100%;
   max-width: 1344px;
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   border: 1px solid rgba(130, 130, 130, 0.5);
   border-radius: 15px;
   margin: 40px auto;
@@ -172,30 +114,34 @@ body {
   box-sizing: border-box;
 }
 
+
 .orgs-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 15px;
-  flex-wrap: nowrap;
-  margin-bottom: 0px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 20px;
+
 }
 
+
+
 .orgs-header-text h3 {
-  margin: 0 0 4px 0;
-  font-size: 1.2rem;
-  white-space: nowrap;
+  margin: 0 0 5px 0;
+  font-size: 1.5rem;
   font-weight: 600;
   color: #222;
 }
 
+
 .orgs-header-text p {
   margin: 0;
   color: #828282;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 400;
-  white-space: nowrap
 }
+
 
 .orgs-header-actions {
   display: flex;
@@ -204,17 +150,19 @@ body {
   flex-wrap: wrap;
 }
 
+
 /* --- Department Filter Dropdown --- */
 .filter-dropdown {
   position: relative;
 }
+
 
 .filter-select {
   padding: 12px 20px;
   width: 150px;
   border-radius: 10px;
   border: 1px solid rgba(130, 130, 130, 0.5);
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   font-family: Poppins;
   font-size: 16px;
   font-weight: 400;
@@ -224,21 +172,24 @@ body {
   min-width: 200px;
 }
 
+
 .filter-select:hover {
-  border-color: #8b3b08;
+  border-color: #8B3B08;
 }
+
 
 .filter-select:focus {
   outline: none;
-  border-color: #8b3b08;
+  border-color: #8B3B08;
 }
+
 
 /* --- Add Organization Button --- */
 .add-btn {
   width: 240px;
   height: 50px;
-  background-color: #8b3b08;
-  color: #ffffff;
+  background-color: #8B3B08;
+  color: #FFFFFF;
   border: none;
   border-radius: 10px;
   font-size: 20px;
@@ -247,32 +198,36 @@ body {
   transition: background-color 0.3s ease;
 }
 
+
 .add-btn:hover {
   background-color: #602805;
 }
 
-/* --- Search Input --- */
+
+/* --- Search Input ---  */
 .search-input {
   padding: 10px 15px;
   margin-top: 0;
   border-radius: 8px;
   border: 1px solid #ddd;
   font-family: Poppins;
-  font-size: 14px;
-  width: 280px;
+  font-size: 16px;
+  width: 300px;
   transition: border-color 0.3s ease;
 }
+
 
 .search-input:focus,
 .search-input:hover {
   outline: none;
-  border-color: #8b3b08;
+  border-color: #8B3B08;
 }
+
 
 /* --- Empty State Box --- */
 .empty-state {
   width: 100%;
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   border: 1px solid rgba(130, 130, 130, 0.5);
   border-radius: 15px;
   display: flex;
@@ -285,11 +240,13 @@ body {
   animation: fadeIn 0.5s ease-in;
 }
 
+
 .empty-state img {
   width: 85px;
   height: 85px;
   margin-bottom: 20px;
 }
+
 
 .empty-state h4 {
   font-size: 24px;
@@ -297,6 +254,7 @@ body {
   color: #000000;
   margin: 0 0 10px 0;
 }
+
 
 .empty-state p {
   font-size: 18px;
@@ -306,34 +264,39 @@ body {
   max-width: 700px;
 }
 
+
 /* ============================
    ANIMATIONS
 ============================ */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
   }
 }
 
+
+/* Optional: Also animate table rows when they appear */
 .table-container tr {
   animation: fadeIn 0.3s ease-in;
 }
+
 
 /* =========================================
    ORGANIZATION TABLE STYLING
 ========================================= */
 .org-box {
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   border-radius: 15px;
   padding: 25px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   margin-top: 25px;
 }
+
 
 .table-container {
   width: 100%;
@@ -342,11 +305,13 @@ body {
   margin-top: 15px;
 }
 
+
 .table-container table {
   width: 100%;
   border-collapse: collapse;
   min-width: 900px;
 }
+
 
 .table-container th {
   background-color: #f9e6c9;
@@ -357,6 +322,7 @@ body {
   border-bottom: 2px solid #e3b266;
 }
 
+
 .table-container td {
   padding: 10px 18px;
   border-bottom: 1px solid #ddd;
@@ -364,30 +330,37 @@ body {
   color: #333;
 }
 
+
 .table-container tr:hover {
   background-color: #fff7ec;
   transition: background-color 0.2s ease-in-out;
 }
+
 
 .table-container td:last-child,
 .table-container th:last-child {
   text-align: right;
 }
 
+
 .status-approved {
   color: #2d8a47;
   font-weight: 500;
 }
+
 
 .status-pending {
   color: #c77b2a;
   font-weight: 500;
 }
 
+
+/* Make the password look like hidden dots */
 .table-password {
-  font-family: "Courier New", monospace;
+  font-family: 'Courier New', monospace;
   letter-spacing: 2px;
 }
+
 
 /* TOAST / POPUP MESSAGE */
 .toast {
@@ -404,25 +377,22 @@ body {
   font-weight: 500;
   display: none;
   z-index: 10000;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
+
 @keyframes slideIn {
-  from {
-    transform: translateX(400px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  from { transform: translateX(400px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
+
 
 /* DROPDOWN BUTTON IN TABLE */
 .dropdown {
   position: relative;
   display: inline-block;
 }
+
 
 .dropdown-btn {
   background: none;
@@ -431,10 +401,12 @@ body {
   padding: 5px;
 }
 
+
 .dropdown-btn img {
   width: 25px;
   height: 25px;
 }
+
 
 .dropdown-menu {
   display: none;
@@ -445,11 +417,12 @@ body {
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   width: max-content;
   flex-direction: column;
   z-index: 1000;
 }
+
 
 .dropdown-menu button {
   border: none;
@@ -460,9 +433,11 @@ body {
   white-space: nowrap;
 }
 
+
 .dropdown-menu button:hover {
   background-color: #f9e6c9;
 }
+
 
 /* ============================
    DELETE CONFIRM MODAL
@@ -474,11 +449,12 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0,0,0,0.4);
   justify-content: center;
   align-items: center;
   z-index: 10000;
 }
+
 
 #deleteModal .modal-box {
   background: #fff;
@@ -486,11 +462,12 @@ body {
   width: 400px;
   max-width: 90%;
   padding: 25px 30px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
+
 
 #deleteModal .modal-header {
   display: flex;
@@ -498,11 +475,13 @@ body {
   align-items: center;
 }
 
+
 #deleteModal .modal-header h2 {
   margin: 0;
   font-size: 22px;
   font-weight: 600;
 }
+
 
 #deleteModal .close-btn {
   background: none;
@@ -511,17 +490,20 @@ body {
   cursor: pointer;
 }
 
+
 #deleteModal p {
   font-size: 16px;
   color: #333;
   margin: 0;
 }
 
+
 #deleteModal .modal-buttons {
   display: flex;
   justify-content: flex-end;
   gap: 15px;
 }
+
 
 #deleteModal .modal-buttons button {
   padding: 8px 16px;
@@ -531,27 +513,33 @@ body {
   font-size: 16px;
 }
 
+
 #deleteModal #cancelDeleteBtn {
   background: #ddd;
   color: #333;
 }
 
+
 #deleteModal #cancelDeleteBtn:hover {
   background: #ccc;
 }
 
+
 #deleteModal #confirmDeleteBtn {
-  background: #8b3b08;
+  background: #8B3B08;
   color: #fff;
 }
+
 
 #deleteModal #confirmDeleteBtn:hover {
   background: #602805;
 }
 
+
 /* =========================================
    RESPONSIVENESS
 ========================================= */
+
 
 /* Tablets (≤ 1024px) */
 @media (max-width: 1024px) {
@@ -559,29 +547,35 @@ body {
     padding: 20px;
   }
 
+
   .stat-card {
     flex: 1 1 45%;
   }
 
+
   .organizations {
     padding: 20px;
   }
+
 
   .add-btn {
     width: 200px;
     font-size: 18px;
   }
 
+
   .filter-select {
     min-width: 150px;
   }
 }
+
 
 /* Mobile (≤ 768px) */
 @media (max-width: 768px) {
   body {
     padding-top: 120px;
   }
+
 
   .admin-header {
     flex-direction: column;
@@ -590,37 +584,51 @@ body {
     padding: 15px 20px;
   }
 
-  .sidebar {
+
+  .side-menu {
     top: 120px;
     height: calc(100vh - 120px);
   }
+
 
   .table-container table {
     display: none;
   }
 
+
+  .stats {
+    flex-direction: column;
+    align-items: center;
+  }
+
+
   .stat-card {
     width: 90%;
   }
+
 
   .organizations {
     width: 90%;
     padding: 20px;
   }
 
-  .orgs-header-row {
+
+  .header-row {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .orgs-header-actions {
+
+  .header-actions {
     width: 100%;
     flex-direction: column;
   }
 
+
   .filter-select {
     width: 100%;
   }
+
 
   .add-btn {
     width: 100%;
@@ -628,15 +636,18 @@ body {
     font-size: 18px;
   }
 
+
   .empty-state p {
     font-size: 16px;
     padding: 0 10px;
   }
 
+
   .search-input {
     width: 100%;
   }
 }
+
 
 /* Small Mobile (≤ 480px) */
 @media (max-width: 480px) {
@@ -645,21 +656,26 @@ body {
     height: 50px;
   }
 
+
   .logo_name {
     font-size: 22px;
   }
+
 
   .stat-card .label {
     font-size: 16px;
   }
 
+
   .stat-card .count {
     font-size: 24px;
   }
 
+
   .empty-state h4 {
     font-size: 20px;
   }
+
 
   .empty-state p {
     font-size: 14px;
