@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
-  static const String baseUrl = 'http://192.168.1.12:5000'; // Replace with your server's address or IP for device access
+  // Change this if your Flask server IP/port changes
+  static const String baseUrl = 'http://192.168.1.12:5000';
 
   Future<Map<String, dynamic>> postJson(
     String path,
@@ -22,6 +23,7 @@ class ApiClient {
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
+  // For endpoints that return a JSON object
   Future<Map<String, dynamic>> getJson(String path) async {
     final res = await http
         .get(
@@ -31,5 +33,17 @@ class ApiClient {
         .timeout(const Duration(seconds: 10));
 
     return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  // For endpoints that return a JSON array, e.g. /pres/api/wallets
+  Future<List<dynamic>> getJsonList(String path) async {
+    final res = await http
+        .get(
+          Uri.parse('$baseUrl$path'),
+          headers: const {'Accept': 'application/json'},
+        )
+        .timeout(const Duration(seconds: 10));
+
+    return jsonDecode(res.body) as List<dynamic>;
   }
 }

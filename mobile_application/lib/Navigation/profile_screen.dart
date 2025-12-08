@@ -20,46 +20,24 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   int _selectedOrgTabIndex = 0;
 
-  // controllers for text fields (Organization Information)
-  final TextEditingController _orgNameController =
-      TextEditingController(text: 'ITUH');
-  final TextEditingController _shortNameController =
-      TextEditingController(text: 'ITUH');
-  final TextEditingController _departmentController =
-      TextEditingController(text: 'President');
-  final TextEditingController _schoolController =
-      TextEditingController(text: 'Laguna State Polytechnic University');
+  // edit mode for Organization Information section
+  bool _isEditingOrgInfo = false;
 
-  // dummy officers data
-  final List<Map<String, String>> _officers = [
-    {
-      'name': 'Zamuel..',
-      'position': 'President',
-      'start': 'August 2024',
-      'end': 'May 2025',
-      'status': 'Active',
-    },
-    {
-      'name': 'Rashed..',
-      'position': 'Vice Pre..',
-      'start': 'August 2024',
-      'end': 'May 2025',
-      'status': 'Active',
-    },
-    {
-      'name': 'Rhea M..',
-      'position': 'Secretar..',
-      'start': 'August 2024',
-      'end': 'May 2025',
-      'status': 'Active',
-    },
-  ];
+  // controllers for text fields (Organization Information)
+  final TextEditingController _orgNameController = TextEditingController();
+  final TextEditingController _shortNameController = TextEditingController();
+  final TextEditingController _departmentController = TextEditingController();
+  final TextEditingController _schoolController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+
+  // officers data (starts empty)
+  final List<Map<String, String>> _officers = [];
 
   // organization image (picked from gallery)
   File? _orgImageFile;
   final ImagePicker _picker = ImagePicker();
 
-  // shared horizontal controller for header + body
+  // shared horizontal controller for officers table
   final ScrollController _officersHorizontalController = ScrollController();
 
   Future<void> _pickOrgImage() async {
@@ -78,8 +56,384 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _shortNameController.dispose();
     _departmentController.dispose();
     _schoolController.dispose();
+    _emailController.dispose();
     _officersHorizontalController.dispose();
     super.dispose();
+  }
+
+  // open Add Officer dialog
+  Future<void> _openAddOfficerDialog() async {
+    final nameController = TextEditingController();
+    final positionController = TextEditingController();
+    DateTime? termStart;
+    DateTime? termEnd;
+    String status = 'Active';
+
+    Future<void> pickDate(bool isStart) async {
+      final now = DateTime.now();
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: now,
+        firstDate: DateTime(now.year - 5),
+        lastDate: DateTime(now.year + 5),
+      );
+      if (picked != null) {
+        if (isStart) {
+          termStart = picked;
+        } else {
+          termEnd = picked;
+        }
+      }
+    }
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: StatefulBuilder(
+            builder: (context, setStateDialog) {
+              String formatDate(DateTime? d) =>
+                  d == null ? '----------' : '${d.month}/${d.day}/${d.year}';
+
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Add Officer',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Divider(height: 1),
+
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Name',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter officer name',
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                          borderSide:
+                              BorderSide(color: Color(0xFFE2D2B7), width: 1),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                          borderSide:
+                              BorderSide(color: Color(0xFFE2D2B7), width: 1),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                          borderSide:
+                              BorderSide(color: Color(0xFF8B3B08), width: 1.2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Position',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: positionController,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter position',
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                          borderSide:
+                              BorderSide(color: Color(0xFFE2D2B7), width: 1),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                          borderSide:
+                              BorderSide(color: Color(0xFFE2D2B7), width: 1),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                          borderSide:
+                              BorderSide(color: Color(0xFF8B3B08), width: 1.2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Term Start',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              InkWell(
+                                onTap: () async {
+                                  await pickDate(true);
+                                  setStateDialog(() {});
+                                },
+                                child: Container(
+                                  height: 42,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: const Color(0xFFE2D2B7),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        formatDate(termStart),
+                                        style: const TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 13,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      const Icon(
+                                        Icons.calendar_today_outlined,
+                                        size: 18,
+                                        color: Colors.black54,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Term End',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              InkWell(
+                                onTap: () async {
+                                  await pickDate(false);
+                                  setStateDialog(() {});
+                                },
+                                child: Container(
+                                  height: 42,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: const Color(0xFFE2D2B7),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        formatDate(termEnd),
+                                        style: const TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 13,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      const Icon(
+                                        Icons.calendar_today_outlined,
+                                        size: 18,
+                                        color: Colors.black54,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Status',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFFE2D2B7),
+                        ),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: status,
+                          isExpanded: true,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'Active',
+                              child: Text('Active'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Inactive',
+                              child: Text('Inactive'),
+                            ),
+                          ],
+                          onChanged: (val) {
+                            if (val == null) return;
+                            setStateDialog(() {
+                              status = val;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Divider(height: 1),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        SizedBox(
+                          height: 40,
+                          child: TextButton(
+                            style: TextButton.styleFrom(
+                              backgroundColor: const Color(0xFFE0E0E0),
+                              foregroundColor: Colors.black87,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          height: 40,
+                          child: TextButton(
+                            style: TextButton.styleFrom(
+                              backgroundColor: const Color(0xFF28A745),
+                              foregroundColor: Colors.white,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 24),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: () {
+                              if (nameController.text.trim().isEmpty ||
+                                  positionController.text.trim().isEmpty) {
+                                return;
+                              }
+                              setState(() {
+                                _officers.add({
+                                  'name': nameController.text.trim(),
+                                  'position': positionController.text.trim(),
+                                  'start': termStart == null
+                                      ? '-'
+                                      : '${termStart!.month}/${termStart!.day}/${termStart!.year}',
+                                  'end': termEnd == null
+                                      ? '-'
+                                      : '${termEnd!.month}/${termEnd!.day}/${termEnd!.year}',
+                                  'status': status,
+                                });
+                              });
+                              Navigator.pop(context);
+                            },
+                            child: const Text(
+                              'Save Officer',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -185,7 +539,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            _orgNameController.text,
+                            _orgNameController.text.isEmpty
+                                ? '-'
+                                : _orgNameController.text,
                             style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 18,
@@ -205,7 +561,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            _schoolController.text,
+                            _schoolController.text.isEmpty
+                                ? '-'
+                                : _schoolController.text,
                             style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 12,
@@ -322,14 +680,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // ORGANIZATION INFORMATION FORM
   Widget _buildOrganizationInformationForm() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF4EEDF),
+        color: const Color.fromARGB(255, 255, 255, 255),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFECDDC6), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,7 +696,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'Organization Name',
             style: TextStyle(
               fontFamily: 'Poppins',
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
               color: Colors.black,
             ),
@@ -346,7 +704,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 6),
           TextField(
             controller: _orgNameController,
-            decoration: _inputDecoration(),
+            readOnly: true,
+            decoration: _inputDecoration().copyWith(
+              filled: true,
+              fillColor: const Color(0xFFF5F5F5),
+            ),
           ),
           const SizedBox(height: 14),
           Row(
@@ -356,10 +718,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Organization Shorten Name',
+                      'Org. Shorten Name',
                       style: TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: Colors.black,
                       ),
@@ -367,7 +729,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 6),
                     TextField(
                       controller: _shortNameController,
-                      decoration: _inputDecoration(),
+                      readOnly: !_isEditingOrgInfo,
+                      decoration: _inputDecoration().copyWith(
+                        filled: true,
+                        fillColor: _isEditingOrgInfo
+                            ? Colors.white
+                            : const Color(0xFFF9F7F2),
+                      ),
                     ),
                   ],
                 ),
@@ -381,7 +749,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       'Department',
                       style: TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: Colors.black,
                       ),
@@ -389,7 +757,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 6),
                     TextField(
                       controller: _departmentController,
-                      decoration: _inputDecoration(),
+                      readOnly: true,
+                      decoration: _inputDecoration().copyWith(
+                        filled: true,
+                        fillColor: const Color(0xFFF9F7F2),
+                      ),
                     ),
                   ],
                 ),
@@ -401,7 +773,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'School University',
             style: TextStyle(
               fontFamily: 'Poppins',
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
               color: Colors.black,
             ),
@@ -409,49 +781,131 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 6),
           TextField(
             controller: _schoolController,
-            decoration: _inputDecoration(),
+            readOnly: true,
+            decoration: _inputDecoration().copyWith(
+              filled: true,
+              fillColor: const Color(0xFFF9F7F2),
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Email',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _emailController,
+            readOnly: !_isEditingOrgInfo,
+            keyboardType: TextInputType.emailAddress,
+            decoration: _inputDecoration().copyWith(
+              filled: true,
+              fillColor:
+                  _isEditingOrgInfo ? Colors.white : const Color(0xFFF9F7F2),
+            ),
           ),
           const SizedBox(height: 24),
           Align(
             alignment: Alignment.centerRight,
-            child: SizedBox(
-              width: 110,
-              height: 40,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8B3B08),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+            child: _isEditingOrgInfo
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        height: 40,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF28A745),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isEditingOrgInfo = false;
+                            });
+                          },
+                          child: const Text(
+                            'Save Changes',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        height: 40,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE0E0E0),
+                            foregroundColor: Colors.black54,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isEditingOrgInfo = false;
+                            });
+                          },
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : SizedBox(
+                    width: 110,
+                    height: 40,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF8B3B08),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isEditingOrgInfo = true;
+                        });
+                      },
+                      child: const Text(
+                        'Edit',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                onPressed: () {
-                  setState(() {});
-                },
-                child: const Text(
-                  'Edit',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
           ),
         ],
       ),
     );
   }
 
-  // OFFICERS SECTION
   Widget _buildOfficersSection() {
-    const double tableWidth = 600;
+    final double tableWidth = MediaQuery.of(context).size.width - 40;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header + button
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -467,7 +921,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(
               height: 36,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: _openAddOfficerDialog,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFB75A11),
                   foregroundColor: Colors.white,
@@ -491,8 +945,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
         const SizedBox(height: 12),
-
-        // Card with table
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
@@ -506,16 +958,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
-          child: Column(
-            children: [
-              // Header row
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                controller: _officersHorizontalController,
-                physics: const ClampingScrollPhysics(),
-                child: SizedBox(
-                  width: tableWidth,
-                  child: Container(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            controller: _officersHorizontalController,
+            physics: const ClampingScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: tableWidth),
+              child: Column(
+                children: [
+                  Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 10),
                     decoration: const BoxDecoration(
@@ -536,101 +987,107 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                   ),
-                ),
-              ),
-
-              // Body rows
-              SizedBox(
-                height: 180,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    controller: _officersHorizontalController,
-                    physics: const ClampingScrollPhysics(),
-                    child: SizedBox(
-                      width: tableWidth,
-                      child: Column(
-                        children: _officers.map((officer) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 10),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: Color(0xFFE0E0E0),
-                                  width: 0.5,
+                  SizedBox(
+                    height: 180,
+                    child: _officers.isEmpty
+                        ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Text(
+                                'No officers added yet.',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 12,
+                                  color: Colors.black54,
                                 ),
                               ),
                             ),
-                            child: Row(
-                              children: [
-                                _DataCellText(officer['name']!, flex: 2),
-                                _DataCellText(officer['position']!, flex: 2),
-                                _DataCellText(officer['start']!),
-                                _DataCellText(officer['end']!),
-                                SizedBox(
-                                  width: 110,
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFBDEBC8),
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Text(
-                                        officer['status']!,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF2F7D38),
-                                        ),
+                          )
+                        : SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            child: Column(
+                              children: _officers.map((officer) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 10),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: Color(0xFFE0E0E0),
+                                        width: 0.5,
                                       ),
                                     ),
                                   ),
-                                ),
-                                SizedBox(
-                                  width: 140,
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      _SmallActionButton(
-                                        label: 'Edit',
-                                        color: const Color(0xFF4BA3FF),
-                                        onTap: () {},
+                                      _DataCellText(officer['name']!, flex: 2),
+                                      _DataCellText(
+                                          officer['position']!, flex: 2),
+                                      _DataCellText(officer['start']!),
+                                      _DataCellText(officer['end']!),
+                                      SizedBox(
+                                        width: 110,
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 10, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFBDEBC8),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            child: Text(
+                                              officer['status']!,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontFamily: 'Poppins',
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF2F7D38),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                      const SizedBox(width: 6),
-                                      _SmallActionButton(
-                                        label: 'Delete',
-                                        color: const Color(0xFFFF6B6B),
-                                        onTap: () {},
+                                      SizedBox(
+                                        width: 140,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            _SmallActionButton(
+                                              label: 'Edit',
+                                              color: const Color(0xFF4BA3FF),
+                                              onTap: () {},
+                                            ),
+                                            const SizedBox(width: 6),
+                                            _SmallActionButton(
+                                              label: 'Delete',
+                                              color: const Color(0xFFFF6B6B),
+                                              onTap: () {},
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ),
-                                ),
-                              ],
+                                );
+                              }).toList(),
                             ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
+                          ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ],
     );
   }
 
-  // ACCREDITATION INFORMATION CARD
   Widget _buildAccreditationInfo() {
     return Container(
       width: double.infinity,
@@ -679,24 +1136,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // shared decoration for all TextFields
   InputDecoration _inputDecoration() {
-    return InputDecoration(
+    return const InputDecoration(
       filled: true,
       fillColor: Colors.white,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(6),
-        borderSide: const BorderSide(color: Color(0xFFE2D2B7), width: 1),
+        borderRadius: BorderRadius.all(Radius.circular(6)),
+        borderSide: BorderSide(color: Color(0xFFE2D2B7), width: 1),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(6),
-        borderSide: const BorderSide(color: Color(0xFFE2D2B7), width: 1),
+        borderRadius: BorderRadius.all(Radius.circular(6)),
+        borderSide: BorderSide(color: Color(0xFFE2D2B7), width: 1),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(6),
-        borderSide: const BorderSide(color: Color(0xFF8B3B08), width: 1.2),
+        borderRadius: BorderRadius.all(Radius.circular(6)),
+        borderSide: BorderSide(color: Color(0xFF8B3B08), width: 1.2),
       ),
     );
   }
@@ -747,7 +1202,6 @@ class _OrgSegmentTab extends StatelessWidget {
   }
 }
 
-// header cell for officers table
 class _HeaderCell extends StatelessWidget {
   final String title;
   final int flex;
@@ -775,7 +1229,6 @@ class _HeaderCell extends StatelessWidget {
   }
 }
 
-// data cell text
 class _DataCellText extends StatelessWidget {
   final String text;
   final int flex;
@@ -803,7 +1256,6 @@ class _DataCellText extends StatelessWidget {
   }
 }
 
-// small action buttons (Edit / Delete)
 class _SmallActionButton extends StatelessWidget {
   final String label;
   final Color color;
@@ -841,7 +1293,6 @@ class _SmallActionButton extends StatelessWidget {
   }
 }
 
-// row used in accreditation card
 class _AccreditationRow extends StatelessWidget {
   final String label;
   final String value;

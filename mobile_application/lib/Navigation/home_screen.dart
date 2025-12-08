@@ -70,8 +70,10 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     // limit greeting width to avoid hitting the avatar
     final double greetingMaxWidth =
-        MediaQuery.of(context).size.width - 16 /*padding left*/
-        - 16 /*padding right*/ - 60 /*approx avatar+menu width*/;
+        MediaQuery.of(context).size.width -
+            16 /*padding left*/ -
+            16 /*padding right*/ -
+            60 /*approx avatar+menu width*/;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -213,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
               const SizedBox(height: 20),
 
-              // Transaction history preview
+              // Transaction history title
               const Text(
                 'Transaction History',
                 style: TextStyle(
@@ -224,6 +226,8 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               const SizedBox(height: 70),
+
+              // Empty transaction state
               Center(
                 child: Column(
                   children: [
@@ -244,6 +248,54 @@ class _HomeScreenState extends State<HomeScreen>
                     const SizedBox(height: 4),
                     const Text(
                       'Your transaction history will appear here once you add entries',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w400,
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 80),
+
+              // Wallets Overview title (left aligned)
+              const Text(
+                'Wallets Overview',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontStyle: FontStyle.italic,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              // Empty wallets state (centered, same style as transaction empty state)
+              Center(
+                child: Column(
+                  children: [
+                    Image.asset(
+                      'assets/Icons/navigation_icons/nav_wallet.png',
+                      height: 61,
+                      width: 61,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'No wallets yet',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Create your first wallet to start tracking your finances',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: 'Poppins',
@@ -314,11 +366,13 @@ class _OverviewCard extends StatelessWidget {
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
+                
               ),
             ),
           ),
         ],
       ),
     );
+    
   }
 }
