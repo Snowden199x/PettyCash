@@ -129,11 +129,10 @@ def osas_logout():
 
     # HUWAG na session.clear() para di ma‑logout ang PRES
     session.pop("osas_admin", None)
-    session.pop("osas_role", None)       # kung meron kang ganitong key
+    session.pop("osas_role", None)  # kung meron kang ganitong key
     session.pop("osas_permissions", None)  # at iba pang OSAS-only keys
 
     return redirect(url_for("osas.osas_login"))
-
 
 
 @osas.route("/reports")
@@ -203,40 +202,46 @@ def osas_archive():
 @osas.route("/api/organizations", methods=["GET"])
 def get_organizations():
     department = request.args.get("department")
-    
+
     # Get ALL departments first (single query)
     all_depts = supabase.table("departments").select("id, dept_name").execute()
     dept_map = {d["id"]: d["dept_name"] for d in (all_depts.data or [])}
-    
+
     # Build query
     dept_id = None
     if department and department != "All Departments":
-        for dept in (all_depts.data or []):
+        for dept in all_depts.data or []:
             if dept["dept_name"] == department:
                 dept_id = dept["id"]
                 break
-    
+
     org_query = supabase.table("organizations").select("*").eq("status", "Active")
     if dept_id:
         org_query = org_query.eq("department_id", dept_id)
-    
+
     result = org_query.execute()
-    
+
     orgs = []
     if result.data:
         for org in result.data:
-            dept_name = dept_map.get(org.get("department_id"), "-") if org.get("department_id") else "-"
-            orgs.append({
-                "id": org["id"],
-                "name": org["org_name"],
-                "department": dept_name,
-                "username": org["username"],
-                "password": org["password"],
-                "date": str(org.get("accreditation_date")),
-                "status": org.get("status"),
-                "created_by": org.get("created_by"),
-            })
-    
+            dept_name = (
+                dept_map.get(org.get("department_id"), "-")
+                if org.get("department_id")
+                else "-"
+            )
+            orgs.append(
+                {
+                    "id": org["id"],
+                    "name": org["org_name"],
+                    "department": dept_name,
+                    "username": org["username"],
+                    "password": org["password"],
+                    "date": str(org.get("accreditation_date")),
+                    "status": org.get("status"),
+                    "created_by": org.get("created_by"),
+                }
+            )
+
     return jsonify({"organizations": orgs})
 
 
@@ -253,27 +258,30 @@ def get_organizations_with_reports():
     dept_map = {d["id"]: d["dept_name"] for d in (all_depts.data or [])}
 
     org_result = (
-        supabase.table("organizations")
-        .select("*")
-        .eq("status", "Active")
-        .execute()
+        supabase.table("organizations").select("*").eq("status", "Active").execute()
     )
 
     orgs = []
     org_ids = []
     if org_result.data:
         for org in org_result.data:
-            dept_name = dept_map.get(org.get("department_id"), "-") if org.get("department_id") else "-"
-            orgs.append({
-                "id": org["id"],
-                "name": org["org_name"],
-                "department": dept_name,
-                "username": org["username"],
-                "password": org["password"],
-                "date": str(org.get("accreditation_date")),
-                "status": org.get("status"),
-                "created_by": org.get("created_by"),
-            })
+            dept_name = (
+                dept_map.get(org.get("department_id"), "-")
+                if org.get("department_id")
+                else "-"
+            )
+            orgs.append(
+                {
+                    "id": org["id"],
+                    "name": org["org_name"],
+                    "department": dept_name,
+                    "username": org["username"],
+                    "password": org["password"],
+                    "date": str(org.get("accreditation_date")),
+                    "status": org.get("status"),
+                    "created_by": org.get("created_by"),
+                }
+            )
             org_ids.append(org["id"])
 
     # 2) Load ALL OSAS financial_reports rows for those orgs in ONE query
@@ -297,26 +305,33 @@ def get_archived_organizations():
     # Get ALL departments first (single query)
     all_depts = supabase.table("departments").select("id, dept_name").execute()
     dept_map = {d["id"]: d["dept_name"] for d in (all_depts.data or [])}
-    
-    result = supabase.table("organizations").select("*").eq("status", "Archived").execute()
-    
+
+    result = (
+        supabase.table("organizations").select("*").eq("status", "Archived").execute()
+    )
+
     orgs = []
     if result.data:
         for org in result.data:
-            dept_name = dept_map.get(org.get("department_id"), "-") if org.get("department_id") else "-"
-            orgs.append({
-                "id": org["id"],
-                "name": org["org_name"],
-                "department": dept_name,
-                "username": org["username"],
-                "password": org["password"],
-                "date": str(org.get("accreditation_date")),
-                "status": org.get("status"),
-                "created_by": org.get("created_by"),
-            })
-    
-    return jsonify({"organizations": orgs})
+            dept_name = (
+                dept_map.get(org.get("department_id"), "-")
+                if org.get("department_id")
+                else "-"
+            )
+            orgs.append(
+                {
+                    "id": org["id"],
+                    "name": org["org_name"],
+                    "department": dept_name,
+                    "username": org["username"],
+                    "password": org["password"],
+                    "date": str(org.get("accreditation_date")),
+                    "status": org.get("status"),
+                    "created_by": org.get("created_by"),
+                }
+            )
 
+    return jsonify({"organizations": orgs})
 
 
 @osas.route("/api/archive/empty", methods=["DELETE"])
@@ -405,10 +420,12 @@ def add_organization():
 
         # --- default PRES profile row with LSPU school ---
         try:
-            supabase.table("profile_users").insert({
-                "organization_id": new_org_id,
-                "school_name": "Laguna State Polytechnic University, Sta. Cruz, Laguna (LSPU-SCC)",
-            }).execute()
+            supabase.table("profile_users").insert(
+                {
+                    "organization_id": new_org_id,
+                    "school_name": "Laguna State Polytechnic University, Sta. Cruz, Laguna (LSPU-SCC)",
+                }
+            ).execute()
         except Exception as e:
             # optional: huwag pabagsakin ang add_organization kung mag-fail ito
             print("Failed to create default PRES profile row:", e)
@@ -537,6 +554,7 @@ def get_departments():
         print("ERROR:", e)
         return jsonify({"error": str(e)}), 500
 
+
 @osas.route("/reports/<int:org_id>/months/<string:month_key>/view", methods=["GET"])
 def osas_view_monthly_report(org_id, month_key):
     if "osas_admin" not in session:
@@ -659,6 +677,7 @@ def osas_view_monthly_report(org_id, month_key):
         report_month_text=report_month_text,
     )
 
+
 # ========== FINANCIAL REPORTS API ===========
 @osas.route("/api/organizations/<int:org_id>/financial_reports", methods=["GET"])
 def get_financial_reports_by_org(org_id):
@@ -670,7 +689,7 @@ def get_financial_reports_by_org(org_id):
         supabase.table("financial_reports")
         .select("*")
         .eq("organization_id", org_id)
-        .is_("wallet_id", None)   # huwag isama PRES rows
+        .is_("wallet_id", None)  # huwag isama PRES rows
         .is_("budget_id", None)
         .order("created_at", desc=True)
         .execute()
@@ -715,72 +734,102 @@ def update_financial_report(report_id):
 
     try:
         data = request.get_json() or {}
-        
+
         # Load existing report
-        res = supabase.table("financial_reports").select("*").eq("id", report_id).execute()
+        res = (
+            supabase.table("financial_reports")
+            .select("*")
+            .eq("id", report_id)
+            .execute()
+        )
         if not res.data:
             return jsonify({"error": "Report not found"}), 404
-        
+
         report = res.data[0]
         checklist = report.get("checklist") or {}
-        
+
         # Ensure checklist is always a dict
         if not isinstance(checklist, dict):
             checklist = {}
-        
+
         update_data = {}
-        
+
         # Admin notes
         if "notes" in data and data["notes"] is not None:
             update_data["notes"] = data["notes"]
-        
+
         # Explicit checklist overwrite (optional)
         if "checklist" in data and data["checklist"] is not None:
             checklist = data["checklist"] if isinstance(data["checklist"], dict) else {}
-        
+
         # Receive single month from modal
         receive_month = data.get("receiveMonth")
         if receive_month and isinstance(receive_month, str):
             checklist[receive_month.lower()] = True
-        
+
         # Mark all months complete from "Mark as Complete" button
         if data.get("completeAll") is True:
             month_keys = [
-                "august", "september", "october", "november", "december",
-                "january", "february", "march", "april", "may",
+                "august",
+                "september",
+                "october",
+                "november",
+                "december",
+                "january",
+                "february",
+                "march",
+                "april",
+                "may",
             ]
             for key in month_keys:
                 checklist[key] = True
-        
+
         update_data["checklist"] = checklist
-        
+
         # Recompute status based on checklist
         month_keys = [
-            "august", "september", "october", "november", "december",
-            "january", "february", "march", "april", "may",
+            "august",
+            "september",
+            "october",
+            "november",
+            "december",
+            "january",
+            "february",
+            "march",
+            "april",
+            "may",
         ]
         received_count = sum(1 for k in month_keys if checklist.get(k, False))
         total_count = len(month_keys)
-        
+
         if received_count == 0:
             update_data["status"] = "Pending Review"
         elif received_count < total_count:
             update_data["status"] = "In Review"
         else:
             update_data["status"] = "Completed"
-        
+
         update_data["updated_at"] = datetime.utcnow().isoformat()
-        
+
         # Update database
-        supabase.table("financial_reports").update(update_data).eq("id", report_id).execute()
-        
+        supabase.table("financial_reports").update(update_data).eq(
+            "id", report_id
+        ).execute()
+
         # Log activity
         admin = get_admin_data(session.get("osas_admin"))
         if admin:
-            log_activity(admin["id"], "financial_report", f"Updated financial report [{report_id}]")
-        
-        return jsonify({"message": "Financial report updated", "updated": update_data}), 200
-    
+            log_activity(
+                admin["id"],
+                "financial_report",
+                f"Updated financial report [{report_id}]",
+            )
+
+        return (
+            jsonify({"message": "Financial report updated", "updated": update_data}),
+            200,
+        )
+
     except Exception as e:
         print(f"Error updating financial report: {e}")
         return jsonify({"error": str(e)}), 500
@@ -792,10 +841,7 @@ def get_single_financial_report(report_id):
     Kunin isang OSAS master financial report row by id.
     """
     result = (
-        supabase.table("financial_reports")
-        .select("*")
-        .eq("id", report_id)
-        .execute()
+        supabase.table("financial_reports").select("*").eq("id", report_id).execute()
     )
     if not result.data:
         return jsonify({"error": "Not found"}), 404
@@ -826,7 +872,7 @@ def osas_print_monthly_report(org_id, month_key):
         rep = pres_res.data[0]
         wallet_id = rep.get("wallet_id")
         budget_id = rep.get("budget_id")
-        
+
         # Safety check
         if wallet_id is None or budget_id is None:
             return "Report missing wallet or budget information", 400
@@ -919,9 +965,13 @@ def osas_print_monthly_report(org_id, month_key):
         receipts = rc_res.data or []
         for r in receipts:
             try:
-                public_url = supabase.storage.from_("Receipts").get_public_url(r["file_url"])
+                public_url = supabase.storage.from_("Receipts").get_public_url(
+                    r["file_url"]
+                )
                 if isinstance(public_url, dict):
-                    r["file_url"] = public_url.get("publicUrl") or public_url.get("signedURL") or ""
+                    r["file_url"] = (
+                        public_url.get("publicUrl") or public_url.get("signedURL") or ""
+                    )
                 else:
                     r["file_url"] = public_url or ""
             except Exception as url_err:
@@ -946,7 +996,7 @@ def osas_print_monthly_report(org_id, month_key):
             report_month_text=report_month_text,
             receipts=receipts,
         )
-    
+
     except Exception as e:
         print(f"Error in print_monthly_report: {e}")
         return f"Error: {str(e)}", 500

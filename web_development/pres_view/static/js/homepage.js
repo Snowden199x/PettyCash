@@ -61,36 +61,36 @@ async function loadDashboardData() {
   if (content) content.style.display = "none";
 
   try {
-    // 1) Summary
-    const summaryResponse = await fetch("/pres/api/dashboard/summary");
-    if (summaryResponse.ok) {
-      const summary = await summaryResponse.json();
-      updateSummaryCards(summary);
+    const res = await fetch("/pres/api/dashboard/full");
+    if (!res.ok) {
+      throw new Error("Failed to load dashboard data");
     }
 
-    // 2) Wallet overview
-    const walletsResponse = await fetch("/pres/api/wallets/overview");
-    if (walletsResponse.ok) {
-      const wallets = await walletsResponse.json();
-      if (wallets.length > 0) {
-        loadWallets(wallets);
-      } else {
-        showEmptyWallets();
-      }
+    const data = await res.json();
+    const summary = data.summary || {
+      total_balance: 0,
+      reports_submitted: 0,
+      income_month: 0,
+      expenses_month: 0,
+    };
+    const wallets = Array.isArray(data.wallets) ? data.wallets : [];
+    const recent = Array.isArray(data.recent_transactions)
+      ? data.recent_transactions
+      : [];
+
+    // Summary cards
+    updateSummaryCards(summary);
+
+    // Wallets
+    if (wallets.length > 0) {
+      loadWallets(wallets);
     } else {
       showEmptyWallets();
     }
 
-    // 3) Recent transactions
-    const transactionsResponse = await fetch("/pres/api/transactions/recent");
-    if (transactionsResponse.ok) {
-      const all = await transactionsResponse.json();
-      const recent = Array.isArray(all) ? all.slice(0, 5) : [];
-      if (recent.length > 0) {
-        loadTransactions(recent);
-      } else {
-        showEmptyTransactions();
-      }
+    // Recent transactions
+    if (recent.length > 0) {
+      loadTransactions(recent);
     } else {
       showEmptyTransactions();
     }
@@ -121,10 +121,9 @@ function updateSummaryCards(summary) {
     reportsEl.textContent = summary.reports_submitted;
   }
   if (incomeEl) {
-    incomeEl.textContent = `Php ${summary.income_month.toLocaleString(
-      "en-PH",
-      { minimumFractionDigits: 2 }
-    )}`;
+    incomeEl.textContent = `Php ${summary.income_month.toLocaleString("en-PH", {
+      minimumFractionDigits: 2,
+    })}`;
   }
   if (expensesEl) {
     expensesEl.textContent = `Php ${summary.expenses_month.toLocaleString(
@@ -307,9 +306,7 @@ function setupHeaderSearch() {
       e.preventDefault();
       const term = input.value.trim();
       if (!term) return;
-      window.location.href = `/pres/wallets?search=${encodeURIComponent(
-        term
-      )}`;
+      window.location.href = `/pres/wallets?search=${encodeURIComponent(term)}`;
     }
   });
 }
