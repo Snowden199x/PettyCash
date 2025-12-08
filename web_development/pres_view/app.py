@@ -2565,13 +2565,31 @@ def update_profile():
             except Exception as e:
                 # duplicate short name (unique violation)
                 msg = str(e)
+                if "org_short_name" in msg:
+                    return (
+                        jsonify(
+                            success=False,
+                            error="Shortened name is already used by another organization.",
+                        ),
+                        400,
+                    )
+
+                # Email unique key
+                if "email" in msg:
+                    return (
+                        jsonify(
+                            success=False,
+                            error="Email is already used by another organization.",
+                        ),
+                        400,
+                    )
+
+                # Fallback for any 23505 not matched above
                 if "duplicate key value violates unique constraint" in msg or "23505" in msg:
                     return (
                         jsonify(
-                            {
-                                "success": False,
-                                "error": "Shortened name is already used by another organization.",
-                            }
+                            success=False,
+                            error="One of the fields is already used by another organization.",
                         ),
                         400,
                     )
