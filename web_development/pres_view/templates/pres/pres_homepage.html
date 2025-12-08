@@ -43,7 +43,7 @@
         <div class="profile-dropdown">
           <button class="profile-btn" id="profile-dropdown-toggle">
             <img
-              src="{{ profile_picture or url_for('pres.static', filename='images/default_profile.png') }}"
+              src="{{ profile_picture or url_for('pres.static', filename='images/default_avatar.png') }}"
               alt="Profile"
               class="profile-avatar"
             />
@@ -127,11 +127,6 @@
                 </div>
 
                 <div class="card">
-                  <p>Reports submitted</p>
-                  <h2 id="reports-submitted">0</h2>
-                </div>
-
-                <div class="card">
                   <p id="income-month-label">Income this month</p>
                   <h2 id="income-month">Php 0.00</h2>
                 </div>
@@ -139,6 +134,11 @@
                 <div class="card">
                   <p id="expenses-month-label">Expenses this month</p>
                   <h2 id="expenses-month">Php 0.00</h2>
+                </div>
+
+                <div class="card">
+                  <p>Reports submitted</p>
+                  <h2 id="reports-submitted">0</h2>
                 </div>
               </div>
             </div>

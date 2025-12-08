@@ -216,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // orgShortName lang ang editable
     const editableKeys = ["orgShortName", "email"];
-    editableKeys.forEach((key) => {
+      editableKeys.forEach((key) => {
       const input = inputs[key];
       originalValues[key] = input.value;
       input.removeAttribute("readonly");
@@ -274,14 +274,81 @@ document.addEventListener("DOMContentLoaded", () => {
       disableEditing();
     } catch (err) {
       console.error(err);
+          // ---- new block: inspect server error and highlight fields ----
+      let serverMsg = "Failed to update profile.";
+        if (err.data && (err.data.error || err.data.message)) {
+          serverMsg = err.data.error || err.data.message;
+        } else if (typeof err.message === "string") {
+          serverMsg = err.message;
+        }
+
+        console.log("raw serverMsg:", serverMsg);
+
+        // If backend sent a JSON string, parse and extract .error
+        if (typeof serverMsg === "string" && serverMsg.trim().startsWith("{")) {
+          try {
+            const parsed = JSON.parse(serverMsg);
+            if (parsed && typeof parsed.error === "string") {
+              serverMsg = parsed.error;
+            }
+          } catch (e) {
+            // ignore parse failure, keep original serverMsg
+          }
+        }
+
+        const msgLower = serverMsg.toLowerCase();
+
+      // clear old error states
+      [inputs.email, inputs.orgShortName].forEach((input) => {
+        const group = input.closest(".form-group");
+        if (!group) return;
+        group.classList.remove("error", "shake");
+        const oldMsg = group.querySelector(".error-message");
+        if (oldMsg) oldMsg.remove();
+      });
+
+      // If message mentions shortened name, highlight orgShortName
+      if (msgLower.includes("shortened name") || msgLower.includes("org_short_name")) {
+        const group = inputs.orgShortName.closest(".form-group");
+        if (group) {
+          group.classList.add("error", "shake");
+          const em = document.createElement("div");
+          em.className = "error-message";
+          em.textContent = serverMsg;
+          group.appendChild(em);
+          setTimeout(() => group.classList.remove("shake"), 300);
+        }
+        showToast("Shortened name is already used by another organization", "error");
+        return;
+      }
+
+      // If message mentions email, highlight email
+      if (msgLower.includes("email")) {
+        const group = inputs.email.closest(".form-group");
+        if (group) {
+          group.classList.add("error", "shake");
+          const em = document.createElement("div");
+          em.className = "error-message";
+          em.textContent = serverMsg;
+          group.appendChild(em);
+          setTimeout(() => group.classList.remove("shake"), 300);
+        }
+        showToast("Email is already used by another organization", "error");
+        return;
+      }
       showToast("Failed to update profile.", "error");
     }
   }
 
   function cancelEditing() {
-    Object.keys(inputs).forEach((key) => {
-      inputs[key].value = originalValues[key] ?? "";
+    const editableKeys = ["orgShortName", "email"];
+
+    editableKeys.forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(originalValues, key)) {
+        inputs[key].value = originalValues[key];
+      }
     });
+
     disableEditing();
   }
 
