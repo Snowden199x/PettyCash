@@ -52,6 +52,37 @@ def get_admin_data(username):
     return None
 
 
+MONTH_LABELS = {
+    "august": "August",
+    "september": "September",
+    "october": "October",
+    "november": "November",
+    "december": "December",
+    "january": "January",
+    "february": "February",
+    "march": "March",
+    "april": "April",
+    "may": "May",
+}
+
+
+def create_report_notification(org_id, report_id, org_name, status, month_key):
+    month_label = MONTH_LABELS.get(month_key.lower(), month_key.title())
+    message = f'has a report "{status} for {month_label}"'
+    supabase.table("osas_notifications").insert(
+        {
+            "org_id": org_id,
+            "report_id": report_id,
+            "org_name": org_name,
+            "message": message,
+            "status": status,
+            "month_key": month_key.lower(),
+            "is_read": False,
+            "created_at": datetime.utcnow().isoformat(),
+        }
+    ).execute()
+
+
 def log_activity(admin_id, action_type, description):
     supabase.table("osas_activity_log").insert(
         {

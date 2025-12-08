@@ -291,21 +291,21 @@ document.addEventListener("DOMContentLoaded", () => {
     let orgList = organizations;
     const selectedDept = departmentFilter ? departmentFilter.value : "";
 
-  const deptNamesAll = departments.map((d) => d.name);
-  const colorsAll = [
-    "#471C6E",
-    "#6E3402",
-    "#DF196E",
-    "#FBD004",
-    "#000000ff",
-    "#48469B",
-    "#2F6519",
-    "#FE8D00",
-    "#6A0200",
-    "#534a6eff",
-    "#0097e6",
-    "#b2bec3",
-  ];
+    const deptNamesAll = departments.map((d) => d.name);
+    const colorsAll = [
+      "#471C6E",
+      "#6E3402",
+      "#DF196E",
+      "#FBD004",
+      "#000000ff",
+      "#48469B",
+      "#2F6519",
+      "#FE8D00",
+      "#6A0200",
+      "#534a6eff",
+      "#0097e6",
+      "#b2bec3",
+    ];
 
     let deptNames;
     let deptCounts;
@@ -541,11 +541,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const total = data.reduce((sum, val) => sum + val, 0) || 1;
 
     const statusMap = {
-      "Pending Review": "pending",
-      "In Review": "review",
-      Completed: "completed",
-    };
-
+  "Pending Review": "pending",
+  "In Review": "review",
+  "Completed": "completed",
+};
     labels.forEach((label, index) => {
       const key = statusMap[label];
       if (!key) return;
@@ -934,7 +933,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function startPolling() {
     if (!notifPollInterval) {
-      notifPollInterval = setInterval(loadNotifications, 30000); // 30 seconds
+      notifPollInterval = setInterval(loadNotifications, 5000); // 30 seconds
+      loadNotifications();
     }
     if (!dashPollInterval) {
       dashPollInterval = setInterval(loadDashboardData, 600000); // 10 minutes
