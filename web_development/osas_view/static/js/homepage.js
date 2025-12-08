@@ -291,21 +291,21 @@ document.addEventListener("DOMContentLoaded", () => {
     let orgList = organizations;
     const selectedDept = departmentFilter ? departmentFilter.value : "";
 
-    const deptNamesAll = departments.map((d) => d.name);
-    const colorsAll = [
-      "#3f2166ff",
-      "#66b8eeff",
-      "#f083d5ff",
-      "#ddd258ff",
-      "#5e5e5eff",
-      "#12376aff",
-      "#226c15ff",
-      "#d98d14ff",
-      "#a22d1fff",
-      "#534a6eff",
-      "#0097e6",
-      "#b2bec3",
-    ];
+  const deptNamesAll = departments.map((d) => d.name);
+  const colorsAll = [
+    "#471C6E",
+    "#6E3402",
+    "#DF196E",
+    "#FBD004",
+    "#000000ff",
+    "#48469B",
+    "#2F6519",
+    "#FE8D00",
+    "#6A0200",
+    "#534a6eff",
+    "#0097e6",
+    "#b2bec3",
+  ];
 
     let deptNames;
     let deptCounts;

@@ -1568,7 +1568,7 @@ document.addEventListener("DOMContentLoaded", () => {
         event: currentWallet?.name || "",
         quantity: Number(tx.quantity),
         price: Number(tx.price),
-        income_type: tx.income_type,
+        income_type: tx.income_type || tx.incomeType || "",
         particulars: tx.particulars,
         raw_description: tx.description,
         amount:

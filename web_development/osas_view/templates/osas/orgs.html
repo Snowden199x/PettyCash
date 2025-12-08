@@ -22,33 +22,7 @@
       </div>
     </header>
 
-    <!-- FIXED PAGE HEADER (doesn't move with sidebar) -->
-    <div class="page-header">
-      <div class="orgs-header-row">
-        <div class="orgs-header-text">
-          <h3>Accredited Organizations</h3>
-          <p>Manage organizations and their login credentials</p>
-        </div>
-        <div class="orgs-header-actions">
-          <input
-            type="text"
-            id="searchOrgs"
-            placeholder="Search organizations..."
-            class="search-input"
-          />
-          <div class="filter-dropdown">
-            <select id="departmentFilter" class="filter-select">
-              <option value="">All Departments</option>
-            </select>
-          </div>
-          <button id="addOrganization" class="add-btn">
-            + Add Organization
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- SIDEBAR -->
+    <!-- SIDEBAR (MUST BE BEFORE page-header and dashboard for sibling selectors to work) -->
     <aside class="sidebar hover-sidebar">
       <nav class="nav-menu">
         <a href="{{ url_for('osas.osas_dashboard') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
@@ -73,6 +47,32 @@
         </a>
       </nav>
     </aside>
+
+    <!-- FIXED PAGE HEADER (now comes AFTER sidebar in DOM) -->
+    <div class="page-header">
+      <div class="orgs-header-row">
+        <div class="orgs-header-text">
+          <h3>Accredited Organizations</h3>
+          <p>Manage organizations and their login credentials</p>
+        </div>
+        <div class="orgs-header-actions">
+          <input
+            type="text"
+            id="searchOrgs"
+            placeholder="Search organizations..."
+            class="search-input"
+          />
+          <div class="filter-dropdown">
+            <select id="departmentFilter" class="filter-select">
+              <option value="">All Departments</option>
+            </select>
+          </div>
+          <button id="addOrganization" class="add-btn">
+            + Add Organization
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- MAIN CONTENT -->
     <main class="dashboard with-sidebar">
