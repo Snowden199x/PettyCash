@@ -361,7 +361,7 @@ def pres_forgot_password():
                         code,
                     )
 
-            success_msg = "If this account exists, a reset link has been sent."
+            success_msg = "If this account exists, a reset link has been sent.."
             if request.accept_mimetypes.best == "application/json":
                 return jsonify({"success": True, "message": success_msg})
             flash(success_msg, "success")
