@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const pageSize = 6;
   let departments = [];
   let notifications = [];
-  
+
   if (orgIdParam || reportIdParam) {
     openFromNotification(Number(orgIdParam), Number(reportIdParam));
   }
@@ -436,29 +436,29 @@ document.addEventListener("DOMContentLoaded", () => {
       const received = checklist[key] === true;
       const hasNoteOnly = received && monthNotes[key];
 
-      const btnLabel = !received
-        ? "Receive"
-        : hasNoteOnly
-        ? "View note"
-        : "View report";
-
       const rowClass = received ? "month-row received" : "month-row";
+
+      // If report not submitted, show "N/A" as text, not a button
+      const actionContent = received
+        ? `<button
+            type="button"
+            class="month-btn ${hasNoteOnly ? "secondary" : "primary"}"
+            data-month="${key}"
+            data-received="1"
+          >
+            ${hasNoteOnly ? "View note" : "View report"}
+          </button>`
+        : '<span class="month-action-na">N/A</span>';
 
       return `
         <div class="${rowClass}" data-month="${key}">
           <span class="month-label">${MONTH_LABELS[key]}</span>
-          <button
-            type="button"
-            class="month-btn ${received ? "secondary" : "primary"}"
-            data-month="${key}"
-            data-received="${received ? "1" : "0"}"
-          >
-            ${btnLabel}
-          </button>
+          ${actionContent}
         </div>
       `;
     }).join("");
 
+    // Only attach click handlers to actual buttons (not N/A spans)
     monthsList.querySelectorAll(".month-btn").forEach((btn) => {
       btn.addEventListener("click", () => handleMonthAction(report, btn));
     });
@@ -491,12 +491,11 @@ document.addEventListener("DOMContentLoaded", () => {
         openReportModal(report.id);
         renderReports();
       }
-      } else {
-    // direct download ng report para sa org + month na ito
-    const orgId = report.organization_id || report.org_id || report.id;
-    window.location.href = `/osas/reports/${orgId}/months/${monthKey}/print`;
-  }
-
+    } else {
+      // direct download ng report para sa org + month na ito - OPEN IN NEW TAB
+      const orgId = report.organization_id || report.org_id || report.id;
+      window.open(`/osas/reports/${orgId}/months/${monthKey}/print`, "_blank");
+    }
   }
 
   function closeReportModal() {

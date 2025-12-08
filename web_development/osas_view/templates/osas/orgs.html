@@ -5,24 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PockiTrack | Admin Homepage</title>
 
-    <link
-      rel="stylesheet"
-      href="{{ url_for('osas.static', filename='css/layout.css') }}"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('osas.static', filename='css/orgs.css') }}"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('osas.static', filename='css/add_org.css') }}"
-    />
+    <link rel="stylesheet" href="{{ url_for('osas.static', filename='css/layout.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('osas.static', filename='css/orgs.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('osas.static', filename='css/add_org.css') }}" />
 
     <script src="{{ url_for('osas.static', filename='js/orgs.js') }}"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
   </head>
 
   <body>
@@ -34,93 +22,93 @@
       </div>
     </header>
 
+    <!-- FIXED PAGE HEADER (doesn't move with sidebar) -->
+    <div class="page-header">
+      <div class="orgs-header-row">
+        <div class="orgs-header-text">
+          <h3>Accredited Organizations</h3>
+          <p>Manage organizations and their login credentials</p>
+        </div>
+        <div class="orgs-header-actions">
+          <input
+            type="text"
+            id="searchOrgs"
+            placeholder="Search organizations..."
+            class="search-input"
+          />
+          <div class="filter-dropdown">
+            <select id="departmentFilter" class="filter-select">
+              <option value="">All Departments</option>
+            </select>
+          </div>
+          <button id="addOrganization" class="add-btn">
+            + Add Organization
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- SIDEBAR -->
     <aside class="sidebar hover-sidebar">
-  <nav class="nav-menu">
-    <a href="{{ url_for('osas.osas_dashboard') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
-      <img src="{{ url_for('osas.static', filename='images/dashboard_menu.png') }}" class="nav-icon-img" alt="Dashboard" />
-      <span class="nav-label">Dashboard</span>
-    </a>
-    <a href="{{ url_for('osas.osas_orgs') }}" class="nav-item {% if active_page == 'orgs' %}active{% endif %}">
-      <img src="{{ url_for('osas.static', filename='images/organization_menu.png') }}" class="nav-icon-img" alt="Organizations" />
-      <span class="nav-label">Accredited Organizations</span>
-    </a>
-    <a href="{{ url_for('osas.osas_reports') }}" class="nav-item {% if active_page == 'reports' %}active{% endif %}">
-      <img src="{{ url_for('osas.static', filename='images/reports_menu.png') }}" class="nav-icon-img" alt="Reports" />
-      <span class="nav-label">Reports</span>
-    </a>
-    <a href="{{ url_for('osas.osas_archive') }}" class="nav-item {% if active_page == 'archive' %}active{% endif %}">
-      <img src="{{ url_for('osas.static', filename='images/archive_menu.png') }}" class="nav-icon-img" alt="Archive" />
-      <span class="nav-label">Archive</span>
-    </a>
-    <a href="{{ url_for('osas.osas_settings') }}" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
-      <img src="{{ url_for('osas.static', filename='images/settings_menu.png') }}" class="nav-icon-img" alt="Settings" />
-      <span class="nav-label">Settings</span>
-    </a>
-  </nav>
-</aside>
+      <nav class="nav-menu">
+        <a href="{{ url_for('osas.osas_dashboard') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+          <img src="{{ url_for('osas.static', filename='images/dashboard_menu.png') }}" class="nav-icon-img" alt="Dashboard" />
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="{{ url_for('osas.osas_orgs') }}" class="nav-item {% if active_page == 'orgs' %}active{% endif %}">
+          <img src="{{ url_for('osas.static', filename='images/organization_menu.png') }}" class="nav-icon-img" alt="Organizations" />
+          <span class="nav-label">Accredited Organizations</span>
+        </a>
+        <a href="{{ url_for('osas.osas_reports') }}" class="nav-item {% if active_page == 'reports' %}active{% endif %}">
+          <img src="{{ url_for('osas.static', filename='images/reports_menu.png') }}" class="nav-icon-img" alt="Reports" />
+          <span class="nav-label">Reports</span>
+        </a>
+        <a href="{{ url_for('osas.osas_archive') }}" class="nav-item {% if active_page == 'archive' %}active{% endif %}">
+          <img src="{{ url_for('osas.static', filename='images/archive_menu.png') }}" class="nav-icon-img" alt="Archive" />
+          <span class="nav-label">Archive</span>
+        </a>
+        <a href="{{ url_for('osas.osas_settings') }}" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
+          <img src="{{ url_for('osas.static', filename='images/settings_menu.png') }}" class="nav-icon-img" alt="Settings" />
+          <span class="nav-label">Settings</span>
+        </a>
+      </nav>
+    </aside>
 
     <!-- MAIN CONTENT -->
     <main class="dashboard with-sidebar">
-
-      <!-- ORGANIZATIONS -->
-      <div class="orgs-header-row">
-  <div class="orgs-header-text">
-    <h3>Accredited Organizations</h3>
-    <p>Manage organizations and their login credentials</p>
-  </div>
-  <div class="orgs-header-actions">
-    <input
-      type="text"
-      id="searchOrgs"
-      placeholder="Search organizations..."
-      class="search-input"
-    />
-    <div class="filter-dropdown">
-      <select id="departmentFilter" class="filter-select">
-        <option value="">All Departments</option>
-      </select>
-    </div>
-    <button id="addOrganization" class="add-btn">
-      + Add Organization
-    </button>
-  </div>
-</div>
-
-        <!-- WRAPPER BOX -->
-        <div class="org-box">
-          <!-- Empty State -->
-          <div class="empty-state" id="emptyState">
-            <img
-              src="{{ url_for('osas.static', filename='images/empty_org.png') }}"
-              alt="No Organizations"
-            />
-            <h4>No Accredited Organizations</h4>
-            <p>
-              Start by adding your first organization to manage their details and
-              reports here.
-            </p>
-          </div>
-
-          <!-- TABLE STATE -->
-          <div class="table-container" id="tableContainer" style="display: none;">
-            <table>
-              <thead>
-                <tr>
-                  <th>Organization Name</th>
-                  <th>Department</th>
-                  <th>Username</th>
-                  <th>Password</th>
-                  <th>Accreditation Date</th>
-                  <th>Status</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="orgTableBody"></tbody>
-            </table>
-          </div>
+      <!-- WRAPPER BOX -->
+      <div class="org-box">
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+          <img
+            src="{{ url_for('osas.static', filename='images/empty_org.png') }}"
+            alt="No Organizations"
+          />
+          <h4>No Accredited Organizations</h4>
+          <p>
+            Start by adding your first organization to manage their details and
+            reports here.
+          </p>
         </div>
-      </section>
+
+        <!-- TABLE STATE -->
+        <div class="table-container" id="tableContainer" style="display: none;">
+          <table>
+            <thead>
+              <tr>
+                <th>Organization Name</th>
+                <th>Department</th>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Accreditation Date</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="orgTableBody"></tbody>
+          </table>
+        </div>
+      </div>
 
       <!-- ADD/EDIT MODAL -->
       <div id="addOrgModal" class="modal">
@@ -173,8 +161,6 @@
                 required
               />
             </div>
-
-            <!-- Status is always Active; no select -->
 
             <div class="modal-buttons">
               <button type="button" id="cancelModal">Cancel</button>

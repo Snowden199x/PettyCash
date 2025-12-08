@@ -4,13 +4,13 @@
 body {
   margin: 0;
   font-family: Poppins;
-  background-color: #F5F1E8;
+  background-color: #f5f1e8;
   color: #000000;
   padding-top: 80px; /* Space for fixed header */
 }
 
 /* =========================================
-   HEADER (Fixed at Top)
+   HEADER (Fixed at Top) - SINGLE DEFINITION
 ========================================= */
 .admin-header {
   position: fixed;
@@ -20,11 +20,12 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(to bottom, #FFFFFF, #ECDDC6);
+  background: linear-gradient(to bottom, #ffffff, #ecddc6);
   padding: 10px 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   height: 60px;
+  margin-left: 0 !important; /* CRITICAL: Never shift */
 }
 
 .logo {
@@ -50,28 +51,111 @@ body {
   color: #000000;
 }
 
+/* =========================================
+   PAGE HEADER (Fixed below admin header) - UPDATED
+========================================= */
+.page-header {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  background-color: #f5f1e8;
+  padding: 12px 40px;
+  z-index: 999;
+  box-sizing: border-box;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  margin-left: 60px; /* Matches collapsed sidebar */
+  transition: margin-left 0.25s ease;
+}
+
+/* When sidebar hovers, page-header shifts too */
+.sidebar.hover-sidebar:hover ~ .page-header {
+  margin-left: 260px;
+}
 
 /* =========================================
-   MAIN DASHBOARD
+   SIDEBAR STYLING
+========================================= */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 80px;
+  width: 60px;
+  height: calc(100vh - 80px);
+  background-color: #f5f1e8;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  transition: width 0.25s ease;
+  z-index: 999;
+  overflow: hidden;
+}
+
+.sidebar.hover-sidebar:hover {
+  width: 260px;
+}
+
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 20px;
+  text-decoration: none;
+  color: #333;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+  font-size: 15px;
+}
+
+.nav-item:hover {
+  background-color: rgba(139, 59, 8, 0.1);
+}
+
+.nav-item.active {
+  background-color: rgba(139, 59, 8, 0.2);
+  border-left: 4px solid #8b3b08;
+  padding-left: 16px;
+}
+
+.nav-icon-img {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.nav-label {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.sidebar.hover-sidebar:hover .nav-label {
+  opacity: 1;
+}
+
+/* =========================================
+   MAIN DASHBOARD - CLEAN VERSION
 ========================================= */
 .dashboard {
   padding: 20px 40px;
   box-sizing: border-box;
-  margin-left: 100px;
-  padding: 20px 40px;
-  transition: margin-left 0.3s ease;
+  margin-left: 60px; /* Matches collapsed sidebar */
+  transition: margin-left 0.25s ease;
+  min-height: calc(100vh - 80px);
 }
 
 .dashboard.with-sidebar {
   margin-left: 60px;
-  transition: margin-left 0.25s;
+  transition: margin-left 0.25s ease;
 }
-/* When the sidebar is hovered (i.e., open), shift the main content */
+
+/* ONLY dashboard shifts on sidebar hover, NOT header */
 .sidebar.hover-sidebar:hover ~ .dashboard.with-sidebar {
   margin-left: 260px;
 }
-
-
 
 /* =========================================
    ACCREDITED ORGANIZATIONS SECTION
@@ -79,7 +163,7 @@ body {
 .organizations {
   width: 100%;
   max-width: 1344px;
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   border: 1px solid rgba(130, 130, 130, 0.5);
   border-radius: 15px;
   margin: 40px auto;
@@ -91,15 +175,16 @@ body {
 .orgs-header-row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  gap: 30px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: nowrap;
+  margin-bottom: 0px;
 }
 
 .orgs-header-text h3 {
   margin: 0 0 4px 0;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
+  white-space: nowrap;
   font-weight: 600;
   color: #222;
 }
@@ -107,8 +192,9 @@ body {
 .orgs-header-text p {
   margin: 0;
   color: #828282;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 400;
+  white-space: nowrap
 }
 
 .orgs-header-actions {
@@ -128,7 +214,7 @@ body {
   width: 150px;
   border-radius: 10px;
   border: 1px solid rgba(130, 130, 130, 0.5);
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   font-family: Poppins;
   font-size: 16px;
   font-weight: 400;
@@ -139,20 +225,20 @@ body {
 }
 
 .filter-select:hover {
-  border-color: #8B3B08;
+  border-color: #8b3b08;
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: #8B3B08;
+  border-color: #8b3b08;
 }
 
 /* --- Add Organization Button --- */
 .add-btn {
   width: 240px;
   height: 50px;
-  background-color: #8B3B08;
-  color: #FFFFFF;
+  background-color: #8b3b08;
+  color: #ffffff;
   border: none;
   border-radius: 10px;
   font-size: 20px;
@@ -165,28 +251,28 @@ body {
   background-color: #602805;
 }
 
-/* --- Search Input ---  */
+/* --- Search Input --- */
 .search-input {
   padding: 10px 15px;
   margin-top: 0;
   border-radius: 8px;
   border: 1px solid #ddd;
   font-family: Poppins;
-  font-size: 16px;
-  width: 300px;
+  font-size: 14px;
+  width: 280px;
   transition: border-color 0.3s ease;
 }
 
 .search-input:focus,
 .search-input:hover {
   outline: none;
-  border-color: #8B3B08;
+  border-color: #8b3b08;
 }
 
 /* --- Empty State Box --- */
 .empty-state {
   width: 100%;
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   border: 1px solid rgba(130, 130, 130, 0.5);
   border-radius: 15px;
   display: flex;
@@ -224,17 +310,16 @@ body {
    ANIMATIONS
 ============================ */
 @keyframes fadeIn {
-  from { 
-    opacity: 0; 
-    transform: translateY(20px); 
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Optional: Also animate table rows when they appear */
 .table-container tr {
   animation: fadeIn 0.3s ease-in;
 }
@@ -243,7 +328,7 @@ body {
    ORGANIZATION TABLE STYLING
 ========================================= */
 .org-box {
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   border-radius: 15px;
   padding: 25px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -299,9 +384,8 @@ body {
   font-weight: 500;
 }
 
-/* Make the password look like hidden dots */
 .table-password {
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   letter-spacing: 2px;
 }
 
@@ -320,12 +404,18 @@ body {
   font-weight: 500;
   display: none;
   z-index: 10000;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 @keyframes slideIn {
-  from { transform: translateX(400px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 /* DROPDOWN BUTTON IN TABLE */
@@ -355,7 +445,7 @@ body {
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   width: max-content;
   flex-direction: column;
   z-index: 1000;
@@ -384,7 +474,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   justify-content: center;
   align-items: center;
   z-index: 10000;
@@ -396,7 +486,7 @@ body {
   width: 400px;
   max-width: 90%;
   padding: 25px 30px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -451,7 +541,7 @@ body {
 }
 
 #deleteModal #confirmDeleteBtn {
-  background: #8B3B08;
+  background: #8b3b08;
   color: #fff;
 }
 
@@ -500,18 +590,13 @@ body {
     padding: 15px 20px;
   }
 
-  .side-menu {
+  .sidebar {
     top: 120px;
     height: calc(100vh - 120px);
   }
 
   .table-container table {
     display: none;
-  }
-
-  .stats {
-    flex-direction: column;
-    align-items: center;
   }
 
   .stat-card {
@@ -523,12 +608,12 @@ body {
     padding: 20px;
   }
 
-  .header-row {
+  .orgs-header-row {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .header-actions {
+  .orgs-header-actions {
     width: 100%;
     flex-direction: column;
   }

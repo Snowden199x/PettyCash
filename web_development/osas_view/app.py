@@ -600,7 +600,6 @@ def osas_view_monthly_report(org_id, month_key):
     receipts = rc_res.data or []
 
     # 6) render same HTML template na gamit ng PRES
-    # path: pres_view/templates/pres/print_report.html  [file:2]
     return render_template(
         "pres/print_report.html",
         report=rep,
@@ -751,6 +750,7 @@ def osas_print_monthly_report(org_id, month_key):
         return redirect(url_for("osas.osas_login"))
 
     # 1. Hanapin PRES financial_reports row para sa buwang iyon
+    # ✅ FIX: Filter by organization_id, report_month, AND wallet_id/budget_id not null
     pres_res = (
         supabase.table("financial_reports")
         .select("*")
@@ -816,35 +816,85 @@ def osas_print_monthly_report(org_id, month_key):
     total_income = float(rep.get("total_income") or 0)
     budget_in_the_bank = float(rep.get("budget_in_the_bank") or 0)
 
-    # 5. Expenses table data (per row + line_total)
-    tx_res = (
-        supabase.table("wallet_transactions")
-        .select("date_issued, quantity, particulars, description, price, kind")
-        .eq("wallet_id", wallet_id)
-        .eq("budget_id", budget_id)
-        .eq("kind", "expense")
-        .order("date_issued")
-        .execute()
-    )
-    txs = tx_res.data or []
-    for tx in txs:
-        qty = float(tx.get("quantity") or 0)
-        price = float(tx.get("price") or 0)
-        tx["line_total"] = qty * price
+    # 5. ✅ FIX: Ensure wallet_id and budget_id are NOT NULL before querying transactions
+    if wallet_id is None or budget_id is None:
+        # Fallback: no transactions if wallet/budget missing
+        txs = []
+        incomes = []
+        receipts = []
+    else:
+        # Expenses table data (per row + line_total)
+        tx_res = (
+            supabase.table("wallet_transactions")
+            .select("date_issued, quantity, particulars, description, price, kind")
+            .eq("wallet_id", wallet_id)
+            .eq("budget_id", budget_id)
+            .eq("kind", "expense")
+            .order("date_issued")
+            .execute()
+        )
+        txs = tx_res.data or []
+        for tx in txs:
+            qty = float(tx.get("quantity") or 0)
+            price = float(tx.get("price") or 0)
+            tx["line_total"] = qty * price
 
-    # 6. Income table data
-    inc_res = (
-        supabase.table("wallet_transactions")
-        .select("date_issued, quantity, income_type, description, price, kind")
-        .eq("wallet_id", wallet_id)
-        .eq("budget_id", budget_id)
-        .eq("kind", "income")
-        .order("date_issued")
-        .execute()
+        # Income table data
+        inc_res = (
+            supabase.table("wallet_transactions")
+            .select("date_issued, quantity, income_type, description, price, kind")
+            .eq("wallet_id", wallet_id)
+            .eq("budget_id", budget_id)
+            .eq("kind", "income")
+            .order("date_issued")
+            .execute()
+        )
+        incomes = inc_res.data or []
+        for inc in incomes:
+            inc["amount"] = float(inc.get("price") or 0)
+
+        # ✅ FIX: Receipts query - ensure proper filtering
+        rc_res = (
+            supabase.table("wallet_receipts")
+            .select("description, file_url, receipt_date")
+            .eq("wallet_id", wallet_id)
+            .eq("budget_id", budget_id)
+            .order("receipt_date")
+            .execute()
+        )
+        receipts = rc_res.data or []
+        for r in receipts:
+            try:
+                public_url = supabase.storage.from_("Receipts").get_public_url(
+                    r["file_url"]
+                )
+                if isinstance(public_url, dict):
+                    r["file_url"] = public_url.get("publicUrl") or public_url.get(
+                        "signedURL"
+                    )
+                else:
+                    r["file_url"] = public_url
+            except Exception:
+                r["file_url"] = ""
+
+    # 6. PURE PRINT VIEW – render HTML na may tables at appendix
+    return render_template(
+        "print_report.html",
+        report=rep,
+        budget=budget_val,
+        totalexpense=total_expense,
+        reimbursement=reimb,
+        previous_fund=prev_fund,
+        remaining=remaining,
+        total_income=total_income,
+        budget_in_the_bank=budget_in_the_bank,
+        transactions=txs,
+        incomes=incomes,
+        org_name=org_name,
+        college_name=college_name,
+        report_month_text=report_month_text,
+        receipts=receipts,
     )
-    incomes = inc_res.data or []
-    for inc in incomes:
-        inc["amount"] = float(inc.get("price") or 0)
 
     # 7. Receipts with public URL (APPENDIX A)
     rc_res = (
