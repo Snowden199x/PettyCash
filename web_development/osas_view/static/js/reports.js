@@ -207,40 +207,45 @@ document.addEventListener("DOMContentLoaded", () => {
     return "Completed";
   }
 
-  async function loadOrganizationsAndReports() {
+  // ===== OPTIMIZED: Load everything in ONE API for org+reports =====
+  async function loadInitialData() {
     showLoading();
     try {
-      const res = await fetch(`${API_BASE}/organizations`);
-      if (!res.ok) throw new Error("Failed to fetch organizations");
+      const [deptRes, comboRes] = await Promise.all([
+        fetch(`${API_BASE}/departments`)
+          .then((r) => (r.ok ? r.json() : { departments: [] }))
+          .catch(() => ({ departments: [] })),
+        fetch(`${API_BASE}/organizations_with_reports`)
+          .then((r) => (r.ok ? r.json() : { organizations: [], reports: [] }))
+          .catch(() => ({ organizations: [], reports: [] })),
+      ]);
 
-      const data = await res.json();
-      organizations = Array.isArray(data.organizations)
-        ? data.organizations
-        : [];
+      departments = deptRes.departments || [];
+      organizations = comboRes.organizations || [];
 
-      if (organizations.length === 0) {
-        reports = [];
-        renderReports();
-        return;
-      }
+      departmentFilter.innerHTML = `<option value="">All Departments</option>`;
+      departments.forEach((dep) => {
+        departmentFilter.innerHTML += `<option value="${dep.name}">${dep.name}</option>`;
+      });
 
-      let allReports = [];
-
-      for (let org of organizations) {
-        const orgReports = await getFinancialReportsByOrg(org.id);
-
-        orgReports.forEach((report) => {
-          report.orgName = org.name;
-          report.department = org.department;
-          report.department_abbrev = deriveDeptAbbrev(org.department);
-        });
-
-        allReports = allReports.concat(orgReports);
-      }
+      const rawReports = comboRes.reports || [];
+      let allReports = rawReports.map((rep) => {
+        const org =
+          organizations.find(
+            (o) => Number(o.id) === Number(rep.organization_id)
+          ) || {};
+        return {
+          ...rep,
+          orgName: org.name,
+          department: org.department,
+          department_abbrev: deriveDeptAbbrev(org.department),
+        };
+      });
 
       reports = allReports;
       renderReports();
     } catch (err) {
+      console.error("Load error:", err);
       showToast("Failed to load organizations/reports.", "error");
       reports = [];
       renderReports();
@@ -668,8 +673,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Initial Load ---
-  loadDepartmentFilter();
-  loadOrganizationsAndReports();
+  // --- Initial Load ---
+  loadInitialData();
   loadNotifications();
   setInterval(loadNotifications, 60000); // refresh notifs every minute
 
