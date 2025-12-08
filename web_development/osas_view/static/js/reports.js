@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const pageSize = 6;
   let departments = [];
   let notifications = [];
-  
+
   if (orgIdParam || reportIdParam) {
     openFromNotification(Number(orgIdParam), Number(reportIdParam));
   }
@@ -464,7 +464,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-
   async function handleMonthAction(report, button) {
     const monthKey = button.dataset.month;
     const alreadyReceived = button.dataset.received === "1";
@@ -492,12 +491,11 @@ document.addEventListener("DOMContentLoaded", () => {
         openReportModal(report.id);
         renderReports();
       }
-      } else {
-    // direct download ng report para sa org + month na ito
-    const orgId = report.organization_id || report.org_id || report.id;
-    window.location.href = `/osas/reports/${orgId}/months/${monthKey}/print`;
-  }
-
+    } else {
+      // direct download ng report para sa org + month na ito - OPEN IN NEW TAB
+      const orgId = report.organization_id || report.org_id || report.id;
+      window.open(`/osas/reports/${orgId}/months/${monthKey}/print`, "_blank");
+    }
   }
 
   function closeReportModal() {

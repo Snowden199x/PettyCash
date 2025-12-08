@@ -254,102 +254,100 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -- PIE CHART: ORGANIZATIONS BY DEPARTMENT --
- let deptSlices = [];
+  let deptSlices = [];
 
-function drawDepartmentChart() {
-  const canvas = document.getElementById("departmentChart");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
+  function drawDepartmentChart() {
+    const canvas = document.getElementById("departmentChart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
 
-  let orgList = organizations;
-  const selectedDept = departmentFilter ? departmentFilter.value : "";
+    let orgList = organizations;
+    const selectedDept = departmentFilter ? departmentFilter.value : "";
 
-  const deptNamesAll = departments.map((d) => d.name);
-  const colorsAll = [
-    "#3f2166ff",
-    "#66b8eeff",
-    "#f083d5ff",
-    "#ddd258ff",
-    "#5e5e5eff",
-    "#12376aff",
-    "#226c15ff",
-    "#d98d14ff",
-    "#a22d1fff",
-    "#534a6eff",
-    "#0097e6",
-    "#b2bec3",
-  ];
+    const deptNamesAll = departments.map((d) => d.name);
+    const colorsAll = [
+      "#3f2166ff",
+      "#66b8eeff",
+      "#f083d5ff",
+      "#ddd258ff",
+      "#5e5e5eff",
+      "#12376aff",
+      "#226c15ff",
+      "#d98d14ff",
+      "#a22d1fff",
+      "#534a6eff",
+      "#0097e6",
+      "#b2bec3",
+    ];
 
-  let deptNames;
-  let deptCounts;
-  let colors;
+    let deptNames;
+    let deptCounts;
+    let colors;
 
-  if (selectedDept) {
-    orgList = orgList.filter((org) => org.department === selectedDept);
-    const idx = deptNamesAll.indexOf(selectedDept);
-    const colorForDept = colorsAll[idx >= 0 ? idx % colorsAll.length : 0];
+    if (selectedDept) {
+      orgList = orgList.filter((org) => org.department === selectedDept);
+      const idx = deptNamesAll.indexOf(selectedDept);
+      const colorForDept = colorsAll[idx >= 0 ? idx % colorsAll.length : 0];
 
-    deptNames = [selectedDept];
-    deptCounts = [orgList.length];
-    colors = [colorForDept];
-  } else {
-    deptNames = deptNamesAll;
-    deptCounts = deptNames.map(
-      (name) => orgList.filter((org) => org.department === name).length
-    );
-    colors = colorsAll;
-  }
+      deptNames = [selectedDept];
+      deptCounts = [orgList.length];
+      colors = [colorForDept];
+    } else {
+      deptNames = deptNamesAll;
+      deptCounts = deptNames.map(
+        (name) => orgList.filter((org) => org.department === name).length
+      );
+      colors = colorsAll;
+    }
 
-  const total = deptCounts.reduce((s, v) => s + v, 0);
+    const total = deptCounts.reduce((s, v) => s + v, 0);
 
-  const width = canvas.width || 300;
-  const height = canvas.height || 300;
-  const centerX = width / 2;
-  const centerY = height / 2;
-  const radius = Math.min(width, height) / 2.1;
+    const width = canvas.width || 300;
+    const height = canvas.height || 300;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = Math.min(width, height) / 2.1;
 
-  ctx.clearRect(0, 0, width, height);
-  deptSlices = [];
+    ctx.clearRect(0, 0, width, height);
+    deptSlices = [];
 
-  if (total === 0) {
-    drawEmptyPie(ctx);
-    const legend = document.getElementById("deptLegend");
-    if (legend) legend.innerHTML = "";
-    return;
-  }
+    if (total === 0) {
+      drawEmptyPie(ctx);
+      const legend = document.getElementById("deptLegend");
+      if (legend) legend.innerHTML = "";
+      return;
+    }
 
-  let currentAngle = -Math.PI / 2;
+    let currentAngle = -Math.PI / 2;
 
-  deptCounts.forEach((value, index) => {
-    const sliceAngle = (value / total) * 2 * Math.PI;
-    const startAngle = currentAngle;
-    const endAngle = currentAngle + sliceAngle;
+    deptCounts.forEach((value, index) => {
+      const sliceAngle = (value / total) * 2 * Math.PI;
+      const startAngle = currentAngle;
+      const endAngle = currentAngle + sliceAngle;
 
-    // draw slice
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-    ctx.lineTo(centerX, centerY);
-    ctx.fillStyle = colors[index % colors.length];
-    ctx.fill();
+      // draw slice
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+      ctx.lineTo(centerX, centerY);
+      ctx.fillStyle = colors[index % colors.length];
+      ctx.fill();
 
-    // store slice data for hover
-    deptSlices.push({
-      label: deptNames[index],
-      value,
-      startAngle,
-      endAngle,
-      centerX,
-      centerY,
-      radius,
+      // store slice data for hover
+      deptSlices.push({
+        label: deptNames[index],
+        value,
+        startAngle,
+        endAngle,
+        centerX,
+        centerY,
+        radius,
+      });
+
+      currentAngle = endAngle;
     });
 
-    currentAngle = endAngle;
-  });
-
-  updateLegend("deptLegend", deptNames, colors, deptCounts);
-}
-
-
+    updateLegend("deptLegend", deptNames, colors, deptCounts);
+  }
 
   // PIE CHART HELPER
   function drawPieChart(ctx, data, colors) {
@@ -367,7 +365,13 @@ function drawDepartmentChart() {
     data.forEach((value, index) => {
       const sliceAngle = (value / total) * 2 * Math.PI;
       ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+      ctx.arc(
+        centerX,
+        centerY,
+        radius,
+        currentAngle,
+        currentAngle + sliceAngle
+      );
       ctx.lineTo(centerX, centerY);
       ctx.fillStyle = colors[index % colors.length];
       ctx.fill();
@@ -375,21 +379,19 @@ function drawDepartmentChart() {
     });
   }
 
-
-
   function updateLegend(elementId, labels, colors, data) {
     const legend = document.getElementById(elementId);
     if (!legend) return;
     legend.innerHTML = labels
       .map(
         (label, index) => `
-        <div class="legend-item">
-          <div class="legend-color" style="background-color: ${
-            colors[index % colors.length]
-          }"></div>
-          <span>${label}: ${data[index]}</span>
-        </div>
-      `
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: ${
+              colors[index % colors.length]
+            }"></div>
+            <span>${label}: ${data[index]}</span>
+          </div>
+        `
       )
       .join("");
   }
@@ -505,41 +507,39 @@ function drawDepartmentChart() {
   }
 
   // Status breakdown: update existing cards only
-function updateStatusBreakdown(labels, colors, data) {
-  const breakdown = document.getElementById("statusBreakdown");
-  if (!breakdown) return;
+  function updateStatusBreakdown(labels, colors, data) {
+    const breakdown = document.getElementById("statusBreakdown");
+    if (!breakdown) return;
 
-  const total = data.reduce((sum, val) => sum + val, 0) || 1;
+    const total = data.reduce((sum, val) => sum + val, 0) || 1;
 
-  const statusMap = {
-    "Pending Review": "pending",
-    "In Review": "review",
-    "Completed": "completed",
-  };
+    const statusMap = {
+      "Pending Review": "pending",
+      "In Review": "review",
+      Completed: "completed",
+    };
 
-  labels.forEach((label, index) => {
-    const key = statusMap[label];
-    if (!key) return;
+    labels.forEach((label, index) => {
+      const key = statusMap[label];
+      if (!key) return;
 
-    const count = data[index] ?? 0;
-    const percentage = Math.round((count / total) * 100);
+      const count = data[index] ?? 0;
+      const percentage = Math.round((count / total) * 100);
 
-    // update count text
-    const row = breakdown.querySelector(`.status-row[data-status="${key}"]`);
-    if (!row) return;
+      // update count text
+      const row = breakdown.querySelector(`.status-row[data-status="${key}"]`);
+      if (!row) return;
 
-    const countEl = row.querySelector(".status-count");
-    if (countEl) countEl.textContent = count;
+      const countEl = row.querySelector(".status-count");
+      if (countEl) countEl.textContent = count;
 
-    // update bar width
-    const fill = row.querySelector(
-      `.status-bar-fill[data-status="${key}"]`
-    );
-    if (fill) {
-      fill.style.width = `${percentage}%`;
-    }
-  });
-}
+      // update bar width
+      const fill = row.querySelector(`.status-bar-fill[data-status="${key}"]`);
+      if (fill) {
+        fill.style.width = `${percentage}%`;
+      }
+    });
+  }
 
   // --- Activity Feed ---
   async function updateActivityFeed() {
@@ -583,14 +583,14 @@ function updateStatusBreakdown(labels, colors, data) {
               .map(
                 (activity) =>
                   `<div class="activity-item">
-          <div class="activity-icon">${getIcon(activity.action_type)}</div>
-          <div class="activity-details">
-            <p class="activity-text">${
-              activity.description || activity.action_type
-            }</p>
-            <p class="activity-time">${formatTime(activity.created_at)}</p>
-          </div>
-        </div>`
+            <div class="activity-icon">${getIcon(activity.action_type)}</div>
+            <div class="activity-details">
+              <p class="activity-text">${
+                activity.description || activity.action_type
+              }</p>
+              <p class="activity-time">${formatTime(activity.created_at)}</p>
+            </div>
+          </div>`
               )
               .join("")
           : '<div class="activity-item"><div class="activity-details">No recent activity.</div></div>';
@@ -647,6 +647,63 @@ function updateStatusBreakdown(labels, colors, data) {
   }
 
   // --- Load notifications from OSAS API ---
+  // Track notification IDs in localStorage to persist across page navigations
+  let previousNotifIds = new Set();
+
+  // Load from localStorage on startup
+  function loadPreviousNotifIds() {
+    try {
+      const stored = localStorage.getItem("osasNotificationIds");
+      if (stored) {
+        previousNotifIds = new Set(JSON.parse(stored));
+      }
+    } catch (err) {
+      console.log("Could not load notification IDs from storage", err);
+    }
+  }
+
+  // Save to localStorage when updated
+  function savePreviousNotifIds() {
+    try {
+      localStorage.setItem(
+        "osasNotificationIds",
+        JSON.stringify(Array.from(previousNotifIds))
+      );
+    } catch (err) {
+      console.log("Could not save notification IDs to storage", err);
+    }
+  }
+
+  loadPreviousNotifIds();
+
+  // Play notification sound
+  function playNotificationSound() {
+    try {
+      // Create a simple beep sound using Web Audio API
+      const audioContext = new (window.AudioContext ||
+        window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = 800; // Frequency in Hz
+      oscillator.type = "sine";
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.01,
+        audioContext.currentTime + 0.1
+      );
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } catch (err) {
+      console.log("Notification sound not available:", err);
+    }
+  }
+
   async function loadNotifications() {
     if (!notifList) return;
 
@@ -657,41 +714,114 @@ function updateStatusBreakdown(labels, colors, data) {
       const items = data.notifications || [];
       const hasUnread = data.has_unread;
 
-      if (notifDot) notifDot.style.display = hasUnread ? "block" : "none";
+      /// Count unread FIRST
+      // Count unread FIRST
+      const unreadCount = items.filter((n) => !n.is_read).length;
+
+      // 🔔 PLAY SOUND ONLY if a NEW notification arrived (not just count change)
+      const currentNotifIds = new Set(items.map((n) => n.id));
+      const hasNewNotif = Array.from(currentNotifIds).some(
+        (id) => !previousNotifIds.has(id)
+      );
+      if (hasNewNotif && unreadCount > 0) {
+        playNotificationSound();
+      }
+      previousNotifIds = currentNotifIds;
+      savePreviousNotifIds();
+
+      // Update count badge on bell
+      if (notifBtn) {
+        const countBadge = notifBtn.querySelector(".notif-count");
+        if (countBadge) {
+          countBadge.textContent = unreadCount;
+          countBadge.style.display = unreadCount > 0 ? "inline-flex" : "none";
+        }
+      }
 
       if (!items.length) {
         notifList.innerHTML = '<p class="notif-empty">Nothing here yet</p>';
         return;
       }
 
-      notifList.innerHTML = items.map((n) => `
-        <div class="notif-item ${n.is_read ? "read" : "unread"}"
-            data-id="${n.id}"
-            data-org-id="${n.org_id}"
-            data-report-id="${n.report_id}">
-          <div class="notif-item-content">
-            <div class="notif-item-icon">📄</div>
-            <div class="notif-item-text">
-              <div class="notif-item-title">${n.org_name}</div>
-              <div class="notif-item-message">${n.message}</div>
-              <div class="notif-item-time">${formatNotifTime(n.created_at)}</div>
-            </div>
-          </div>
+      // ✅ Build notification header with "Mark all as Read" button
+      // ✅ Build notification items WITHOUT duplicate header (header is in HTML already)
+      // Notifications header is already in homepage.html, don't add it again
+      const itemsHtml = items
+        .map(
+          (n) => `
+    <div class="notif-item ${n.is_read ? "read" : "unread"}"
+        data-id="${n.id}"
+        data-org-id="${n.org_id}"
+        data-report-id="${n.report_id}">
+      ${!n.is_read ? '<div class="notif-unread-indicator"></div>' : ""}
+      <div class="notif-item-content">
+        <div class="notif-item-icon">📄</div>
+        <div class="notif-item-text">
+          <div class="notif-item-title">${n.org_name}</div>
+          <div class="notif-item-message">${n.message}</div>
+          <div class="notif-item-time">${formatNotifTime(n.created_at)}</div>
         </div>
-      `).join("");
+      </div>
+    </div>
+  `
+        )
+        .join("");
 
+      // Set items ONLY (header is already in HTML)
+      notifList.innerHTML = itemsHtml;
 
+      // Update bell badge with unread count
+      if (notifBtn) {
+        const countBadge = notifBtn.querySelector(".notif-count");
+        if (countBadge) {
+          countBadge.textContent = unreadCount;
+          countBadge.style.display = unreadCount > 0 ? "inline-flex" : "none";
+        }
+      }
+
+      // Add event listener for "Mark all as Read" button
+      // Add event listener for "Mark all as Read" button (use the header button, not from notifList)
+      const markAllBtn = document.getElementById("markAllReadBtn");
+      if (markAllBtn) {
+        // Remove old listeners by cloning
+        const newMarkAllBtn = markAllBtn.cloneNode(true);
+        markAllBtn.parentNode.replaceChild(newMarkAllBtn, markAllBtn);
+
+        // Add fresh listener
+        newMarkAllBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+
+          // Mark all unread as read
+          for (const item of items.filter((n) => !n.is_read)) {
+            try {
+              await fetch(`${API_BASE}/admin/notifications/${item.id}/read`, {
+                method: "POST",
+              });
+            } catch (err) {
+              console.error("Failed to mark notification read", err);
+            }
+          }
+
+          // Update state
+          previousNotifIds.clear();
+          savePreviousNotifIds();
+          if (notifDot) notifDot.style.display = "none";
+          loadNotifications();
+        });
+      }
+
+      // Attach click handlers to notification items
       notifList.querySelectorAll(".notif-item").forEach((el) => {
         el.addEventListener("click", async () => {
           const notifId = el.dataset.id;
           const orgId = el.dataset.orgId;
           const reportId = el.dataset.reportId;
 
-          // visually mark as read
+          // Visually mark as read
           el.classList.remove("unread");
           el.classList.add("read");
 
-          // mark read in backend
+          // Mark read in backend
           try {
             await fetch(`${API_BASE}/admin/notifications/${notifId}/read`, {
               method: "POST",
@@ -700,10 +830,14 @@ function updateStatusBreakdown(labels, colors, data) {
             console.error("Failed to mark notification read", e);
           }
 
-          // kung lahat read na, i-hide red dot
+          // Check if all read
           const stillUnread = notifList.querySelector(".notif-item.unread");
-          if (!stillUnread && notifDot) notifDot.style.display = "none";
+          if (!stillUnread && notifDot) {
+            notifDot.style.display = "none";
+            previousNotifCount = 0;
+          }
 
+          // Navigate to reports
           const url = `/osas/reports?org_id=${encodeURIComponent(
             orgId
           )}&report_id=${encodeURIComponent(reportId)}`;
@@ -712,59 +846,58 @@ function updateStatusBreakdown(labels, colors, data) {
       });
     } catch (err) {
       notifList.innerHTML =
-        '<p class="notif-empty">There`s nothing here yet</p>';
+        '<p class="notif-empty">There\'s nothing here yet</p>';
       if (notifDot) notifDot.style.display = "none";
     }
   }
 
-const deptCanvas = document.getElementById("departmentChart");
-const deptTooltip = document.getElementById("deptTooltip");
+  const deptCanvas = document.getElementById("departmentChart");
+  const deptTooltip = document.getElementById("deptTooltip");
 
-if (deptCanvas && deptTooltip) {
-  deptCanvas.addEventListener("mousemove", (e) => {
-    const rect = deptCanvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+  if (deptCanvas && deptTooltip) {
+    deptCanvas.addEventListener("mousemove", (e) => {
+      const rect = deptCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
 
-    let found = null;
+      let found = null;
 
-    for (const slice of deptSlices) {
-      const dx = x - slice.centerX;
-      const dy = y - slice.centerY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      for (const slice of deptSlices) {
+        const dx = x - slice.centerX;
+        const dy = y - slice.centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
 
-      if (dist > slice.radius) continue;
+        if (dist > slice.radius) continue;
 
-      let angle = Math.atan2(dy, dx);
-      if (angle < -Math.PI / 2) angle += 2 * Math.PI;
+        let angle = Math.atan2(dy, dx);
+        if (angle < -Math.PI / 2) angle += 2 * Math.PI;
 
-      if (angle >= slice.startAngle && angle <= slice.endAngle) {
-        found = slice;
-        break;
+        if (angle >= slice.startAngle && angle <= slice.endAngle) {
+          found = slice;
+          break;
+        }
       }
-    }
 
-    if (found) {
-      deptTooltip.style.display = "block";
-      deptTooltip.textContent = `${found.label}: ${found.value}`;
-      // position relative to card
-      deptTooltip.style.left = `${e.clientX - rect.left}px`;
-      deptTooltip.style.top = `${e.clientY - rect.top}px`;
-    } else {
+      if (found) {
+        deptTooltip.style.display = "block";
+        deptTooltip.textContent = `${found.label}: ${found.value}`;
+        // position relative to card
+        deptTooltip.style.left = `${e.clientX - rect.left}px`;
+        deptTooltip.style.top = `${e.clientY - rect.top}px`;
+      } else {
+        deptTooltip.style.display = "none";
+      }
+    });
+
+    deptCanvas.addEventListener("mouseleave", () => {
       deptTooltip.style.display = "none";
-    }
-  });
-
-  deptCanvas.addEventListener("mouseleave", () => {
-    deptTooltip.style.display = "none";
-  });
-}
-
+    });
+  }
 
   // INITIAL LOAD
   loadDashboardDepartments().then(loadDashboardOrganizations);
   loadDashboardData();
   loadNotifications();
-  setInterval(loadNotifications, 60000);
+  setInterval(loadNotifications, 10000);
   setInterval(loadDashboardData, 300000);
 });
