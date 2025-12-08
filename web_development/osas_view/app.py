@@ -203,79 +203,120 @@ def osas_archive():
 @osas.route("/api/organizations", methods=["GET"])
 def get_organizations():
     department = request.args.get("department")
-    orgs = []
+    
+    # Get ALL departments first (single query)
+    all_depts = supabase.table("departments").select("id, dept_name").execute()
+    dept_map = {d["id"]: d["dept_name"] for d in (all_depts.data or [])}
+    
+    # Build query
     dept_id = None
     if department and department != "All Departments":
-        dept_result = (
-            supabase.table("departments")
-            .select("id")
-            .eq("dept_name", department)
-            .execute()
-        )
-        if dept_result.data:
-            dept_id = dept_result.data[0]["id"]
+        for dept in (all_depts.data or []):
+            if dept["dept_name"] == department:
+                dept_id = dept["id"]
+                break
+    
     org_query = supabase.table("organizations").select("*").eq("status", "Active")
     if dept_id:
         org_query = org_query.eq("department_id", dept_id)
+    
     result = org_query.execute()
+    
+    orgs = []
     if result.data:
         for org in result.data:
-            dept_name = "-"
-            if org.get("department_id"):
-                d = (
-                    supabase.table("departments")
-                    .select("dept_name")
-                    .eq("id", org["department_id"])
-                    .execute()
-                )
-                if d.data and isinstance(d.data, list):
-                    dept_name = d.data[0]["dept_name"]
-            orgs.append(
-                {
-                    "id": org["id"],
-                    "name": org["org_name"],
-                    "department": dept_name,
-                    "username": org["username"],
-                    "password": org["password"],
-                    "date": str(org.get("accreditation_date")),
-                    "status": org.get("status"),
-                    "created_by": org.get("created_by"),
-                }
-            )
+            dept_name = dept_map.get(org.get("department_id"), "-") if org.get("department_id") else "-"
+            orgs.append({
+                "id": org["id"],
+                "name": org["org_name"],
+                "department": dept_name,
+                "username": org["username"],
+                "password": org["password"],
+                "date": str(org.get("accreditation_date")),
+                "status": org.get("status"),
+                "created_by": org.get("created_by"),
+            })
+    
     return jsonify({"organizations": orgs})
+
+
+@osas.route("/api/organizations_with_reports", methods=["GET"])
+def get_organizations_with_reports():
+    """
+    Single optimized endpoint:
+    - 1 query for active orgs + dept names
+    - 1 query for OSAS financial_reports master rows
+    Returns: { organizations: [...], reports: [...] }
+    """
+    # 1) Load all active orgs + dept names (same logic as /api/organizations)
+    all_depts = supabase.table("departments").select("id, dept_name").execute()
+    dept_map = {d["id"]: d["dept_name"] for d in (all_depts.data or [])}
+
+    org_result = (
+        supabase.table("organizations")
+        .select("*")
+        .eq("status", "Active")
+        .execute()
+    )
+
+    orgs = []
+    org_ids = []
+    if org_result.data:
+        for org in org_result.data:
+            dept_name = dept_map.get(org.get("department_id"), "-") if org.get("department_id") else "-"
+            orgs.append({
+                "id": org["id"],
+                "name": org["org_name"],
+                "department": dept_name,
+                "username": org["username"],
+                "password": org["password"],
+                "date": str(org.get("accreditation_date")),
+                "status": org.get("status"),
+                "created_by": org.get("created_by"),
+            })
+            org_ids.append(org["id"])
+
+    # 2) Load ALL OSAS financial_reports rows for those orgs in ONE query
+    reports = []
+    if org_ids:
+        fr_result = (
+            supabase.table("financial_reports")
+            .select("*")
+            .in_("organization_id", org_ids)
+            .is_("wallet_id", None)
+            .is_("budget_id", None)
+            .execute()
+        )
+        reports = fr_result.data or []
+
+    return jsonify({"organizations": orgs, "reports": reports})
 
 
 @osas.route("/api/archived_organizations", methods=["GET"])
 def get_archived_organizations():
+    # Get ALL departments first (single query)
+    all_depts = supabase.table("departments").select("id, dept_name").execute()
+    dept_map = {d["id"]: d["dept_name"] for d in (all_depts.data or [])}
+    
+    result = supabase.table("organizations").select("*").eq("status", "Archived").execute()
+    
     orgs = []
-    result = (
-        supabase.table("organizations").select("*").eq("status", "Archived").execute()
-    )
     if result.data:
         for org in result.data:
-            dept_name = "-"
-            if org.get("department_id"):
-                d = (
-                    supabase.table("departments")
-                    .select("dept_name")
-                    .eq("id", org["department_id"])
-                    .execute()
-                )
-                if d.data and isinstance(d.data, list):
-                    dept_name = d.data[0]["dept_name"]
-            orgs.append(
-                {
-                    "id": org["id"],
-                    "name": org["org_name"],
-                    "department": dept_name,
-                    "username": org["username"],
-                    "password": org["password"],
-                    "date": str(org.get("accreditation_date")),
-                    "status": org.get("status"),
-                    "created_by": org.get("created_by"),
-                }
-            )
+            dept_name = dept_map.get(org.get("department_id"), "-") if org.get("department_id") else "-"
+            orgs.append({
+                "id": org["id"],
+                "name": org["org_name"],
+                "department": dept_name,
+                "username": org["username"],
+                "password": org["password"],
+                "date": str(org.get("accreditation_date")),
+                "status": org.get("status"),
+                "created_by": org.get("created_by"),
+            })
+    
     return jsonify({"organizations": orgs})
+
 
 
 @osas.route("/api/archive/empty", methods=["DELETE"])
@@ -672,59 +713,76 @@ def update_financial_report(report_id):
     if "osas_admin" not in session:
         return jsonify({"error": "Login required"}), 401
 
-    data = request.get_json() or {}
-    update_data = {}
-
-    # load existing report for checklist manipulation
-    res = supabase.table("financial_reports").select("*").eq("id", report_id).execute()
-    if not res.data:
-        return jsonify({"error": "Not found"}), 404
-    report = res.data[0]
-    checklist = report.get("checklist") or {}
-
-    # admin notes
-    if "notes" in data:
-        update_data["notes"] = data["notes"]
-
-    # explicit checklist overwrite (optional)
-    if "checklist" in data:
-        checklist = data["checklist"] or checklist
-
-    # receive single month from modal
-    receive_month = data.get("receiveMonth")
-    if receive_month:
-        checklist[receive_month] = True
-
-    # mark all months complete from "Mark as Complete" button
-    if data.get("completeAll"):
-        for key in [
+    try:
+        data = request.get_json() or {}
+        
+        # Load existing report
+        res = supabase.table("financial_reports").select("*").eq("id", report_id).execute()
+        if not res.data:
+            return jsonify({"error": "Report not found"}), 404
+        
+        report = res.data[0]
+        checklist = report.get("checklist") or {}
+        
+        # Ensure checklist is always a dict
+        if not isinstance(checklist, dict):
+            checklist = {}
+        
+        update_data = {}
+        
+        # Admin notes
+        if "notes" in data and data["notes"] is not None:
+            update_data["notes"] = data["notes"]
+        
+        # Explicit checklist overwrite (optional)
+        if "checklist" in data and data["checklist"] is not None:
+            checklist = data["checklist"] if isinstance(data["checklist"], dict) else {}
+        
+        # Receive single month from modal
+        receive_month = data.get("receiveMonth")
+        if receive_month and isinstance(receive_month, str):
+            checklist[receive_month.lower()] = True
+        
+        # Mark all months complete from "Mark as Complete" button
+        if data.get("completeAll") is True:
+            month_keys = [
+                "august", "september", "october", "november", "december",
+                "january", "february", "march", "april", "may",
+            ]
+            for key in month_keys:
+                checklist[key] = True
+        
+        update_data["checklist"] = checklist
+        
+        # Recompute status based on checklist
+        month_keys = [
             "august", "september", "october", "november", "december",
             "january", "february", "march", "april", "may",
-        ]:
-            checklist[key] = True
-
-    update_data["checklist"] = checklist
-
-    # recompute status based on checklist (same logic as PRES submit) [file:2]
-    month_keys = [
-        "august", "september", "october", "november", "december",
-        "january", "february", "march", "april", "may",
-    ]
-    received_count = sum(1 for k in month_keys if checklist.get(k))
-    total_count = len(month_keys)
-    if received_count == 0:
-        update_data["status"] = "Pending Review"
-    elif received_count < total_count:
-        update_data["status"] = "In Review"
-    else:
-        update_data["status"] = "Completed"
-
-    update_data["updated_at"] = datetime.utcnow().isoformat()
-
-    try:
+        ]
+        received_count = sum(1 for k in month_keys if checklist.get(k, False))
+        total_count = len(month_keys)
+        
+        if received_count == 0:
+            update_data["status"] = "Pending Review"
+        elif received_count < total_count:
+            update_data["status"] = "In Review"
+        else:
+            update_data["status"] = "Completed"
+        
+        update_data["updated_at"] = datetime.utcnow().isoformat()
+        
+        # Update database
         supabase.table("financial_reports").update(update_data).eq("id", report_id).execute()
-        return jsonify({"message": "Financial report updated", "updated": update_data})
+        
+        # Log activity
+        admin = get_admin_data(session.get("osas_admin"))
+        if admin:
+            log_activity(admin["id"], "financial_report", f"Updated financial report [{report_id}]")
+        
+        return jsonify({"message": "Financial report updated", "updated": update_data}), 200
+    
     except Exception as e:
+        print(f"Error updating financial report: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -749,81 +807,78 @@ def osas_print_monthly_report(org_id, month_key):
     if "osas_admin" not in session:
         return redirect(url_for("osas.osas_login"))
 
-    # 1. Hanapin PRES financial_reports row para sa buwang iyon
-    # ✅ FIX: Filter by organization_id, report_month, AND wallet_id/budget_id not null
-    pres_res = (
-        supabase.table("financial_reports")
-        .select("*")
-        .eq("organization_id", org_id)
-        .eq("report_month", month_key.lower())
-        .not_.is_("wallet_id", None)
-        .not_.is_("budget_id", None)
-        .order("created_at", desc=True)
-        .limit(1)
-        .execute()
-    )
-    if not pres_res.data:
-        return "No report", 404
+    try:
+        # 1. Find PRES financial_reports row for this month
+        pres_res = (
+            supabase.table("financial_reports")
+            .select("*")
+            .eq("organization_id", org_id)
+            .eq("report_month", month_key.lower())
+            .not_.is_("wallet_id", None)
+            .not_.is_("budget_id", None)
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+        if not pres_res.data:
+            return "No report found", 404
 
-    rep = pres_res.data[0]
-    wallet_id = rep["wallet_id"]
-    budget_id = rep["budget_id"]
+        rep = pres_res.data[0]
+        wallet_id = rep.get("wallet_id")
+        budget_id = rep.get("budget_id")
+        
+        # Safety check
+        if wallet_id is None or budget_id is None:
+            return "Report missing wallet or budget information", 400
 
-    # 2. Org + college (pareho ng PRES)
-    org_res = (
-        supabase.table("organizations")
-        .select("org_name, department_id")
-        .eq("id", org_id)
-        .single()
-        .execute()
-    )
-    org_data = org_res.data or {}
-    org_name = org_data.get("org_name") or ""
-
-    college_name = "COLLEGE"
-    dept_id = org_data.get("department_id")
-    if dept_id is not None:
-        dept_res = (
-            supabase.table("departments")
-            .select("dept_name")
-            .eq("id", dept_id)
+        # 2. Get org and department info
+        org_res = (
+            supabase.table("organizations")
+            .select("org_name, department_id")
+            .eq("id", org_id)
             .single()
             .execute()
         )
-        if dept_res.data:
-            college_name = dept_res.data["dept_name"].upper()
+        org_data = org_res.data or {}
+        org_name = org_data.get("org_name") or ""
 
-    # 3. Month text (wallet_budgets + months)
-    wb_res = (
-        supabase.table("wallet_budgets")
-        .select("year, month_id, months (month_name)")
-        .eq("id", budget_id)
-        .single()
-        .execute()
-    )
-    report_month_text = ""
-    if wb_res.data:
-        y = wb_res.data["year"]
-        mname = wb_res.data["months"]["month_name"]
-        report_month_text = f"{mname} {y}".upper()
+        college_name = "COLLEGE"
+        dept_id = org_data.get("department_id")
+        if dept_id is not None:
+            dept_res = (
+                supabase.table("departments")
+                .select("dept_name")
+                .eq("id", dept_id)
+                .single()
+                .execute()
+            )
+            if dept_res.data:
+                college_name = dept_res.data["dept_name"].upper()
 
-    # 4. Numeric fields (main totals)
-    budget_val = float(rep.get("budget") or 0)
-    total_expense = float(rep.get("total_expense") or 0)
-    reimb = float(rep.get("reimbursement") or 0)
-    prev_fund = float(rep.get("previous_fund") or 0)
-    remaining = budget_val - total_expense - reimb + prev_fund
-    total_income = float(rep.get("total_income") or 0)
-    budget_in_the_bank = float(rep.get("budget_in_the_bank") or 0)
+        # 3. Get month text
+        wb_res = (
+            supabase.table("wallet_budgets")
+            .select("year, month_id, months (month_name)")
+            .eq("id", budget_id)
+            .single()
+            .execute()
+        )
+        report_month_text = ""
+        if wb_res.data:
+            y = wb_res.data["year"]
+            mname = wb_res.data["months"]["month_name"]
+            report_month_text = f"{mname} {y}".upper()
 
-    # 5. ✅ FIX: Ensure wallet_id and budget_id are NOT NULL before querying transactions
-    if wallet_id is None or budget_id is None:
-        # Fallback: no transactions if wallet/budget missing
-        txs = []
-        incomes = []
-        receipts = []
-    else:
-        # Expenses table data (per row + line_total)
+        # 4. Numeric fields
+        budget_val = float(rep.get("budget") or 0)
+        total_expense = float(rep.get("total_expense") or 0)
+        reimb = float(rep.get("reimbursement") or 0)
+        prev_fund = float(rep.get("previous_fund") or 0)
+        remaining = budget_val - total_expense - reimb + prev_fund
+        total_income = float(rep.get("total_income") or 0)
+        budget_in_the_bank = float(rep.get("budget_in_the_bank") or 0)
+
+        # 5. Get transactions and incomes
         tx_res = (
             supabase.table("wallet_transactions")
             .select("date_issued, quantity, particulars, description, price, kind")
@@ -839,7 +894,6 @@ def osas_print_monthly_report(org_id, month_key):
             price = float(tx.get("price") or 0)
             tx["line_total"] = qty * price
 
-        # Income table data
         inc_res = (
             supabase.table("wallet_transactions")
             .select("date_issued, quantity, income_type, description, price, kind")
@@ -853,7 +907,7 @@ def osas_print_monthly_report(org_id, month_key):
         for inc in incomes:
             inc["amount"] = float(inc.get("price") or 0)
 
-        # ✅ FIX: Receipts query - ensure proper filtering
+        # 6. Get receipts with public URLs
         rc_res = (
             supabase.table("wallet_receipts")
             .select("description, file_url, receipt_date")
@@ -865,79 +919,37 @@ def osas_print_monthly_report(org_id, month_key):
         receipts = rc_res.data or []
         for r in receipts:
             try:
-                public_url = supabase.storage.from_("Receipts").get_public_url(
-                    r["file_url"]
-                )
+                public_url = supabase.storage.from_("Receipts").get_public_url(r["file_url"])
                 if isinstance(public_url, dict):
-                    r["file_url"] = public_url.get("publicUrl") or public_url.get(
-                        "signedURL"
-                    )
+                    r["file_url"] = public_url.get("publicUrl") or public_url.get("signedURL") or ""
                 else:
-                    r["file_url"] = public_url
-            except Exception:
+                    r["file_url"] = public_url or ""
+            except Exception as url_err:
+                print(f"Error getting receipt URL: {url_err}")
                 r["file_url"] = ""
 
-    # 6. PURE PRINT VIEW – render HTML na may tables at appendix
-    return render_template(
-        "print_report.html",
-        report=rep,
-        budget=budget_val,
-        totalexpense=total_expense,
-        reimbursement=reimb,
-        previous_fund=prev_fund,
-        remaining=remaining,
-        total_income=total_income,
-        budget_in_the_bank=budget_in_the_bank,
-        transactions=txs,
-        incomes=incomes,
-        org_name=org_name,
-        college_name=college_name,
-        report_month_text=report_month_text,
-        receipts=receipts,
-    )
-
-    # 7. Receipts with public URL (APPENDIX A)
-    rc_res = (
-        supabase.table("wallet_receipts")
-        .select("description, file_url, receipt_date")
-        .eq("wallet_id", wallet_id)
-        .eq("budget_id", budget_id)
-        .order("receipt_date")
-        .execute()
-    )
-    receipts = rc_res.data or []
-    for r in receipts:
-        try:
-            public_url = supabase.storage.from_("Receipts").get_public_url(
-                r["file_url"]
-            )
-            if isinstance(public_url, dict):
-                r["file_url"] = public_url.get("publicUrl") or public_url.get(
-                    "signedURL"
-                )
-            else:
-                r["file_url"] = public_url
-        except Exception:
-            r["file_url"] = ""
-
-    # 8. PURE PRINT VIEW – render HTML na may tables at appendix
-    return render_template(
-        "osas/print_report.html",
-        report=rep,
-        budget=budget_val,
-        totalexpense=total_expense,
-        reimbursement=reimb,
-        previous_fund=prev_fund,
-        remaining=remaining,
-        total_income=total_income,
-        budget_in_the_bank=budget_in_the_bank,
-        transactions=txs,
-        incomes=incomes,
-        org_name=org_name,
-        college_name=college_name,
-        report_month_text=report_month_text,
-        receipts=receipts,
-    )
+        # 7. Render print template
+        return render_template(
+            "osas/print_report.html",
+            report=rep,
+            budget=budget_val,
+            totalexpense=total_expense,
+            reimbursement=reimb,
+            previous_fund=prev_fund,
+            remaining=remaining,
+            total_income=total_income,
+            budget_in_the_bank=budget_in_the_bank,
+            transactions=txs,
+            incomes=incomes,
+            org_name=org_name,
+            college_name=college_name,
+            report_month_text=report_month_text,
+            receipts=receipts,
+        )
+    
+    except Exception as e:
+        print(f"Error in print_monthly_report: {e}")
+        return f"Error: {str(e)}", 500
 
 
 # ========== ADMIN/SETTINGS ===========

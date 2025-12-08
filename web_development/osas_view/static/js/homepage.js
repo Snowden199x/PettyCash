@@ -98,40 +98,50 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Dashboard Data Load ---
   async function loadDashboardData() {
     try {
-      await loadAdminProfile();
-
-      const orgRes = await fetch("/osas/api/organizations");
-      if (!orgRes.ok) throw new Error("Failed to load organizations");
-      const orgData = await orgRes.json();
-      organizations = orgData.organizations || [];
-
+      // Show loaders IMMEDIATELY (better UX)
+      showDeptLoading();
       showStatusLoading();
 
-      // Fetch all real reports, one call per org
-      reports = [];
-      for (let org of organizations) {
-        const res = await fetch(
-          `/osas/api/organizations/${org.id}/financial_reports`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          if (data.reports && Array.isArray(data.reports)) {
-            data.reports.forEach((report) => {
-              // Attach org info for display
-              report.orgName = org.name;
-              report.department = org.department;
-            });
-            reports = reports.concat(data.reports);
-          }
-        }
-      }
+      // ✅ 1: Admin profile + COMBINED orgs+reports in PARALLEL
+      const [adminRes, comboRes] = await Promise.all([
+        loadAdminProfile(),
+        fetch("/osas/api/organizations_with_reports")
+          .then((r) => (r.ok ? r.json() : { organizations: [], reports: [] }))
+          .catch((err) => {
+            console.error("Org+reports fetch failed:", err);
+            return { organizations: [], reports: [] };
+          }),
+      ]);
 
+      // ✅ 2: Set organizations + reports
+      organizations = comboRes.organizations || [];
+      const rawReports = comboRes.reports || [];
+
+      // ✅ 3: Attach orgName / department to each report
+      reports = rawReports.map((rep) => {
+        const org =
+          organizations.find((o) => o.id === rep.organization_id) || {};
+        return {
+          ...rep,
+          orgName: org.name,
+          department: org.department,
+        };
+      });
+
+      // ✅ 4: Start activity feed in parallel
+      const activityPromise = updateActivityFeed();
+
+      // ✅ 5: Update UI (same as before)
+      hideDeptLoading();
       hideStatusLoading();
       updateSummaryCards();
       updateCharts();
-      updateActivityFeed();
+
+      // ✅ 6: Wait for activity feed
+      await activityPromise;
     } catch (err) {
       console.error("Error loading dashboard data:", err);
+      hideDeptLoading();
       hideStatusLoading();
       showToast("Failed to load some dashboard data", "error");
     }
@@ -139,13 +149,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadAdminProfile() {
     try {
-      const res = await fetch("/osas/api/admin/profile");
+      // Add 5-second timeout to prevent hanging
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+
+      const res = await fetch("/osas/api/admin/profile", {
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
       if (!res.ok) throw new Error("Profile request failed");
       const data = await res.json();
       if (data.full_name && adminNameEl) {
         adminNameEl.textContent = data.full_name.split(" ")[0];
       }
     } catch (err) {
+      console.warn("Admin profile load failed, using fallback:", err);
       if (adminNameEl) adminNameEl.textContent = "Admin";
     }
   }
@@ -170,6 +189,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loadDashboardOrganizations() {
+    // Skip if already loaded (prevent duplicate API call)
+    if (organizations.length > 0) {
+      showDeptLoading();
+      hideDeptLoading();
+      drawDepartmentChart();
+      return;
+    }
+
     showDeptLoading();
     try {
       const res = await fetch("/osas/api/organizations");
@@ -543,7 +570,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Activity Feed ---
   async function updateActivityFeed() {
-    if (!activityFeed) return;
+    if (!activityFeed) {
+      return Promise.resolve();
+    }
     try {
       const res = await fetch("/osas/api/admin/activity");
       const data = await res.json();
@@ -898,6 +927,33 @@ document.addEventListener("DOMContentLoaded", () => {
   loadDashboardDepartments().then(loadDashboardOrganizations);
   loadDashboardData();
   loadNotifications();
-  setInterval(loadNotifications, 10000);
-  setInterval(loadDashboardData, 300000);
+
+  // Smart polling: only when window focused, increased intervals
+  let notifPollInterval = null;
+  let dashPollInterval = null;
+
+  function startPolling() {
+    if (!notifPollInterval) {
+      notifPollInterval = setInterval(loadNotifications, 30000); // 30 seconds
+    }
+    if (!dashPollInterval) {
+      dashPollInterval = setInterval(loadDashboardData, 600000); // 10 minutes
+    }
+  }
+
+  function stopPolling() {
+    if (notifPollInterval) {
+      clearInterval(notifPollInterval);
+      notifPollInterval = null;
+    }
+    if (dashPollInterval) {
+      clearInterval(dashPollInterval);
+      dashPollInterval = null;
+    }
+  }
+
+  // Start polling on window focus, stop on blur
+  window.addEventListener("focus", startPolling);
+  window.addEventListener("blur", stopPolling);
+  startPolling(); // Start immediately
 });
