@@ -70,13 +70,15 @@ body {
   z-index: 999;
   box-sizing: border-box;
   margin-left: 90px;
-  transition: margin-left 0.25s ease;
+  width: calc(100% - 90px);
+  transition: margin-left 0.25s ease, width 0.25s ease;
+  margin-top: 15px;
 }
 
 .sidebar.hover-sidebar:hover ~ .page-header {
   margin-left: 290px;
+  width: calc(100% - 290px);
 }
-
 
 /* =========================================
    MAIN DASHBOARD
@@ -98,58 +100,46 @@ body {
   margin-left: 260px;
 }
 
-
 /* =========================================
    ACCREDITED ORGANIZATIONS SECTION
 ========================================= */
-.organizations {
-  width: 100%;
-  max-width: 1344px;
-  background-color: #FFFFFF;
-  border: 1px solid rgba(130, 130, 130, 0.5);
-  border-radius: 15px;
-  margin: 40px auto;
-  padding: 25px 30px;
-  box-shadow: 0px 4px 7.9px 4px rgba(243, 213, 141, 0.4);
-  box-sizing: border-box;
-}
-
-
 .orgs-header-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 20px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 20px;
-
 }
 
 
+.orgs-header-text {
+  flex-shrink: 0;
+  min-width: 250px;
+}
 
 .orgs-header-text h3 {
   margin: 0 0 5px 0;
-  font-size: 1.5rem;
+  font-size: 32px;
   font-weight: 600;
-  color: #222;
+  color: #000000;
 }
-
 
 .orgs-header-text p {
   margin: 0;
   color: #828282;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 400;
 }
 
-
 .orgs-header-actions {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  justify-content: flex-end;
 }
-
 
 /* --- Department Filter Dropdown --- */
 .filter-dropdown {
@@ -175,18 +165,21 @@ body {
 
 .filter-select:hover {
   border-color: #8B3B08;
+  box-shadow: 0 0 0 3px rgba(139, 59, 8, 0.1);
+
 }
 
 
 .filter-select:focus {
   outline: none;
   border-color: #8B3B08;
+  box-shadow: 0 0 0 3px rgba(139, 59, 8, 0.1);
 }
 
 
 /* --- Add Organization Button --- */
 .add-btn {
-  width: 240px;
+  width: 200px;
   height: 50px;
   background-color: #8B3B08;
   color: #FFFFFF;
@@ -212,7 +205,7 @@ body {
   border: 1px solid #ddd;
   font-family: Poppins;
   font-size: 16px;
-  width: 300px;
+  width: 250px;
   transition: border-color 0.3s ease;
 }
 
@@ -221,6 +214,7 @@ body {
 .search-input:hover {
   outline: none;
   border-color: #8B3B08;
+  box-shadow: 0 0 0 3px rgba(139, 59, 8, 0.1);
 }
 
 

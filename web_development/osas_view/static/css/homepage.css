@@ -64,12 +64,13 @@ body {
 }
 
 .notif-btn:hover {
-  background-color: #fff7ec;
+  border-color: #8B3B08;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
   transform: translateY(-1px);
 }
 
 .notif-btn:active {
+  border-color: #8B3B08;
   transform: translateY(0);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
 }
@@ -124,11 +125,11 @@ body {
 
 .notif-menu-header {
   padding: 18px 24px;
-  background: linear-gradient(135deg, #8b5a2b 0%, #b9823a 50%, #d4a857 100%);
+  background: #e59e2c;
   color: #ffffff;
   font-weight: 600;
   font-size: 16px;
-  border-bottom: 3px solid #d4a857;
+  border-bottom: 3px solid #e59e2c;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -280,7 +281,8 @@ body {
   font-family: "Poppins", sans-serif;
   transition: all 0.3s ease;
 }
-.search-bar input:focus {
+.search-bar input:focus,
+.search-bar input:hover {
   outline: none;
   border-color: #8b3b08;
   box-shadow: 0 0 0 3px rgba(139, 59, 8, 0.1);
@@ -302,8 +304,7 @@ body {
   transition: all 0.3s ease;
 }
 .profile-btn:hover {
-  background-color: #fff7ec;
-  border-color: #e59e2c;
+  border-color: #8b3b08;
 }
 .profile-avatar {
   width: 35px;
@@ -611,12 +612,36 @@ body {
   width: 100%;
   margin-bottom: 15px;
 }
-canvas {
+
+/* Department Chart - Smaller pie */
+#departmentChart {
   display: block;
   margin: 0 auto;
-  max-width: 400px;
-  max-height: 400px;
+  max-width: 200px;
+  max-height: 200px;
 }
+
+/* Status Chart - Keep it bigger */
+#statusChart {
+  display: block;
+  margin: 0 auto;
+  max-width: 300px;
+  max-height: 300px;
+}
+
+/* Status Breakdown Container - allows resizing of breakdown section */
+.status-breakdown-container {
+  width: 100%;
+  padding: 0 24px 24px;
+  box-sizing: border-box;
+  min-height: 140px;
+  max-height: 200px;
+}
+
+#statusBreakdown {
+  min-height: 140px;
+}
+
 
 /* Chart Legend – 2 Columns */
 .chart-legend {
