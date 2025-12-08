@@ -66,6 +66,25 @@ body {
   margin-bottom: 20px;
 }
 
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper input {
+  width: 100%;
+  padding-right: 40px; /* space for icon */
+}
+
+.password-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-90%); /* centers vertically */
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
 /* --------------------------------------------------
    INPUTS
 -------------------------------------------------- */

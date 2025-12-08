@@ -244,7 +244,7 @@
               <span class="loading-spinner"></span> Loading...
             </div>
             <div class="chart-container" id="deptChartContainer">
-              <canvas id="departmentChart" width="400" heightt="400"></canvas>
+              <canvas id="departmentChart" width="300" height="300"></canvas>
               <div
                 id="deptTooltip"
                 class="chart-tooltip"
@@ -253,6 +253,7 @@
             </div>
             <div class="chart-legend" id="deptLegend"></div>
           </div>
+
 
           <!-- Report Status Overview -->
           <div class="analytics-card">
@@ -270,32 +271,35 @@
             <div class="chart-container">
               <canvas id="statusChart" width="300" height="300"></canvas>
             </div>
-            <div id="statusBreakdown">
-              <div class="status-row" data-status="pending">
-                <span class="status-label">Pending</span>
-                <div class="status-bar">
-                  <div class="status-bar-fill" data-status="pending"></div>
+            <div class="status-breakdown-container">
+              <div id="statusBreakdown">
+                <div class="status-row" data-status="pending">
+                  <span class="status-label">Pending</span>
+                  <div class="status-bar">
+                    <div class="status-bar-fill" data-status="pending"></div>
+                  </div>
+                  <span class="status-count" id="pendingCount">0</span>
                 </div>
-                <span class="status-count" id="pendingCount">0</span>
-              </div>
 
-              <div class="status-row" data-status="review">
-                <span class="status-label">In Review</span>
-                <div class="status-bar">
-                  <div class="status-bar-fill" data-status="review"></div>
+                <div class="status-row" data-status="review">
+                  <span class="status-label">In Review</span>
+                  <div class="status-bar">
+                    <div class="status-bar-fill" data-status="review"></div>
+                  </div>
+                  <span class="status-count" id="reviewCount">0</span>
                 </div>
-                <span class="status-count" id="reviewCount">0</span>
-              </div>
 
-              <div class="status-row" data-status="completed">
-                <span class="status-label">Completed</span>
-                <div class="status-bar">
-                  <div class="status-bar-fill" data-status="completed"></div>
+                <div class="status-row" data-status="completed">
+                  <span class="status-label">Completed</span>
+                  <div class="status-bar">
+                    <div class="status-bar-fill" data-status="completed"></div>
+                  </div>
+                  <span class="status-count" id="completedCount">0</span>
                 </div>
-                <span class="status-count" id="completedCount">0</span>
               </div>
             </div>
           </div>
+
 
           <!-- RECENT ACTIVITIES -->
           <div class="analytics-card tall">

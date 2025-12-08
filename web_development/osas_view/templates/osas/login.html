@@ -47,9 +47,18 @@
 
           <!-- Password -->
           <label for="password">Password</label>
-          <input type="password" id="password" name="password" /> <!-- remove required -->
+          <div class="password-wrapper">
+            <input type="password" id="password" name="password" />
+            <img
+              id="togglePassword"
+              class="password-icon"
+              src="{{ url_for('osas.static', filename='images/show_password.png') }}"
+              data-show-src="{{ url_for('osas.static', filename='images/show_password.png') }}"
+              data-hide-src="{{ url_for('osas.static', filename='images/hide_password.png') }}"
+              alt="Show password"
+            />
+          </div>
           <p id="passwordError" class="error-message"></p>
-
           <button type="submit" class="login-btn">Log in</button>
         </form>
       </div>

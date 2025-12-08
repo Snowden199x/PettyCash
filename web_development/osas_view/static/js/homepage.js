@@ -879,48 +879,61 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  const deptCanvas = document.getElementById("departmentChart");
-  const deptTooltip = document.getElementById("deptTooltip");
+    const deptCanvas = document.getElementById("departmentChart");
+    const deptTooltip = document.getElementById("deptTooltip");
 
-  if (deptCanvas && deptTooltip) {
-    deptCanvas.addEventListener("mousemove", (e) => {
-      const rect = deptCanvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
 
-      let found = null;
+    if (deptCanvas && deptTooltip) {
+      deptCanvas.addEventListener("mousemove", (e) => {
+        const rect = deptCanvas.getBoundingClientRect();
+        
+        // ✅ Scale mouse coordinates to canvas internal dimensions
+        const scaleX = deptCanvas.width / rect.width;
+        const scaleY = deptCanvas.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
 
-      for (const slice of deptSlices) {
-        const dx = x - slice.centerX;
-        const dy = y - slice.centerY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist > slice.radius) continue;
+        let found = null;
 
-        let angle = Math.atan2(dy, dx);
-        if (angle < -Math.PI / 2) angle += 2 * Math.PI;
 
-        if (angle >= slice.startAngle && angle <= slice.endAngle) {
-          found = slice;
-          break;
+        for (const slice of deptSlices) {
+          const dx = x - slice.centerX;
+          const dy = y - slice.centerY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+
+          if (dist > slice.radius) continue;
+
+
+          let angle = Math.atan2(dy, dx);
+          if (angle < -Math.PI / 2) angle += 2 * Math.PI;
+
+
+          if (angle >= slice.startAngle && angle <= slice.endAngle) {
+            found = slice;
+            break;
+          }
         }
-      }
 
-      if (found) {
-        deptTooltip.style.display = "block";
-        deptTooltip.textContent = `${found.label}: ${found.value}`;
-        // position relative to card
-        deptTooltip.style.left = `${e.clientX - rect.left}px`;
-        deptTooltip.style.top = `${e.clientY - rect.top}px`;
-      } else {
+
+        if (found) {
+          deptTooltip.style.display = "block";
+          deptTooltip.textContent = `${found.label}: ${found.value}`;
+          // position relative to card
+          deptTooltip.style.left = `${e.clientX - rect.left}px`;
+          deptTooltip.style.top = `${e.clientY - rect.top}px`;
+        } else {
+          deptTooltip.style.display = "none";
+        }
+      });
+
+
+      deptCanvas.addEventListener("mouseleave", () => {
         deptTooltip.style.display = "none";
-      }
-    });
+      });
+    }
 
-    deptCanvas.addEventListener("mouseleave", () => {
-      deptTooltip.style.display = "none";
-    });
-  }
 
   // INITIAL LOAD
   loadDashboardDepartments().then(loadDashboardOrganizations);
