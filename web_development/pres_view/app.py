@@ -108,9 +108,27 @@ def validate_password(pw: str):
     return errors
 
 
-def create_osas_notification(org_id, report_id, message=None):
+MONTH_LABELS = {
+    "august": "August",
+    "september": "September",
+    "october": "October",
+    "november": "November",
+    "december": "December",
+    "january": "January",
+    "february": "February",
+    "march": "March",
+    "april": "April",
+    "may": "May",
+}
+
+
+def create_osas_notification(
+    org_id, report_id, status="Pending Review", month_key=None
+):
     """
     Insert a row into osas_notifications so OSAS bell sees a new item.
+    Message format example:
+      has a report "Pending Review for November"
     """
     try:
         # kunin org_name para sa display
@@ -123,8 +141,14 @@ def create_osas_notification(org_id, report_id, message=None):
         )
         org_name = org_res.data["org_name"] if org_res.data else "Organization"
 
-        if not message:
-            message = 'has a report "Pending Review"'
+        month_label = ""
+        if month_key:
+            month_label = MONTH_LABELS.get(month_key.lower(), month_key.title())
+
+        if month_label:
+            message = f'has a report "{status} for {month_label}"'
+        else:
+            message = f'has a report "{status}"'
 
         supabase.table("osas_notifications").insert(
             {
@@ -132,7 +156,7 @@ def create_osas_notification(org_id, report_id, message=None):
                 "report_id": report_id,
                 "org_name": org_name,
                 "message": message,
-                # created_at at is_read may default na sa table definition
+                # created_at at is_read naka-default sa table
             }
         ).execute()
     except Exception:
@@ -2280,7 +2304,13 @@ def submitreportwalletid(wallet_id):
                 "updated_at": dt.utcnow().isoformat(),
             }
         ).eq("id", rep_id).execute()
-        create_osas_notification(org_id, rep_id, 'has a report "Pending Review"')
+        report_month = rep.get("report_month")  # e.g. "november"
+        create_osas_notification(
+            org_id=org_id,
+            report_id=rep_id,
+            status="Pending Review",
+            month_key=report_month,
+        )
 
         # Compute remaining balance
         budget_val = float(rep.get("budget") or 0)
@@ -2604,7 +2634,7 @@ def download_archive(archive_id):
 
             summary_row.cells[-1].text = f"PHP {total_expense:,.2f}"
 
-               # 8) incomes table rows + total income
+            # 8) incomes table rows + total income
         inc_res = (
             supabase.table("financial_report_archive_transactions")
             .select("date_issued, quantity, description, price, kind")
@@ -2656,13 +2686,12 @@ def download_archive(archive_id):
                 dcell.text = fmt_date2(inc.get("date_issued") or "")
                 qtycell.text = str(inc.get("quantity") or "")
                 # walang income_type column sa archive table, so blank or reuse description
-                typecell.text = ""    # or inc.get("description") or ""
+                typecell.text = ""  # or inc.get("description") or ""
                 desccell.text = inc.get("description") or ""
                 amt = (inc.get("quantity") or 0) * (inc.get("price") or 0)
                 pricecell.text = f"PHP {amt:,.2f}"
 
             sum_row.cells[-1].text = f"PHP {total_income:,.2f}"
-
 
         # 9) budget in the bank
         budget_in_the_bank = (

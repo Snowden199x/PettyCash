@@ -737,3 +737,25 @@ background-color: #e0e0e0;
   background-color: #e8f5e9;
   color: #2e7d32;
 }
+.reports-section {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 220px); /* adjust depende sa header + filters */
+}
+
+.reports-content {
+  flex: 1 0 auto;        /* grid area */
+}
+
+#paginationWrapper {
+  flex-shrink: 0;
+  padding: 16px 0 32px;
+  display: flex;
+  justify-content: center;
+}
+
+.pagination {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}

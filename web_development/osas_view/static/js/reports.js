@@ -328,26 +328,57 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const maxVisible = 10; // max buttons na nakikita
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = startPage + maxVisible - 1;
+
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
     let html = "";
 
-    for (let i = 1; i <= totalPages; i++) {
+    // left arrow
+    html += `
+    <button class="page-btn arrow" data-page="${Math.max(
+      1,
+      currentPage - 1
+    )}" ${currentPage === 1 ? "disabled" : ""}>
+      ‹
+    </button>
+  `;
+
+    // number buttons
+    for (let i = startPage; i <= endPage; i++) {
       html += `
-        <button class="page-btn ${
-          i === currentPage ? "active" : ""
-        }" data-page="${i}">
-          ${i}
-        </button>`;
+      <button class="page-btn ${
+        i === currentPage ? "active" : ""
+      }" data-page="${i}">
+        ${i}
+      </button>
+    `;
     }
+
+    // right arrow
+    html += `
+    <button class="page-btn arrow" data-page="${Math.min(
+      totalPages,
+      currentPage + 1
+    )}" ${currentPage === totalPages ? "disabled" : ""}>
+      ›
+    </button>
+  `;
 
     paginationEl.innerHTML = html;
 
     paginationEl.querySelectorAll(".page-btn").forEach((btn) => {
+      const page = parseInt(btn.dataset.page, 10);
+      if (isNaN(page)) return;
       btn.addEventListener("click", () => {
-        const page = parseInt(btn.dataset.page, 10);
-        if (!isNaN(page)) {
-          currentPage = page;
-          renderReports();
-        }
+        if (page === currentPage) return;
+        currentPage = page;
+        renderReports();
       });
     });
   }
@@ -657,7 +688,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     if (!reports.length) {
-      loadOrganizationsAndReports().then(openNow);
+      loadInitialData().then(openNow);
     } else {
       openNow();
     }

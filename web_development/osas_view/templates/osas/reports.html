@@ -127,24 +127,22 @@
 
       <!-- REPORTS SECTION -->
       <section class="reports-section">
-        <!-- Empty State -->
-        <div class="empty-state" id="emptyState">
-          <img
-            src="{{ url_for('osas.static', filename='images/empty_org.png') }}"
-            alt="No Reports"
-          />
-          <h4>No Reports Available</h4>
-          <p>
-            Organizations will appear here once they start submitting financial
-            reports.
-          </p>
+        <div class="reports-content">
+          <!-- Empty State -->
+          <div class="empty-state" id="emptyState">...</div>
+
+          <!-- Reports Grid -->
+          <div
+            class="reports-grid"
+            id="reportsGrid"
+            style="display: none"
+          ></div>
         </div>
 
-        <!-- Reports Grid -->
-        <div class="reports-grid" id="reportsGrid" style="display: none"></div>
-
-        <!-- Pagination -->
-        <div id="pagination" class="pagination"></div>
+        <!-- Pagination (fixed sa baba ng section) -->
+        <div id="paginationWrapper">
+          <div id="pagination" class="pagination"></div>
+        </div>
       </section>
 
       <!-- REPORT DETAILS MODAL -->
