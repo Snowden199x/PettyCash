@@ -148,11 +148,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-
+// loading ui
 function showLoading() {
-  tableContainer.style.display = "none";  // Hide table
-  emptyState.style.display = "flex";      // Show your styled empty state
-  tableBody.innerHTML = '';
+  tableContainer.style.display = "block";
+  emptyState.style.display = "none";
+  tableBody.innerHTML = `
+    <tr>
+      <td colspan="7" style="text-align:center; padding: 24px 0;">
+        <span class="loading-spinner"></span>
+        <span style="margin-left: 10px; font-size: 16px; color: #a17c50;">
+          Loading organizations...
+        </span>
+      </td>
+    </tr>
+  `;
 }
 
 
@@ -180,10 +189,10 @@ function showLoading() {
   function renderFilteredTable(filtered) {
     tableBody.innerHTML = "";
     if (filtered.length === 0) {
-    tableContainer.style.display = "none";   // Hide table
-    emptyState.style.display = "flex";       // Show styled empty state
-    return;
-  }
+      tableContainer.style.display = "none";   // Hide table
+      emptyState.style.display = "flex";       // Show styled empty state
+      return;
+    }
     filtered.forEach((org) => {
       const row = document.createElement("tr");
       row.innerHTML = `
