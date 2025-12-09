@@ -39,6 +39,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
 
   // Report actions (chips) state
   bool showReportActions = false;
+  bool isReportSubmitted = false;
 
   // Tabs: 0 Transaction, 1 Reports, 2 Receipts, 3 Archive
   int selectedTabIndex = 0;
@@ -46,6 +47,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
   // Database-synced lists
   List<TransactionItem> transactions = [];
   List<ReceiptItem> receipts = [];
+  List<ArchiveItem> archives = [];
   bool _isLoadingData = false;
 
   // Controllers - Income
@@ -102,9 +104,44 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
         _loadTransactions(),
         _loadReceipts(),
         _loadBudget(),
+        _checkReportStatus(),
+        _loadArchives(),
       ]);
     } finally {
       if (mounted) setState(() => _isLoadingData = false);
+    }
+  }
+
+  Future<void> _loadArchives() async {
+    try {
+      final data = await WalletMonthDbHelper.loadArchives(widget.folderId);
+      if (mounted) {
+        setState(() {
+          archives = data.map((e) => ArchiveItem(
+            id: e['id'] ?? 0,
+            reportNo: e['reportno'] ?? '',
+            eventName: e['eventname'] ?? '',
+            datePrepared: e['dateprepared'] ?? '',
+            remaining: (e['remaining'] ?? 0).toDouble(),
+          )).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading archives: $e');
+    }
+  }
+
+  Future<void> _checkReportStatus() async {
+    try {
+      final status = await WalletMonthDbHelper.checkReportStatus(widget.folderId);
+      if (mounted && status != null) {
+        setState(() {
+          showReportActions = status['exists'] == true;
+          isReportSubmitted = status['submitted'] == true;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error checking report status: $e');
     }
   }
 
@@ -113,7 +150,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
       final data = await WalletMonthDbHelper.loadBudget(widget.folderId);
       if (mounted && data != null) {
         setState(() {
-          currentBudget = (data['budget'] ?? 0).toDouble();
+          currentBudget = (data['amount'] ?? 0).toDouble();
         });
       }
     } catch (e) {
@@ -171,9 +208,10 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
       if (mounted) {
         setState(() {
           receipts = data.map((e) => ReceiptItem(
+            id: e['id'] ?? 0,
             description: e['description'] ?? '',
-            date: e['date'] ?? '',
-            imagePath: e['image_url'] ?? '',
+            date: e['receiptdate'] ?? '',
+            imagePath: e['fileurl'] ?? '',
           )).toList();
         });
       }
@@ -532,6 +570,7 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
       return;
     }
 
+    final messenger = ScaffoldMessenger.of(context);
     try {
       await WalletMonthDbHelper.uploadReceipt(
         widget.folderId,
@@ -549,11 +588,14 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
           receiptImage = null;
           activePopup = ActivePopup.none;
         });
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Receipt uploaded successfully')),
+        );
       }
     } catch (e) {
       debugPrint('Error saving receipt: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text('Failed to save receipt: $e')),
         );
       }
@@ -866,79 +908,188 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                     const EdgeInsets.only(bottom: 12.0),
                                 child: ReceiptCard(
                                   item: r,
-                                  onView: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (ctx) {
-                                        return Dialog(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.all(
-                                                        12),
-                                                child: Text(
-                                                  r.description,
-                                                  style: const TextStyle(
-                                                    fontFamily: 'Poppins',
-                                                    fontSize: 14,
-                                                    fontWeight:
-                                                        FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ),
-                                              if (File(r.imagePath)
-                                                  .existsSync())
-                                                Image.file(
-                                                  File(r.imagePath),
-                                                  fit: BoxFit.contain,
-                                                )
-                                              else
-                                                const Padding(
-                                                  padding:
-                                                      EdgeInsets.all(16),
+                                  onView: () async {
+                                    final messenger = ScaffoldMessenger.of(context);
+                                    try {
+                                      final url = await WalletMonthDbHelper.getReceiptUrl(r.id);
+                                      if (context.mounted) {
+                                        showDialog(
+                                          context: context,
+                                          builder: (ctx) => Dialog(
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Padding(
+                                                  padding: const EdgeInsets.all(12),
                                                   child: Text(
-                                                    'Image not found.',
-                                                    style: TextStyle(
+                                                    r.description,
+                                                    style: const TextStyle(
                                                       fontFamily: 'Poppins',
-                                                      fontSize: 12,
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.w600,
                                                     ),
                                                   ),
                                                 ),
-                                              TextButton(
-                                                onPressed: () =>
-                                                    Navigator.of(ctx)
-                                                        .pop(),
-                                                child: const Text('Close'),
+                                                Image.network(
+                                                  url,
+                                                  fit: BoxFit.contain,
+                                                  loadingBuilder: (context, child, progress) {
+                                                    if (progress == null) return child;
+                                                    return const Padding(
+                                                      padding: EdgeInsets.all(50),
+                                                      child: CircularProgressIndicator(),
+                                                    );
+                                                  },
+                                                  errorBuilder: (context, error, stackTrace) {
+                                                    return const Padding(
+                                                      padding: EdgeInsets.all(16),
+                                                      child: Text('Failed to load image'),
+                                                    );
+                                                  },
+                                                ),
+                                                TextButton(
+                                                  onPressed: () => Navigator.of(ctx).pop(),
+                                                  child: const Text('Close'),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      messenger.showSnackBar(
+                                        SnackBar(content: Text('Failed to load receipt: $e')),
+                                      );
+                                    }
+                                  },
+                                  onDownload: () async {
+                                    final messenger = ScaffoldMessenger.of(context);
+                                    try {
+                                      final url = await WalletMonthDbHelper.getReceiptDownloadUrl(r.id);
+                                      final response = await http.get(Uri.parse(url));
+                                      if (response.statusCode == 200) {
+                                        final dir = Directory('/storage/emulated/0/Download');
+                                        if (!await dir.exists()) {
+                                          await dir.create(recursive: true);
+                                        }
+                                        final fileName = 'receipt_${r.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+                                        final file = File('${dir.path}/$fileName');
+                                        await file.writeAsBytes(response.bodyBytes);
+                                        messenger.showSnackBar(
+                                          SnackBar(content: Text('Downloaded: $fileName')),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      messenger.showSnackBar(
+                                        SnackBar(content: Text('Failed to download: $e')),
+                                      );
+                                    }
+                                  },
+                                  onDelete: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (ctx) => Dialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(20),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  const Text(
+                                                    'Delete receipt',
+                                                    style: TextStyle(
+                                                      fontFamily: 'Poppins',
+                                                      fontSize: 18,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                  IconButton(
+                                                    icon: const Icon(Icons.close),
+                                                    onPressed: () => Navigator.of(ctx).pop(),
+                                                    padding: EdgeInsets.zero,
+                                                    constraints: const BoxConstraints(),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 12),
+                                              const Text(
+                                                'Are you sure you want to delete this receipt?',
+                                                style: TextStyle(
+                                                  fontFamily: 'Poppins',
+                                                  fontSize: 14,
+                                                  color: Colors.black87,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 20),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.end,
+                                                children: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.of(ctx).pop(),
+                                                    style: TextButton.styleFrom(
+                                                      padding: const EdgeInsets.symmetric(
+                                                        horizontal: 20,
+                                                        vertical: 10,
+                                                      ),
+                                                    ),
+                                                    child: const Text(
+                                                      'Cancel',
+                                                      style: TextStyle(
+                                                        fontFamily: 'Poppins',
+                                                        fontSize: 14,
+                                                        color: Colors.black,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  ElevatedButton(
+                                                    onPressed: () async {
+                                                      Navigator.of(ctx).pop();
+                                                      final messenger = ScaffoldMessenger.of(context);
+                                                      try {
+                                                        await WalletMonthDbHelper.deleteReceipt(r.id);
+                                                        await _loadReceipts();
+                                                        messenger.showSnackBar(
+                                                          const SnackBar(content: Text('Receipt deleted')),
+                                                        );
+                                                      } catch (e) {
+                                                        messenger.showSnackBar(
+                                                          SnackBar(content: Text('Failed to delete: $e')),
+                                                        );
+                                                      }
+                                                    },
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: const Color(0xFF8B3B08),
+                                                      padding: const EdgeInsets.symmetric(
+                                                        horizontal: 20,
+                                                        vertical: 10,
+                                                      ),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(8),
+                                                      ),
+                                                    ),
+                                                    child: const Text(
+                                                      'Yes, delete',
+                                                      style: TextStyle(
+                                                        fontFamily: 'Poppins',
+                                                        fontSize: 14,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ],
                                           ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                  onDownload: () {
-                                    // Placeholder: hook real download/gallery save here.
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Download not implemented in this demo.',
                                         ),
                                       ),
                                     );
-                                  },
-                                  onDelete: () async {
-                                    try {
-                                      await WalletMonthDbHelper.deleteReceipt(r.imagePath);
-                                      await _loadReceipts();
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Failed to delete: $e')),
-                                        );
-                                      }
-                                    }
                                   },
                                 ),
                               );
@@ -947,45 +1098,108 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                           );
                         } else {
                           // ARCHIVE TAB
-                          return const Align(
-                            alignment: Alignment.center,
-                            child: Padding(
-                              padding: EdgeInsets.only(bottom: 100),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.center,
-                                children: [
-                                  Image(
-                                    image: AssetImage(
-                                        'assets/Icons/navigation_icons/nav_history.png'),
-                                    width: 61,
-                                    height: 61,
-                                    fit: BoxFit.contain,
-                                  ),
-                                  SizedBox(height: 16),
-                                  Text(
-                                    'No archives found',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black,
+                          if (_isLoadingData) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+                          if (archives.isEmpty) {
+                            return const Align(
+                              alignment: Alignment.center,
+                              child: Padding(
+                                padding: EdgeInsets.only(bottom: 100),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.center,
+                                  children: [
+                                    Image(
+                                      image: AssetImage(
+                                          'assets/Icons/navigation_icons/nav_history.png'),
+                                      width: 61,
+                                      height: 61,
+                                      fit: BoxFit.contain,
                                     ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'There are no archived reports for this month.',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 12,
-                                      color: Colors.black54,
+                                    SizedBox(height: 16),
+                                    Text(
+                                      'No archives found',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'There are no archived reports for this month.',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 12,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
+                            );
+                          }
+
+                          return RefreshIndicator(
+                            onRefresh: _loadData,
+                            child: ListView.builder(
+                              padding: const EdgeInsets.only(bottom: 100, top: 0),
+                              itemCount: archives.length,
+                              itemBuilder: (context, index) {
+                                final a = archives[index];
+                                return ArchiveCard(
+                                  item: a,
+                                  onDownload: () async {
+                                    final messenger = ScaffoldMessenger.of(context);
+                                    try {
+                                      messenger.showSnackBar(
+                                        const SnackBar(content: Text('Downloading report...')),
+                                      );
+                                      
+                                      final url = await WalletMonthDbHelper.getArchiveDownloadUrl(a.id);
+                                      final response = await http.get(Uri.parse(url), headers: ApiClient.getHeaders());
+                                      
+                                      if (response.statusCode == 200) {
+                                        final dir = Directory('/storage/emulated/0/Download');
+                                        if (!await dir.exists()) {
+                                          await dir.create(recursive: true);
+                                        }
+                                        
+                                        final fileName = '${a.reportNo}_${DateTime.now().millisecondsSinceEpoch}.docx';
+                                        final file = File('${dir.path}/$fileName');
+                                        await file.writeAsBytes(response.bodyBytes);
+                                        
+                                        await OpenFile.open(file.path);
+                                        messenger.showSnackBar(
+                                          SnackBar(
+                                            content: Text('Opening: $fileName'),
+                                            duration: const Duration(seconds: 2),
+                                          ),
+                                        );
+                                      } else {
+                                        messenger.showSnackBar(
+                                          SnackBar(
+                                            content: Text('Failed to download: ${response.statusCode}'),
+                                            duration: const Duration(seconds: 3),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      messenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text('Failed to download: $e'),
+                                          duration: const Duration(seconds: 3),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                );
+                              },
                             ),
                           );
                         }
@@ -1355,34 +1569,8 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                   actions: [
                     _buildCancelButton(closeAllPopups),
                     const SizedBox(width: 8),
-                    _buildPrimaryButton('Generate', () async {
-                      final messenger = ScaffoldMessenger.of(context);
-                      try {
-                        await WalletMonthDbHelper.generateReport(
-                          widget.folderId,
-                          {
-                            'event_name': reportEventNameController.text,
-                            'date_prepared': reportDatePreparedController.text,
-                            'report_no': reportNumberController.text,
-                            'budget': double.tryParse(reportBudgetController.text) ?? 0,
-                            'total_income': double.tryParse(reportTotalIncomeController.text) ?? 0,
-                            'total_expense': double.tryParse(reportTotalExpensesController.text) ?? 0,
-                            'reimbursement': double.tryParse(reportReimbursementController.text) ?? 0,
-                            'previous_fund': double.tryParse(reportPreviousFundController.text) ?? 0,
-                            'budget_in_the_bank': double.tryParse(reportBudgetInBankController.text) ?? 0,
-                          },
-                        );
-                        if (mounted) {
-                          setState(() {
-                            showReportActions = true;
-                            activePopup = ActivePopup.none;
-                          });
-                        }
-                      } catch (e) {
-                        messenger.showSnackBar(
-                          SnackBar(content: Text('Failed to generate report: $e')),
-                        );
-                      }
+                    _buildPrimaryButton('Generate', () {
+                      openPopup(ActivePopup.reportConfirm);
                     }),
                   ],
                   child: SingleChildScrollView(
@@ -1508,11 +1696,35 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                   actions: [
                     _buildCancelButton(closeAllPopups),
                     const SizedBox(width: 8),
-                    _buildPrimaryButton('Generate', () {
-                      setState(() {
-                        showReportActions = true;
-                        activePopup = ActivePopup.none;
-                      });
+                    _buildPrimaryButton('Generate', () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      try {
+                        await WalletMonthDbHelper.generateReport(
+                          widget.folderId,
+                          {
+                            'event_name': reportEventNameController.text,
+                            'date_prepared': reportDatePreparedController.text,
+                            'report_no': reportNumberController.text,
+                            'budget': double.tryParse(reportBudgetController.text) ?? 0,
+                            'total_income': double.tryParse(reportTotalIncomeController.text) ?? 0,
+                            'total_expense': double.tryParse(reportTotalExpensesController.text) ?? 0,
+                            'reimbursement': double.tryParse(reportReimbursementController.text) ?? 0,
+                            'previous_fund': double.tryParse(reportPreviousFundController.text) ?? 0,
+                            'budget_in_the_bank': double.tryParse(reportBudgetInBankController.text) ?? 0,
+                          },
+                        );
+                        if (mounted) {
+                          setState(() {
+                            showReportActions = true;
+                            isReportSubmitted = false;
+                            activePopup = ActivePopup.none;
+                          });
+                        }
+                      } catch (e) {
+                        messenger.showSnackBar(
+                          SnackBar(content: Text('Failed to generate report: $e')),
+                        );
+                      }
                     }),
                   ],
                   child: const Text(
@@ -1657,68 +1869,66 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                             ? Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  _buildReportActionChip(
-                                    label: 'Edit Report',
-                                    background:
-                                        const Color(0xFFFFFFFF),
-                                    textColor: Colors.black,
+                                  GestureDetector(
+                                    onTap: isReportSubmitted ? null : () => openPopup(ActivePopup.reportDetails),
+                                    child: Opacity(
+                                      opacity: isReportSubmitted ? 0.4 : 1.0,
+                                      child: _buildReportActionChip(
+                                        label: 'Edit Report',
+                                        background:
+                                            const Color(0xFFFFFFFF),
+                                        textColor: Colors.black,
+                                      ),
+                                    ),
                                   ),
                                   const SizedBox(width: 6),
                                   GestureDetector(
                                     onTap: () async {
                                       final messenger = ScaffoldMessenger.of(context);
                                       try {
-                                        debugPrint('Preview button clicked');
                                         messenger.showSnackBar(
                                           const SnackBar(content: Text('Downloading report...')),
                                         );
                                         
                                         final url = await WalletMonthDbHelper.getPreviewUrl(widget.folderId);
-                                        debugPrint('Preview URL: $url');
-                                        
                                         final response = await http.get(Uri.parse(url), headers: ApiClient.getHeaders());
-                                        debugPrint('Response status: ${response.statusCode}');
-                                        debugPrint('Response body length: ${response.bodyBytes.length}');
                                         
                                         if (response.statusCode == 200) {
                                           final dir = Directory('/storage/emulated/0/Download');
-                                          debugPrint('Download dir: ${dir.path}');
-                                          debugPrint('Dir exists: ${await dir.exists()}');
-                                          
                                           if (!await dir.exists()) {
                                             await dir.create(recursive: true);
-                                            debugPrint('Created directory');
                                           }
                                           
                                           final fileName = 'financial_report_${DateTime.now().millisecondsSinceEpoch}.docx';
                                           final file = File('${dir.path}/$fileName');
-                                          debugPrint('File path: ${file.path}');
-                                          
                                           await file.writeAsBytes(response.bodyBytes);
-                                          debugPrint('File written successfully');
                                           
-                                          // Open file with available apps
-                                          final result = await OpenFile.open(file.path);
-                                          debugPrint('Open file result: ${result.message}');
-                                          
+                                          await OpenFile.open(file.path);
                                           messenger.showSnackBar(
                                             SnackBar(
                                               content: Text('Opening: $fileName'),
                                               duration: const Duration(seconds: 2),
                                             ),
                                           );
-                                        } else {
-                                          debugPrint('HTTP error: ${response.statusCode}');
+                                        } else if (response.statusCode == 404) {
                                           messenger.showSnackBar(
-                                            SnackBar(content: Text('Server error: ${response.statusCode}')),
+                                            const SnackBar(
+                                              content: Text('Report not found. Please generate the report first by clicking "Generate Report" and filling in all fields.'),
+                                              duration: Duration(seconds: 5),
+                                            ),
+                                          );
+                                        } else {
+                                          messenger.showSnackBar(
+                                            SnackBar(
+                                              content: Text('Server error (${response.statusCode}). Please try generating the report again.'),
+                                              duration: const Duration(seconds: 5),
+                                            ),
                                           );
                                         }
-                                      } catch (e, stackTrace) {
-                                        debugPrint('Error downloading: $e');
-                                        debugPrint('Stack trace: $stackTrace');
+                                      } catch (e) {
                                         messenger.showSnackBar(
                                           SnackBar(
-                                            content: Text('Error: $e'),
+                                            content: Text('Failed to download report: $e'),
                                             duration: const Duration(seconds: 5),
                                           ),
                                         );
@@ -1731,19 +1941,116 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                       textColor: Colors.black,
                                     ),
                                   ),
+
                                   const SizedBox(width: 6),
-                                  _buildReportActionChip(
-                                    label: 'Print',
-                                    background:
-                                        const Color(0xFF8B3B08),
-                                    textColor: Colors.white,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  _buildReportActionChip(
-                                    label: 'Submit',
-                                    background:
-                                        const Color(0xFF2D8A34),
-                                    textColor: Colors.white,
+                                  GestureDetector(
+                                    onTap: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (ctx) => Dialog(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(20),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  'Submit Report',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Poppins',
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 12),
+                                                const Text(
+                                                  'Are you sure you want to submit this report to OSAS? You will not be able to edit it after submission.',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Poppins',
+                                                    fontSize: 14,
+                                                    color: Colors.black87,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 20),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.end,
+                                                  children: [
+                                                    TextButton(
+                                                      onPressed: () => Navigator.of(ctx).pop(),
+                                                      style: TextButton.styleFrom(
+                                                        padding: const EdgeInsets.symmetric(
+                                                          horizontal: 20,
+                                                          vertical: 10,
+                                                        ),
+                                                      ),
+                                                      child: const Text(
+                                                        'Cancel',
+                                                        style: TextStyle(
+                                                          fontFamily: 'Poppins',
+                                                          fontSize: 14,
+                                                          color: Colors.black,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    ElevatedButton(
+                                                      onPressed: () async {
+                                                        Navigator.of(ctx).pop();
+                                                        final messenger = ScaffoldMessenger.of(context);
+                                                        try {
+                                                          await WalletMonthDbHelper.submitReport(widget.folderId);
+                                                          await _loadArchives();
+                                                          if (mounted) {
+                                                            setState(() {
+                                                              isReportSubmitted = true;
+                                                              selectedTabIndex = 3;
+                                                            });
+                                                            messenger.showSnackBar(
+                                                              const SnackBar(content: Text('Report submitted successfully')),
+                                                            );
+                                                          }
+                                                        } catch (e) {
+                                                          messenger.showSnackBar(
+                                                            SnackBar(content: Text('Failed to submit report: $e')),
+                                                          );
+                                                        }
+                                                      },
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor: const Color(0xFF2D8A34),
+                                                        padding: const EdgeInsets.symmetric(
+                                                          horizontal: 20,
+                                                          vertical: 10,
+                                                        ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(8),
+                                                        ),
+                                                      ),
+                                                      child: const Text(
+                                                        'Yes, submit',
+                                                        style: TextStyle(
+                                                          fontFamily: 'Poppins',
+                                                          fontSize: 14,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: _buildReportActionChip(
+                                      label: 'Submit',
+                                      background:
+                                          const Color(0xFF2D8A34),
+                                      textColor: Colors.white,
+                                    ),
                                   ),
                                 ],
                               )
@@ -2064,11 +2371,13 @@ class _TransactionCardState extends State<TransactionCard> {
 
 // In-memory receipt model
 class ReceiptItem {
+  final int id;
   final String description;
   final String date;
   final String imagePath;
 
   ReceiptItem({
+    required this.id,
     required this.description,
     required this.date,
     required this.imagePath,
@@ -2093,43 +2402,46 @@ class ReceiptCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 140,
+      height: 180,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: const Color(0xFFE7D9C0),
+          color: const Color(0xFFD4C5A9),
           width: 1,
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(16),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Column(
             children: [
-              const Icon(
-                Icons.insert_drive_file_outlined,
-                size: 36,
-                color: Color(0xFFB0B0B0),
+              Image.asset(
+                'assets/Icons/receipts.png',
+                width: 50,
+                height: 50,
+                fit: BoxFit.contain,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
                 item.description,
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontFamily: 'Poppins',
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Colors.black,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
                 item.date,
                 style: const TextStyle(
                   fontFamily: 'Poppins',
-                  fontSize: 11,
+                  fontSize: 12,
                   color: Colors.black54,
                 ),
               ),
@@ -2156,7 +2468,7 @@ class ReceiptCard extends StatelessWidget {
                 label: 'Delete',
                 backgroundColor: Colors.white,
                 textColor: Colors.black,
-                borderColor: const Color(0xFFE0D5C8),
+                borderColor: const Color(0xFFD4C5A9),
                 onTap: onDelete,
               ),
             ],
@@ -2480,6 +2792,127 @@ class LabeledField extends StatelessWidget {
         const SizedBox(height: 4),
         field,
       ],
+    );
+  }
+}
+
+// Archive model
+class ArchiveItem {
+  final int id;
+  final String reportNo;
+  final String eventName;
+  final String datePrepared;
+  final double remaining;
+
+  ArchiveItem({
+    required this.id,
+    required this.reportNo,
+    required this.eventName,
+    required this.datePrepared,
+    required this.remaining,
+  });
+}
+
+// Archive card widget
+class ArchiveCard extends StatelessWidget {
+  final ArchiveItem item;
+  final VoidCallback onDownload;
+
+  const ArchiveCard({
+    super.key,
+    required this.item,
+    required this.onDownload,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFECDDC6),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            item.reportNo,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Event: ${item.eventName}',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 13,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Date: ${item.datePrepared}',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              color: Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Remaining Balance:',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              color: Colors.black54,
+            ),
+          ),
+          Text(
+            'Php ${item.remaining.toStringAsFixed(2)}',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color.fromARGB(255, 0, 0, 0),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: onDownload,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF8B3B08),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 8,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Download',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 12,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 } 
