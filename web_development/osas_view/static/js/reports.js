@@ -1,3 +1,27 @@
+const REPORT_TIMESTAMPS_KEY = 'reportLastModified';
+
+function saveReportTimestamp(reportId) {
+  const timestamps = JSON.parse(localStorage.getItem(REPORT_TIMESTAMPS_KEY) || '{}');
+  timestamps[reportId] = new Date().getTime();
+  localStorage.setItem(REPORT_TIMESTAMPS_KEY, JSON.stringify(timestamps));
+}
+
+function getReportTimestamps() {
+  return JSON.parse(localStorage.getItem(REPORT_TIMESTAMPS_KEY) || '{}');
+}
+
+function sortByRecent(reportsArray) {
+  const timestamps = getReportTimestamps();
+  const sorted = [...reportsArray].sort((a, b) => {
+    const timeA = timestamps[a.id] || 0;
+    const timeB = timestamps[b.id] || 0;
+    return timeB - timeA;
+  });
+  return sorted;
+}
+
+// ===== END LOCAL STORAGE HELPER =====
+
 document.addEventListener("DOMContentLoaded", () => {
   // DOM ELEMENTS
   const reportsGrid = document.getElementById("reportsGrid");
@@ -27,6 +51,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const notifList = document.getElementById("notifList");
   const notifDot = document.getElementById("notifDot");
 
+  //pang complete elements
+  const confirmationModal = document.getElementById("confirmationModal");
+  const confirmTitle = document.getElementById("confirmTitle");
+  const confirmMessage = document.getElementById("confirmMessage");
+  const confirmAccept = document.getElementById("confirmAccept");
+  const confirmCancel = document.getElementById("confirmCancel");
+  const closeConfirm = document.getElementById("closeConfirm");
+
   let reports = [];
   let organizations = [];
   let currentReportId = null;
@@ -34,6 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const pageSize = 6;
   let departments = [];
   let notifications = [];
+  
 
   if (orgIdParam || reportIdParam) {
     openFromNotification(Number(orgIdParam), Number(reportIdParam));
@@ -242,7 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       });
 
-      reports = allReports;
+      reports = sortByRecent(allReports);
       renderReports();
     } catch (err) {
       console.error("Load error:", err);
@@ -583,7 +616,10 @@ async function handleMonthAction(report, button) {
       }
 
       showToast("Report updated!");
+      saveReportTimestamp(currentReportId);
+      reports = sortByRecent(reports);  // ← ADD
       closeReportModal();
+      currentPage = 1;  // ← ADD
       renderReports();
     }
   });
@@ -592,36 +628,65 @@ async function handleMonthAction(report, button) {
   completeReportBtn.addEventListener("click", async () => {
     if (!currentReportId) return;
 
-    const confirmed = window.confirm(
-      "Mark this financial report as complete? All months will be considered received."
-    );
-    if (!confirmed) return;
+    confirmTitle.textContent = "Mark as Complete?";
+    confirmMessage.textContent = "Mark this financial report as complete? All months will be considered received.";
+    confirmationModal.style.display = "flex";
 
-    const updated = await updateFinancialReport(currentReportId, {
-      completeAll: true,
-    });
+    let confirmHandled = false;
 
-    if (updated) {
-      updated.checklist = updated.checklist || {};
-      updated.status = "Completed";
+    const handleConfirm = async () => {
+      if (confirmHandled) return;
+      confirmHandled = true;
+      
+      confirmationModal.style.display = "none";
+      confirmAccept.removeEventListener("click", handleConfirm);
+      confirmCancel.removeEventListener("click", handleCancel);
+      closeConfirm.removeEventListener("click", handleCancel);
 
-      const idx = reports.findIndex((r) => r.id === currentReportId);
-      if (idx !== -1) {
-        const newChecklist = { ...(reports[idx].checklist || {}) };
-        MONTH_KEYS.forEach((k) => (newChecklist[k] = true));
-        reports[idx] = {
-          ...reports[idx],
-          ...updated,
-          checklist: newChecklist,
-          status: "Completed",
-        };
+      const updated = await updateFinancialReport(currentReportId, {
+        completeAll: true,
+      });
+
+      if (updated) {
+        updated.checklist = updated.checklist || {};
+        updated.status = "Completed";
+
+        const idx = reports.findIndex((r) => r.id === currentReportId);
+        if (idx !== -1) {
+          const newChecklist = { ...(reports[idx].checklist || {}) };
+          MONTH_KEYS.forEach((k) => (newChecklist[k] = true));
+          reports[idx] = {
+            ...reports[idx],
+            ...updated,
+            checklist: newChecklist,
+            status: "Completed",
+          };
+        }
+
+        showToast("Report marked as complete!");
+        saveReportTimestamp(currentReportId);
+        reports = sortByRecent(reports);
+        closeReportModal();
+        currentPage = 1;
+        renderReports();
       }
+    };
 
-      showToast("Report marked as complete!");
-      closeReportModal();
-      renderReports();
-    }
+    const handleCancel = () => {
+      if (confirmHandled) return;
+      confirmHandled = true;
+      
+      confirmationModal.style.display = "none";
+      confirmAccept.removeEventListener("click", handleConfirm);
+      confirmCancel.removeEventListener("click", handleCancel);
+      closeConfirm.removeEventListener("click", handleCancel);
+    };
+
+    confirmAccept.addEventListener("click", handleConfirm);
+    confirmCancel.addEventListener("click", handleCancel);
+    closeConfirm.addEventListener("click", handleCancel);
   });
+
 
   // --- Notifications ---
   if (notifBtn && notifMenu) {

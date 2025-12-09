@@ -403,6 +403,35 @@ body {
   color: #999;
 }
 
+/* =========================================
+   CONFIRMATION MODAL
+========================================= */
+.confirmation-modal {
+  max-width: 400px;
+}
+
+.confirmation-content {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.confirmation-content p {
+  font-size: 16px;
+  color: #333;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.modal-header {
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 15px;
+}
+
+.modal-header h2 {
+  color: #000;
+}
+
+
 
 /* =========================================
    STATUS SECTION

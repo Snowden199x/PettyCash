@@ -134,7 +134,16 @@
       <section class="reports-section">
         <div class="reports-content">
           <!-- Empty State -->
-          <div class="empty-state" id="emptyState">...</div>
+          <div class="empty-state" id="emptyState">
+          <img
+            src="{{ url_for('osas.static', filename='images/reports_menu.png') }}"
+            alt="No Organizations"
+          />
+          <h4>No Reports Found</h4>
+          <p>
+            No financial reports match your current filters
+          </p>
+        </div>
 
           <!-- Reports Grid -->
           <div
@@ -195,6 +204,28 @@
           </div>
         </div>
       </div>
+
+            <!-- CONFIRMATION MODAL -->
+      <div id="confirmationModal" class="modal">
+        <div class="modal-box confirmation-modal">
+          <div class="modal-header">
+            <h2 id="confirmTitle">Confirm Action</h2>
+            <button class="close-btn" id="closeConfirm">&times;</button>
+          </div>
+          <div class="confirmation-content">
+            <p id="confirmMessage">Are you sure?</p>
+          </div>
+          <div class="modal-buttons">
+            <button type="button" id="confirmCancel" class="secondary-btn">
+              Cancel
+            </button>
+            <button type="button" id="confirmAccept" class="primary-btn">
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+
 
       <div id="toast" class="toast"></div>
     </main>
