@@ -26,7 +26,7 @@ class ApiClient {
           headers: headers,
           body: jsonEncode(body),
         )
-        .timeout(const Duration(seconds: 10));
+        .timeout(const Duration(seconds: 30));
 
     // Save session cookie from login response
     if (res.headers['set-cookie'] != null) {
@@ -48,7 +48,7 @@ class ApiClient {
           Uri.parse('$baseUrl$path'),
           headers: headers,
         )
-        .timeout(const Duration(seconds: 10));
+        .timeout(const Duration(seconds: 30));
 
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
@@ -65,7 +65,7 @@ class ApiClient {
           Uri.parse('$baseUrl$path'),
           headers: headers,
         )
-        .timeout(const Duration(seconds: 10));
+        .timeout(const Duration(seconds: 30));
 
     final decoded = jsonDecode(res.body);
     if (decoded is Map && decoded.containsKey('error')) {
@@ -77,6 +77,47 @@ class ApiClient {
   // Clear session on logout
   static void clearSession() {
     _sessionCookie = null;
+  }
+  
+  // PUT request
+  Future<Map<String, dynamic>> putJson(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (_sessionCookie != null) {
+      headers['Cookie'] = _sessionCookie!;
+    }
+
+    final res = await http
+        .put(
+          Uri.parse('$baseUrl$path'),
+          headers: headers,
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  // DELETE request
+  Future<Map<String, dynamic>> deleteJson(String path) async {
+    final headers = {'Accept': 'application/json'};
+    if (_sessionCookie != null) {
+      headers['Cookie'] = _sessionCookie!;
+    }
+
+    final res = await http
+        .delete(
+          Uri.parse('$baseUrl$path'),
+          headers: headers,
+        )
+        .timeout(const Duration(seconds: 30));
+
+    return jsonDecode(res.body) as Map<String, dynamic>;
   }
   
   // Get headers with session cookie for manual http requests
