@@ -226,7 +226,7 @@ class _ForgotPasswordState extends State<ForgotPassword> with SingleTickerProvid
                             child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black87),
                           )
                         : const Text(
-                            'Forgot Password',
+                            'Forgot Password?',
                             style: TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w600,
