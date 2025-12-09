@@ -14,6 +14,11 @@
       rel="stylesheet"
       href="{{ url_for('osas.static', filename='css/homepage.css') }}"
     />
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('osas.static', filename='images/logo_website.png') }}"
+    />
 
     <!-- ===== JS ===== -->
     <script src="{{ url_for('osas.static', filename='js/homepage.js') }}"></script>
@@ -149,6 +154,14 @@
 
     <!-- MAIN CONTENT -->
     <main class="dashboard with-sidebar">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %} {% endwith %}
       <!-- WELCOME SECTION -->
       <section class="welcome-section">
         <div class="welcome-content">
@@ -254,7 +267,6 @@
             <div class="chart-legend" id="deptLegend"></div>
           </div>
 
-
           <!-- Report Status Overview -->
           <div class="analytics-card">
             <div class="card-header">
@@ -299,7 +311,6 @@
               </div>
             </div>
           </div>
-
 
           <!-- RECENT ACTIVITIES -->
           <div class="analytics-card tall">
