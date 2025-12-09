@@ -499,40 +499,59 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.addEventListener("click", () => handleMonthAction(report, btn));
     });
   }
+async function handleMonthAction(report, button) {
+  const monthKey = button.dataset.month;
+  const alreadyReceived = button.dataset.received === "1";
 
-  async function handleMonthAction(report, button) {
-    const monthKey = button.dataset.month;
-    const alreadyReceived = button.dataset.received === "1";
+  if (!alreadyReceived) {
+    const confirmed = window.confirm(
+      `Receive ${MONTH_LABELS[monthKey]} report from ${report.orgName}?`
+    );
+    if (!confirmed) return;
 
-    if (!alreadyReceived) {
-      const confirmed = window.confirm(
-        `Receive ${MONTH_LABELS[monthKey]} report from ${report.orgName}?`
-      );
-      if (!confirmed) return;
+    const updated = await updateFinancialReport(report.id, {
+      receiveMonth: monthKey,
+    });
 
-      const updated = await updateFinancialReport(report.id, {
-        receiveMonth: monthKey,
-      });
+    if (updated) {
+      updated.checklist = updated.checklist || {};
+      updated.status = computeStatusFromChecklist(updated);
 
-      if (updated) {
-        updated.checklist = updated.checklist || {};
-        updated.status = computeStatusFromChecklist(updated);
-
-        const idx = reports.findIndex((r) => r.id === report.id);
-        if (idx !== -1) {
-          reports[idx] = { ...reports[idx], ...updated };
-        }
-
-        showToast("Report received!");
-        openReportModal(report.id);
-        renderReports();
+      const idx = reports.findIndex((r) => r.id === report.id);
+      if (idx !== -1) {
+        reports[idx] = { ...reports[idx], ...updated };
       }
-    } else {
-      // direct download ng report para sa org + month na ito - OPEN IN NEW TAB
-      const orgId = report.organization_id || report.org_id || report.id;
-      window.open(`/osas/reports/${orgId}/months/${monthKey}/print`, "_blank");
+
+      showToast("Report received!");
+      openReportModal(report.id);
+      renderReports();
+    }
+  } else {
+    // CHECK MUNA KUNG MAY FILE / RECORD
+    const orgId = report.organization_id || report.org_id || report.id;
+
+    try {
+      const res = await fetch(
+        `/osas/reports/${orgId}/months/${monthKey}/exists`
+      );
+      const data = res.ok ? await res.json() : { exists: false };
+
+      if (!data.exists) {
+        showToast("No record found!", "error");
+        return;
+      }
+
+      // may record: open print page
+      window.open(
+        `/osas/reports/${orgId}/months/${monthKey}/print`,
+        "_blank"
+      );
+    } catch (err) {
+      showToast("No record found!", "error");
     }
   }
+}
+
 
   function closeReportModal() {
     reportModal.style.display = "none";

@@ -117,23 +117,14 @@ def osas_login():
             if check_password_hash(admin["password"], password):
                 session["osas_admin"] = username
                 log_activity(admin["id"], "login", f"Admin {username} logged in")
-                device_info = request.user_agent.string
-                ip_address = request.remote_addr or "Unknown"
-                supabase.table("osas_sessions").insert(
-                    {
-                        "admin_id": admin["id"],
-                        "device_info": device_info,
-                        "ip_address": ip_address,
-                        "last_active_at": datetime.utcnow().isoformat(),
-                        "is_current": True,
-                    }
-                ).execute()
+                # ... sessions insert ...
                 flash("OSAS login successful!", "success")
                 return redirect(url_for("osas.osas_dashboard"))
             flash("Incorrect password.", "danger")
         else:
             flash("Admin not found.", "danger")
     return render_template("osas/login.html")
+
 
 
 @osas.route("/dashboard")
@@ -707,6 +698,24 @@ def osas_view_monthly_report(org_id, month_key):
         college_name=college_name,
         report_month_text=report_month_text,
     )
+@osas.route("/reports/<int:org_id>/months/<string:month_key>/exists", methods=["GET"])
+def osas_check_month_report_exists(org_id, month_key):
+    if "osas_admin" not in session:
+        return jsonify({"exists": False}), 401
+
+    pres_res = (
+        supabase.table("financial_reports")
+        .select("id")
+        .eq("organization_id", org_id)
+        .eq("report_month", month_key.lower())
+        .not_.is_("wallet_id", None)
+        .not_.is_("budget_id", None)
+        .limit(1)
+        .execute()
+    )
+
+    has_record = bool(pres_res.data)
+    return jsonify({"exists": has_record})
 
 
 # ========== FINANCIAL REPORTS API ===========

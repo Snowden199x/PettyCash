@@ -8,6 +8,11 @@
       rel="stylesheet"
       href="{{ url_for('pres.static', filename='css/wallets.css') }}"
     />
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('osas.static', filename='images/logo_website.png') }}"
+    />
 
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
@@ -19,13 +24,11 @@
     />
   </head>
   <body
-  data-wallet-img="{{ url_for('pres.static', filename='images/wallet.png') }}"
-  data-history-icon="{{ url_for('pres.static', filename='images/nav_history.png') }}"
-  data-receipts-icon="{{ url_for('pres.static', filename='images/receipts.png') }}"
-  data-options-icon="{{ url_for('pres.static', filename='images/option.png') }}"
->
-
-
+    data-wallet-img="{{ url_for('pres.static', filename='images/wallet.png') }}"
+    data-history-icon="{{ url_for('pres.static', filename='images/nav_history.png') }}"
+    data-receipts-icon="{{ url_for('pres.static', filename='images/receipts.png') }}"
+    data-options-icon="{{ url_for('pres.static', filename='images/option.png') }}"
+  >
     <div class="container">
       <!-- Sidebar -->
       <aside class="sidebar">
@@ -105,13 +108,16 @@
             <!-- Wallets loading + grid -->
             <div id="wallets-loading" class="wallets-loading">
               <div class="loading-card">
-                <img src="{{ url_for('pres.static', filename='images/nav_wallet.png') }}" alt="Loading" />
+                <img
+                  src="{{ url_for('pres.static', filename='images/nav_wallet.png') }}"
+                  alt="Loading"
+                />
                 <h4>Loading wallets...</h4>
                 <p>Please wait a moment.</p>
               </div>
             </div>
 
-            <div class="wallets-grid" id="wallets-grid" style="display: none;">
+            <div class="wallets-grid" id="wallets-grid" style="display: none">
               <!-- populated by JS -->
             </div>
           </section>
@@ -223,24 +229,23 @@
                 </div>
 
                 <div class="report-stats">
-  <div class="stat-card">
-    <p>Budget</p>
-    <h4 id="stat-budget">Php 0.00</h4>
-  </div>
-  <div class="stat-card">
-    <p>Total amount of income</p>
-    <h4 id="stat-income">Php 0.00</h4>
-  </div>
-  <div class="stat-card">
-    <p>Total amount of expenses</p>
-    <h4 id="stat-expense">Php 0.00</h4>
-  </div>
-  <div class="stat-card">
-    <p>Ending Cash</p>
-    <h4 id="stat-ending">Php 0.00</h4>
-  </div>
-</div>
-
+                  <div class="stat-card">
+                    <p>Budget</p>
+                    <h4 id="stat-budget">Php 0.00</h4>
+                  </div>
+                  <div class="stat-card">
+                    <p>Total amount of income</p>
+                    <h4 id="stat-income">Php 0.00</h4>
+                  </div>
+                  <div class="stat-card">
+                    <p>Total amount of expenses</p>
+                    <h4 id="stat-expense">Php 0.00</h4>
+                  </div>
+                  <div class="stat-card">
+                    <p>Ending Cash</p>
+                    <h4 id="stat-ending">Php 0.00</h4>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -289,7 +294,7 @@
             <label for="tx-income-type">Type of Income</label>
             <select id="tx-income-type" required>
               <option value="">Select type</option>
-              <option value="IGP">Income Generating Projects </option>
+              <option value="IGP">Income Generating Projects</option>
               <option value="Registration Fee">Registration Fee</option>
               <option value="Membership Fee">Membership Fee</option>
             </select>
@@ -336,12 +341,11 @@
 
         <form id="receipt-form" novalidate>
           <div class="form-group">
-  <label for="receipt-file">Receipt image</label>
-  <input type="file" id="receipt-file" accept="image/*" required />
-  <small class="field-hint">Maximum file size: 5 MB</small>
-  <span class="error-msg"></span>
-</div>
-
+            <label for="receipt-file">Receipt image</label>
+            <input type="file" id="receipt-file" accept="image/*" required />
+            <small class="field-hint">Maximum file size: 5 MB</small>
+            <span class="error-msg"></span>
+          </div>
 
           <div class="form-group">
             <label for="receipt-desc">Description</label>
@@ -434,16 +438,18 @@
           </div>
 
           <div class="form-group">
-  <label for="rep-total-income">Total amount of income ({{TOTAL_INCOME}})</label>
-  <input
-    type="number"
-    id="rep-total-income"
-    min="0"
-    step="0.01"
-    required
-  />
-  <span class="error-msg"></span>
-</div>
+            <label for="rep-total-income"
+              >Total amount of income ({{TOTAL_INCOME}})</label
+            >
+            <input
+              type="number"
+              id="rep-total-income"
+              min="0"
+              step="0.01"
+              required
+            />
+            <span class="error-msg"></span>
+          </div>
 
           <div class="form-group">
             <label for="rep-total-expense">Total amount of expenses</label>
@@ -476,16 +482,18 @@
           </div>
 
           <div class="form-group">
-  <label for="rep-budget-bank">Budget in bank ({{BUDGET_IN_THE_BANK}})</label>
-  <input
-    type="number"
-    id="rep-budget-bank"
-    min="0"
-    step="0.01"
-    required
-  />
-  <span class="error-msg"></span>
-</div>
+            <label for="rep-budget-bank"
+              >Budget in bank ({{BUDGET_IN_THE_BANK}})</label
+            >
+            <input
+              type="number"
+              id="rep-budget-bank"
+              min="0"
+              step="0.01"
+              required
+            />
+            <span class="error-msg"></span>
+          </div>
 
           <div class="modal-footer">
             <button
@@ -530,8 +538,8 @@
           <button class="close-modal" id="close-submit-modal">&times;</button>
         </div>
         <p class="modal-subtitle">
-          Submit this financial report to OSAS? You will not be able to edit or submit another record
-          after submission.
+          Submit this financial report to OSAS? You will not be able to edit or
+          submit another record after submission.
         </p>
         <div class="modal-footer">
           <button type="button" class="secondary-btn" id="cancel-submit-btn">
@@ -545,40 +553,41 @@
     </div>
 
     <!-- Confirm Delete Modal -->
-<div class="modal-overlay" id="confirm-delete-overlay">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="confirm-delete-title">Delete</h3>
-      <button class="close-modal" id="close-delete-modal">&times;</button>
+    <div class="modal-overlay" id="confirm-delete-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="confirm-delete-title">Delete</h3>
+          <button class="close-modal" id="close-delete-modal">&times;</button>
+        </div>
+        <p class="modal-subtitle" id="confirm-delete-message">
+          Are you sure you want to delete this item?
+        </p>
+        <div class="modal-footer">
+          <button type="button" class="secondary-btn" id="cancel-delete-btn">
+            Cancel
+          </button>
+          <button type="button" class="primary-btn" id="confirm-delete-btn">
+            Yes, delete
+          </button>
+        </div>
+      </div>
     </div>
-    <p class="modal-subtitle" id="confirm-delete-message">
-      Are you sure you want to delete this item?
-    </p>
-    <div class="modal-footer">
-      <button type="button" class="secondary-btn" id="cancel-delete-btn">
-        Cancel
-      </button>
-      <button type="button" class="primary-btn" id="confirm-delete-btn">
-        Yes, delete
-      </button>
+
+    <div id="confirm-submit-overlay" class="modal-overlay">
+      <div class="modal">
+        <h3>Submit report?</h3>
+        <p>
+          Once you submit this report, you will not be able to edit or submit
+          another report for this wallet and month.
+        </p>
+        <div class="modal-actions">
+          <button id="cancel-submit-btn" type="button">Cancel</button>
+          <button id="confirm-submit-btn" type="button" class="primary">
+            Yes, submit
+          </button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-
-<div id="confirm-submit-overlay" class="modal-overlay">
-  <div class="modal">
-    <h3>Submit report?</h3>
-    <p>
-      Once you submit this report, you will not be able to edit or submit another report for this wallet and month.
-    </p>
-    <div class="modal-actions">
-      <button id="cancel-submit-btn" type="button">Cancel</button>
-      <button id="confirm-submit-btn" type="button" class="primary">Yes, submit</button>
-    </div>
-  </div>
-</div>
-
-
 
     <!-- Toast container -->
     <div id="toast-container"></div>

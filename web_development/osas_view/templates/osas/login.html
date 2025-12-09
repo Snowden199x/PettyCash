@@ -12,6 +12,8 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+    <link rel="icon" type="image/png" href="{{ url_for('osas.static',
+    filename='images/logo_website.png') }}"
   </head>
   <body>
     <!-- Centered Logo -->
@@ -27,22 +29,22 @@
     <!-- Login Container -->
     <div class="container">
       <div class="login-box">
-
         <!-- ✅ Flash messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+        {% with messages = get_flashed_messages(with_categories=true) %} {% if
+        messages %} {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %} {% endif %} {% endwith %}
 
         <!-- ✅ Flask form -->
-        <form id="adminLoginForm" method="POST" action="{{ url_for('osas.osas_login') }}">
-          
+        <form
+          id="adminLoginForm"
+          method="POST"
+          action="{{ url_for('osas.osas_login') }}"
+        >
           <!-- Username -->
           <label for="username">Username</label>
-          <input type="text" id="username" name="username" /> <!-- remove required -->
+          <input type="text" id="username" name="username" />
+          <!-- remove required -->
           <p id="usernameError" class="error-message"></p>
 
           <!-- Password -->
