@@ -14,6 +14,7 @@ dependencies:
   http: ^1.2.0
   path_provider: ^2.1.5
   open_file: ^3.3.2
+  url_launcher: ^6.3.1
 
   # For generating Word (.docx) from a template
   docx_template: ^0.4.0
