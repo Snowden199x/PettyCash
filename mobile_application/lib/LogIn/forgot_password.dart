@@ -61,7 +61,7 @@ class _ForgotPasswordState extends State<ForgotPassword> with SingleTickerProvid
       setState(() => _isLoading = false);
       if (response['success'] == true) {
         setState(() {
-          _successMessage = 'See the reset details in your email.';
+          _successMessage = response['message'] ?? 'If this account exists, a reset link has been sent.';
           _errorMessage = null;
         });
         _emailController.clear();

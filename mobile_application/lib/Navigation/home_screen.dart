@@ -53,9 +53,22 @@ class _HomeScreenState extends State<HomeScreen>
   Future<void> _loadDashboard() async {
     try {
       final apiClient = ApiClient();
-      final data = await apiClient.getJson('/pres/api/dashboard/full');
+      
+      // Load summary
+      final summary = await apiClient.getJson('/pres/api/dashboard/summary');
+      
+      // Load wallets overview (same as web)
+      final wallets = await apiClient.getJsonList('/pres/api/wallets/overview');
+      
+      // Load recent transactions
+      final transactions = await apiClient.getJsonList('/pres/api/transactions/recent');
+      
       setState(() {
-        _dashboardData = data;
+        _dashboardData = {
+          'summary': summary,
+          'wallets': wallets,
+          'recent_transactions': transactions,
+        };
       });
       await _loadProfilePhoto();
     } catch (e) {
@@ -535,9 +548,7 @@ class _WalletCard extends StatelessWidget {
     final budget = (wallet['budget'] ?? 0).toDouble();
     final income = (wallet['total_income'] ?? 0).toDouble();
     final expenses = (wallet['total_expenses'] ?? 0).toDouble();
-    final balance = budget + income - expenses;
-    final totalAvailable = budget + income;
-    final progress = totalAvailable > 0 ? (expenses / totalAvailable).clamp(0.0, 1.0) : 0.0;
+    final progress = budget > 0 ? (expenses / budget).clamp(0.0, 1.0) : 0.0;
     
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -582,7 +593,7 @@ class _WalletCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Balance:',
+                      'Budget Used',
                       style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 12,
@@ -591,11 +602,33 @@ class _WalletCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'PHP ${balance.toStringAsFixed(2)}',
+                      'PHP ${expenses.toStringAsFixed(0)}/PHP ${budget.toStringAsFixed(0)}',
                       style: const TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Income: PHP ${income.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 10,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    Text(
+                      'Expenses: PHP ${expenses.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 10,
+                        color: Colors.black87,
                       ),
                     ),
                   ],
