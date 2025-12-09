@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../api_client.dart';
+import 'officer_dialog_helper.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String orgName;
@@ -27,11 +29,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _orgNameController = TextEditingController();
   final TextEditingController _shortNameController = TextEditingController();
   final TextEditingController _departmentController = TextEditingController();
-  final TextEditingController _schoolController = TextEditingController();
+  final TextEditingController _schoolController = TextEditingController(text: 'Laguna State Polytechnic University, Sta. Cruz, Laguna (LSPU-SCC)');
   final TextEditingController _emailController = TextEditingController();
+  
+  String _displayShortName = '';
+  String _displayDepartment = '';
+  String _accreditationDate = '';
+  String _accreditationStatus = '';
+  bool _isLoading = true;
 
   // officers data (starts empty)
-  final List<Map<String, String>> _officers = [];
+  List<Map<String, dynamic>> _officers = [];
 
   // organization image (picked from gallery)
   File? _orgImageFile;
@@ -39,6 +47,69 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // shared horizontal controller for officers table
   final ScrollController _officersHorizontalController = ScrollController();
+
+  Future<void> _loadOfficers() async {
+    try {
+      final apiClient = ApiClient();
+      final data = await apiClient.getJson('/pres/api/officers');
+      
+      if (mounted && data['officers'] != null) {
+        setState(() {
+          _officers = (data['officers'] as List).map((o) => {
+            'id': o['id'],
+            'name': o['name'] ?? '',
+            'position': o['position'] ?? '',
+            'start': o['term_start'] ?? '-',
+            'end': o['term_end'] ?? '-',
+            'status': o['status'] ?? 'Active',
+          }).toList().cast<Map<String, dynamic>>();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading officers: $e');
+    }
+  }
+
+  Future<void> _deleteOfficer(int officerId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Officer'),
+        content: const Text('Are you sure you want to delete this officer?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final apiClient = ApiClient();
+      await apiClient.deleteJson('/pres/api/officers/$officerId');
+      
+      if (mounted) {
+        _loadOfficers();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Officer deleted successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete officer: $e')),
+        );
+      }
+    }
+  }
 
   Future<void> _pickOrgImage() async {
     final XFile? picked =
@@ -53,7 +124,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _orgNameController.text = widget.orgName;
+    _loadProfile();
+  }
+  
+  Future<void> _loadProfile() async {
+    setState(() => _isLoading = true);
+    try {
+      final apiClient = ApiClient();
+      final data = await apiClient.getJson('/pres/api/profile');
+      
+      debugPrint('Profile API Response: $data');
+      debugPrint('Email from API: ${data['email']}');
+      
+      if (mounted) {
+        final accreditation = data['accreditation'] ?? {};
+        setState(() {
+          _orgNameController.text = data['org_name'] ?? widget.orgName;
+          _shortNameController.text = data['org_short_name'] ?? '';
+          _departmentController.text = data['department'] ?? '';
+          _emailController.text = data['email'] ?? '';
+          
+          _displayShortName = data['org_short_name'] ?? '';
+          _displayDepartment = data['department'] ?? '';
+          _accreditationDate = accreditation['date_of_accreditation'] ?? '';
+          _accreditationStatus = accreditation['current_status'] ?? '';
+          _isLoading = false;
+        });
+        
+        debugPrint('Email Controller Text: ${_emailController.text}');
+        _loadOfficers();
+      }
+    } catch (e) {
+      debugPrint('Error loading profile: $e');
+      if (mounted) {
+        setState(() {
+          _orgNameController.text = widget.orgName;
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -67,378 +176,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  // open Add Officer dialog
-  Future<void> _openAddOfficerDialog() async {
-    final nameController = TextEditingController();
-    final positionController = TextEditingController();
-    DateTime? termStart;
-    DateTime? termEnd;
-    String status = 'Active';
-
-    Future<void> pickDate(bool isStart) async {
-      final now = DateTime.now();
-      final picked = await showDatePicker(
-        context: context,
-        initialDate: now,
-        firstDate: DateTime(now.year - 5),
-        lastDate: DateTime(now.year + 5),
-      );
-      if (picked != null) {
-        if (isStart) {
-          termStart = picked;
-        } else {
-          termEnd = picked;
-        }
-      }
-    }
-
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return Dialog(
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: StatefulBuilder(
-            builder: (context, setStateDialog) {
-              String formatDate(DateTime? d) =>
-                  d == null ? '----------' : '${d.month}/${d.day}/${d.year}';
-
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Add Officer',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Divider(height: 1),
-
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Name',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        hintText: 'Enter officer name',
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                          borderSide:
-                              BorderSide(color: Color(0xFFE2D2B7), width: 1),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                          borderSide:
-                              BorderSide(color: Color(0xFFE2D2B7), width: 1),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                          borderSide:
-                              BorderSide(color: Color(0xFF8B3B08), width: 1.2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Position',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: positionController,
-                      decoration: const InputDecoration(
-                        hintText: 'Enter position',
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                          borderSide:
-                              BorderSide(color: Color(0xFFE2D2B7), width: 1),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                          borderSide:
-                              BorderSide(color: Color(0xFFE2D2B7), width: 1),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                          borderSide:
-                              BorderSide(color: Color(0xFF8B3B08), width: 1.2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Term Start',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              InkWell(
-                                onTap: () async {
-                                  await pickDate(true);
-                                  setStateDialog(() {});
-                                },
-                                child: Container(
-                                  height: 42,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: const Color(0xFFE2D2B7),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        formatDate(termStart),
-                                        style: const TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 13,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                      const Icon(
-                                        Icons.calendar_today_outlined,
-                                        size: 18,
-                                        color: Colors.black54,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Term End',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              InkWell(
-                                onTap: () async {
-                                  await pickDate(false);
-                                  setStateDialog(() {});
-                                },
-                                child: Container(
-                                  height: 42,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: const Color(0xFFE2D2B7),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        formatDate(termEnd),
-                                        style: const TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 13,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                      const Icon(
-                                        Icons.calendar_today_outlined,
-                                        size: 18,
-                                        color: Colors.black54,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Status',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: const Color(0xFFE2D2B7),
-                        ),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: status,
-                          isExpanded: true,
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'Active',
-                              child: Text('Active'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Inactive',
-                              child: Text('Inactive'),
-                            ),
-                          ],
-                          onChanged: (val) {
-                            if (val == null) return;
-                            setStateDialog(() {
-                              status = val;
-                            });
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Divider(height: 1),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        SizedBox(
-                          height: 40,
-                          child: TextButton(
-                            style: TextButton.styleFrom(
-                              backgroundColor: const Color(0xFFE0E0E0),
-                              foregroundColor: Colors.black87,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text(
-                              'Cancel',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          height: 40,
-                          child: TextButton(
-                            style: TextButton.styleFrom(
-                              backgroundColor: const Color(0xFF28A745),
-                              foregroundColor: Colors.white,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 24),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed: () {
-                              if (nameController.text.trim().isEmpty ||
-                                  positionController.text.trim().isEmpty) {
-                                return;
-                              }
-                              setState(() {
-                                _officers.add({
-                                  'name': nameController.text.trim(),
-                                  'position': positionController.text.trim(),
-                                  'start': termStart == null
-                                      ? '-'
-                                      : '${termStart!.month}/${termStart!.day}/${termStart!.year}',
-                                  'end': termEnd == null
-                                      ? '-'
-                                      : '${termEnd!.month}/${termEnd!.day}/${termEnd!.year}',
-                                  'status': status,
-                                });
-                              });
-                              Navigator.pop(context);
-                            },
-                            child: const Text(
-                              'Save Officer',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        );
-      },
+  Future<void> _openOfficerDialog({Map<String, dynamic>? officer}) async {
+    await openOfficerDialog(
+      context,
+      officer: officer,
+      onSuccess: _loadOfficers,
     );
   }
 
@@ -519,7 +261,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               fontFamily: 'Poppins',
                             ),
                           ),
-                          onPressed: _pickOrgImage,
+                          onPressed: _isEditingOrgInfo ? _pickOrgImage : null,
                           icon: const Icon(
                             Icons.photo_camera_outlined,
                             size: 16,
@@ -535,7 +277,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.orgName,
+                            _orgNameController.text,
                             style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 18,
@@ -543,10 +285,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: Colors.black,
                             ),
                           ),
+                          if (_displayShortName.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              _displayShortName,
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 8),
-                          const Text(
-                            "Department",
-                            style: TextStyle(
+                          Text(
+                            _displayDepartment.isEmpty ? 'Department' : _displayDepartment,
+                            style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 13,
                               fontWeight: FontWeight.w400,
@@ -554,11 +308,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          Text(
-                            _schoolController.text.isEmpty
-                                ? '-'
-                                : _schoolController.text,
-                            style: const TextStyle(
+                          const Text(
+                            'Laguna State Polytechnic University, Sta. Cruz, Laguna (LSPU-SCC)',
+                            style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
@@ -649,11 +401,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 16),
 
               Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () async {
-                    // Refresh profile data
-                    setState(() {});
-                  },
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : RefreshIndicator(
+                  onRefresh: _loadProfile,
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: _buildOrgTabContent(),
@@ -799,14 +550,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          TextField(
+          TextFormField(
             controller: _emailController,
             readOnly: !_isEditingOrgInfo,
             keyboardType: TextInputType.emailAddress,
             decoration: _inputDecoration().copyWith(
+              hintText: 'Enter organization email',
+              hintStyle: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 12,
+                color: Colors.black38,
+              ),
               filled: true,
               fillColor:
                   _isEditingOrgInfo ? Colors.white : const Color(0xFFF9F7F2),
+            ),
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 13,
+              color: Colors.black87,
             ),
           ),
           const SizedBox(height: 24),
@@ -825,10 +587,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _isEditingOrgInfo = false;
-                            });
+                          onPressed: () async {
+                            try {
+                              final apiClient = ApiClient();
+                              await apiClient.postJson('/pres/api/profile', {
+                                'org_short_name': _shortNameController.text,
+                                'email': _emailController.text,
+                              });
+                              
+                              if (mounted) {
+                                setState(() {
+                                  _displayShortName = _shortNameController.text;
+                                  _isEditingOrgInfo = false;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Profile updated successfully')),
+                                );
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Failed to update: $e')),
+                                );
+                              }
+                            }
                           },
                           child: const Text(
                             'Save Changes',
@@ -922,7 +704,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(
               height: 36,
               child: ElevatedButton(
-                onPressed: _openAddOfficerDialog,
+                onPressed: _openOfficerDialog,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFB75A11),
                   foregroundColor: Colors.white,
@@ -977,8 +759,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         topRight: Radius.circular(16),
                       ),
                     ),
-                    child: Row(
-                      children: const [
+                    child: const Row(
+                      children: [
                         _HeaderCell('Name', flex: 2),
                         _HeaderCell('Position', flex: 2),
                         _HeaderCell('Term Start'),
@@ -1062,13 +844,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             _SmallActionButton(
                                               label: 'Edit',
                                               color: const Color(0xFF4BA3FF),
-                                              onTap: () {},
+                                              onTap: () => _openOfficerDialog(officer: officer),
                                             ),
                                             const SizedBox(width: 6),
                                             _SmallActionButton(
                                               label: 'Delete',
                                               color: const Color(0xFFFF6B6B),
-                                              onTap: () {},
+                                              onTap: () => _deleteOfficer(officer['id']),
                                             ),
                                           ],
                                         ),
@@ -1107,8 +889,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text(
+        children: [
+          const Text(
             'Accreditation Information',
             style: TextStyle(
               fontFamily: 'Poppins',
@@ -1117,20 +899,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: Colors.black,
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           _AccreditationRow(
             label: 'Date of Accreditation:',
-            value: 'September 15, 2024',
+            value: _accreditationDate.isEmpty ? 'N/A' : _accreditationDate,
           ),
-          Divider(
+          const Divider(
             height: 24,
             thickness: 1,
             color: Color(0xFFE5E5E5),
           ),
           _AccreditationRow(
             label: 'Current Status:',
-            value: 'Accredited',
-            valueColor: Color(0xFF2F7D38),
+            value: _accreditationStatus.isEmpty ? 'N/A' : _accreditationStatus,
+            valueColor: const Color(0xFF2F7D38),
           ),
         ],
       ),
