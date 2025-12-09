@@ -1,3 +1,27 @@
+// ===== ORG TIMESTAMPS HELPER =====
+const ORG_TIMESTAMPS_KEY = 'orgLastModified';
+
+function saveOrgTimestamp(orgId) {
+  const timestamps = JSON.parse(localStorage.getItem(ORG_TIMESTAMPS_KEY) || '{}');
+  timestamps[orgId] = new Date().getTime();
+  localStorage.setItem(ORG_TIMESTAMPS_KEY, JSON.stringify(timestamps));
+}
+
+function getOrgTimestamps() {
+  return JSON.parse(localStorage.getItem(ORG_TIMESTAMPS_KEY) || '{}');
+}
+
+function sortOrgsByRecent(orgsArray) {
+  const timestamps = getOrgTimestamps();
+  const sorted = [...orgsArray].sort((a, b) => {
+    const timeA = timestamps[a.id] || 0;
+    const timeB = timestamps[b.id] || 0;
+    return timeB - timeA;
+  });
+  return sorted;
+}
+// ===== END ORG TIMESTAMPS HELPER =====
+
 document.addEventListener("DOMContentLoaded", () => {
   // --- ELEMENTS ---
   const tableBody = document.getElementById("orgTableBody");
@@ -113,6 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch("/osas/api/organizations");
       const data = await res.json();
       orgs = data.organizations || [];
+      orgs = sortOrgsByRecent(orgs);  // ← ADD THIS LINE
       // kung may initial search or dept filter, gamitin agad
       applyFilters();
     } catch (err) {
@@ -123,12 +148,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function showLoading() {
-    tableBody.innerHTML =
-      '<tr><td colspan="7" style="text-align:center; padding: 40px;">Loading organizations...</td></tr>';
-    tableContainer.style.display = "block";
-    emptyState.style.display = "none";
-  }
+
+function showLoading() {
+  tableContainer.style.display = "none";  // Hide table
+  emptyState.style.display = "flex";      // Show your styled empty state
+  tableBody.innerHTML = '';
+}
+
 
   // FILTERS AND SEARCH
   searchInput.addEventListener("input", applyFilters);
@@ -137,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function applyFilters() {
     const searchTerm = searchInput.value.trim().toLowerCase();
     const selectedDept = departmentFilter.value;
-    let filtered = orgs;
+    let filtered = sortOrgsByRecent(orgs);  // ← ADD THIS - re-sort before filtering
     if (selectedDept)
       filtered = filtered.filter((org) => org.department === selectedDept);
     if (searchTerm) {
@@ -154,12 +180,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderFilteredTable(filtered) {
     tableBody.innerHTML = "";
     if (filtered.length === 0) {
-      tableBody.innerHTML =
-        '<tr><td colspan="7" style="text-align:center; padding: 40px; color: #828282;">No organizations found matching your filters</td></tr>';
-      tableContainer.style.display = "block";
-      emptyState.style.display = "none";
-      return;
-    }
+    tableContainer.style.display = "none";   // Hide table
+    emptyState.style.display = "flex";       // Show styled empty state
+    return;
+  }
     filtered.forEach((org) => {
       const row = document.createElement("tr");
       row.innerHTML = `
@@ -236,80 +260,109 @@ document.addEventListener("DOMContentLoaded", () => {
     await loadDepartmentsSelect(deptId);
   }
 
-  // FORM SUBMISSION
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+    // FORM SUBMISSION
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-    const department_id = parseInt(departmentSelect.value, 10) || null;
-    const orgName = document.getElementById("orgName").value;
-    const username = usernameField.value;
-    const password = passwordField.value;
-    const accreditationDate =
-      document.getElementById("accreditationDate").value;
+      const department_id = parseInt(departmentSelect.value, 10) || null;
+      const orgName = document.getElementById("orgName").value;
+      const username = usernameField.value;
+      const password = passwordField.value;
+      const accreditationDate =
+        document.getElementById("accreditationDate").value;
 
-    if (!orgName || !username || !accreditationDate || !department_id) {
-      alert("All fields except password are required!");
-      return;
-    }
-
-    const orgData = {
-      department_id,
-      orgName,
-      username,
-      accreditationDate,
-    };
-    if (password) orgData.password = password;
-
-    try {
-      if (editingOrgId) {
-        // UPDATE
-        const res = await fetch(`/osas/api/organizations/${editingOrgId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(orgData),
-        });
-        if (!res.ok) throw new Error("Failed to update organization");
-        showToast("Organization updated successfully!");
-      } else {
-        // CREATE
-        if (!password) {
-          alert("Password is required when creating an organization!");
-          return;
-        }
-        orgData.password = password;
-
-        const res = await fetch("/osas/add_organization", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(orgData),
-        });
-
-        if (!res.ok) {
-          let msg = "Failed to add organization";
-          try {
-            const err = await res.json();
-            if (err && err.error) msg = err.error;
-          } catch {}
-          showToast(msg, "error");
-          return;
-        }
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to add organization");
-        }
-
-        showToast("Organization added successfully!");
+      if (!orgName || !username || !accreditationDate || !department_id) {
+        alert("All fields except password are required!");
+        return;
       }
 
-      form.reset();
-      addOrgModal.style.display = "none";
-      await loadOrganizations();
-    } catch (err) {
-      console.error("Error saving organization:", err);
-      showToast(err.message || "Error saving organization.", "error");
-    }
-  });
+      const orgData = {
+        department_id,
+        orgName,
+        username,
+        accreditationDate,
+      };
+      if (password) orgData.password = password;
+
+      try {
+        if (editingOrgId) {
+          // UPDATE
+          const res = await fetch(`/osas/api/organizations/${editingOrgId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(orgData),
+          });
+          if (!res.ok) throw new Error("Failed to update organization");
+                    showToast("Organization updated successfully!");
+          
+          // Move edited org to top
+          const editedOrgIndex = orgs.findIndex((o) => o.id == editingOrgId);
+          if (editedOrgIndex !== -1) {
+            const [editedOrg] = orgs.splice(editedOrgIndex, 1);
+            editedOrg.name = orgName;
+            editedOrg.username = username;
+            editedOrg.date = accreditationDate;
+            const dept = departments.find((d) => d.id == department_id);
+            editedOrg.department = dept ? dept.name : "-";
+            orgs.unshift(editedOrg);
+            saveOrgTimestamp(editingOrgId);  // ← ADD THIS LINE
+          }
+        } else {
+          // CREATE
+          if (!password) {
+            alert("Password is required when creating an organization!");
+            return;
+          }
+          orgData.password = password;
+
+          const res = await fetch("/osas/add_organization", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(orgData),
+          });
+
+          if (!res.ok) {
+            let msg = "Failed to add organization";
+            try {
+              const err = await res.json();
+              if (err && err.error) msg = err.error;
+            } catch {}
+            showToast(msg, "error");
+            return;
+          }
+          const data = await res.json();
+
+          if (!res.ok) {
+            throw new Error(data.error || "Failed to add organization");
+          }
+
+          showToast("Organization added successfully!");
+          
+          // Add new org to top of list
+          const dept = departments.find((d) => d.id == department_id);
+          const newOrg = {
+            id: data.id || new Date().getTime(),
+            name: orgName,
+            department: dept ? dept.name : "-",
+            username: username,
+            password: password,
+            date: accreditationDate,
+            status: "Approved",
+          };
+          orgs.unshift(newOrg);
+          saveOrgTimestamp(newOrg.id);  // ← ADD THIS LINE
+
+        }
+
+        form.reset();
+        addOrgModal.style.display = "none";
+        applyFilters(); // Re-apply filters to show new order
+      } catch (err) {
+        console.error("Error saving organization:", err);
+        showToast(err.message || "Error saving organization.", "error");
+      }
+    });
+
 
   // DELETE FUNCTIONALITY
   closeDeleteModal.addEventListener("click", () => {
