@@ -10,6 +10,11 @@
       rel="stylesheet"
       href="{{ url_for('osas.static', filename='css/archive.css') }}"
     />
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('osas.static', filename='images/logo_website.png') }}"
+    />
 
     <link
       rel="stylesheet"
@@ -18,7 +23,7 @@
 
     <!-- ===== JS ===== -->
     <script src="{{ url_for('osas.static', filename='js/archive.js') }}"></script>
-    
+
     <!-- ===== GOOGLE FONT ===== -->
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
@@ -41,24 +46,59 @@
     <!-- SIDEBAR -->
     <aside class="sidebar hover-sidebar">
       <nav class="nav-menu">
-        <a href="{{ url_for('osas.osas_dashboard') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
-          <img src="{{ url_for('osas.static', filename='images/dashboard_menu.png') }}" class="nav-icon-img" alt="Dashboard" />
+        <a
+          href="{{ url_for('osas.osas_dashboard') }}"
+          class="nav-item {% if active_page == 'dashboard' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/dashboard_menu.png') }}"
+            class="nav-icon-img"
+            alt="Dashboard"
+          />
           <span class="nav-label">Dashboard</span>
         </a>
-        <a href="{{ url_for('osas.osas_orgs') }}" class="nav-item {% if active_page == 'orgs' %}active{% endif %}">
-          <img src="{{ url_for('osas.static', filename='images/organization_menu.png') }}" class="nav-icon-img" alt="Organizations" />
+        <a
+          href="{{ url_for('osas.osas_orgs') }}"
+          class="nav-item {% if active_page == 'orgs' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/organization_menu.png') }}"
+            class="nav-icon-img"
+            alt="Organizations"
+          />
           <span class="nav-label">Accredited Organizations</span>
         </a>
-        <a href="{{ url_for('osas.osas_reports') }}" class="nav-item {% if active_page == 'reports' %}active{% endif %}">
-          <img src="{{ url_for('osas.static', filename='images/reports_menu.png') }}" class="nav-icon-img" alt="Reports" />
+        <a
+          href="{{ url_for('osas.osas_reports') }}"
+          class="nav-item {% if active_page == 'reports' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/reports_menu.png') }}"
+            class="nav-icon-img"
+            alt="Reports"
+          />
           <span class="nav-label">Reports</span>
         </a>
-        <a href="{{ url_for('osas.osas_archive') }}" class="nav-item {% if active_page == 'archive' %}active{% endif %}">
-          <img src="{{ url_for('osas.static', filename='images/archive_menu.png') }}" class="nav-icon-img" alt="Archive" />
+        <a
+          href="{{ url_for('osas.osas_archive') }}"
+          class="nav-item {% if active_page == 'archive' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/archive_menu.png') }}"
+            class="nav-icon-img"
+            alt="Archive"
+          />
           <span class="nav-label">Archive</span>
         </a>
-        <a href="{{ url_for('osas.osas_settings') }}" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
-          <img src="{{ url_for('osas.static', filename='images/settings_menu.png') }}" class="nav-icon-img" alt="Settings" />
+        <a
+          href="{{ url_for('osas.osas_settings') }}"
+          class="nav-item {% if active_page == 'settings' %}active{% endif %}"
+        >
+          <img
+            src="{{ url_for('osas.static', filename='images/settings_menu.png') }}"
+            class="nav-icon-img"
+            alt="Settings"
+          />
           <span class="nav-label">Settings</span>
         </a>
       </nav>
@@ -73,9 +113,9 @@
           <p>Deleted organizations - Restore or permanently delete</p>
         </div>
         <div class="header-actions">
-          <input 
-            type="text" 
-            id="searchArchive" 
+          <input
+            type="text"
+            id="searchArchive"
             placeholder="Search archived organizations..."
             class="search-input"
           />
@@ -95,12 +135,13 @@
           />
           <h4>Archive is Empty</h4>
           <p>
-            Deleted organizations will appear here. You can restore them or permanently delete them.
+            Deleted organizations will appear here. You can restore them or
+            permanently delete them.
           </p>
         </div>
 
         <!-- Archive Grid -->
-        <div class="archive-grid" id="archiveGrid" style="display: none;"></div>
+        <div class="archive-grid" id="archiveGrid" style="display: none"></div>
       </section>
 
       <!-- RESTORE CONFIRMATION MODAL -->
@@ -110,7 +151,9 @@
             <h2>Restore Organization</h2>
             <button class="close-btn" id="closeRestoreModal">&times;</button>
           </div>
-          <p id="restoreMessage">Are you sure you want to restore this organization?</p>
+          <p id="restoreMessage">
+            Are you sure you want to restore this organization?
+          </p>
           <div class="modal-buttons">
             <button id="cancelRestoreBtn" class="secondary-btn">Cancel</button>
             <button id="confirmRestoreBtn" class="primary-btn">Restore</button>
@@ -123,18 +166,25 @@
         <div class="modal-box">
           <div class="modal-header">
             <h2>⚠️ Permanent Delete</h2>
-            <button class="close-btn" id="closePermanentDeleteModal">&times;</button>
+            <button class="close-btn" id="closePermanentDeleteModal">
+              &times;
+            </button>
           </div>
           <p id="permanentDeleteMessage">
-            This action cannot be undone. Are you sure you want to permanently delete this organization?
+            This action cannot be undone. Are you sure you want to permanently
+            delete this organization?
           </p>
           <div class="warning-notice">
             <span class="warning-icon">⚠️</span>
             <span>All associated data will be permanently lost!</span>
           </div>
           <div class="modal-buttons">
-            <button id="cancelPermanentDeleteBtn" class="secondary-btn">Cancel</button>
-            <button id="confirmPermanentDeleteBtn" class="danger-btn">Delete Forever</button>
+            <button id="cancelPermanentDeleteBtn" class="secondary-btn">
+              Cancel
+            </button>
+            <button id="confirmPermanentDeleteBtn" class="danger-btn">
+              Delete Forever
+            </button>
           </div>
         </div>
       </div>
@@ -144,18 +194,29 @@
         <div class="modal-box">
           <div class="modal-header">
             <h2>⚠️ Empty Entire Archive</h2>
-            <button class="close-btn" id="closeEmptyArchiveModal">&times;</button>
+            <button class="close-btn" id="closeEmptyArchiveModal">
+              &times;
+            </button>
           </div>
           <p>
-            This will permanently delete ALL archived organizations. This action cannot be undone.
+            This will permanently delete ALL archived organizations. This action
+            cannot be undone.
           </p>
           <div class="warning-notice">
             <span class="warning-icon">⚠️</span>
-            <span>You are about to delete <strong id="totalArchiveCount">0</strong> organizations permanently!</span>
+            <span
+              >You are about to delete
+              <strong id="totalArchiveCount">0</strong> organizations
+              permanently!</span
+            >
           </div>
           <div class="modal-buttons">
-            <button id="cancelEmptyArchiveBtn" class="secondary-btn">Cancel</button>
-            <button id="confirmEmptyArchiveBtn" class="danger-btn">Delete All Forever</button>
+            <button id="cancelEmptyArchiveBtn" class="secondary-btn">
+              Cancel
+            </button>
+            <button id="confirmEmptyArchiveBtn" class="danger-btn">
+              Delete All Forever
+            </button>
           </div>
         </div>
       </div>

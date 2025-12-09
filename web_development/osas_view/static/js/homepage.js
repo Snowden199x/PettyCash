@@ -934,7 +934,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-
+  
   // INITIAL LOAD
   loadDashboardDepartments().then(loadDashboardOrganizations);
   loadDashboardData();
@@ -964,7 +964,14 @@ document.addEventListener("DOMContentLoaded", () => {
       dashPollInterval = null;
     }
   }
-
+const flash = document.querySelector(".flash-container");
+  if (flash) {
+    setTimeout(() => {
+      flash.style.opacity = "0";
+      flash.style.transition = "opacity 0.3s ease";
+      setTimeout(() => flash.remove(), 300);
+    }, 3000);
+  }
   // Start polling on window focus, stop on blur
   window.addEventListener("focus", startPolling);
   window.addEventListener("blur", stopPolling);
