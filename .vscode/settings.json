@@ -1,6 +1,9 @@
 {
     "liveServer.settings.port": 5501,
     "python-envs.defaultEnvManager": "ms-python.python:system",
-    "python-envs.pythonProjects": []
+    "python-envs.pythonProjects": [],
+    "vscode-pets.petSize": "medium",
+    "vscode-pets.theme": "winter",
+    "vscode-pets.throwBallWithMouse": true
 }
 
