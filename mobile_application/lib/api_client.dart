@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 class ApiClient {
   // Change this if your Flask server IP/port changes
-  static const String baseUrl = 'http://192.168.1.12:5000';
+  static const String baseUrl = 'http://172.16.241.27:5000';
   
   // Store session cookie after login
   static String? _sessionCookie;
