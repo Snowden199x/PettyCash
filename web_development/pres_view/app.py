@@ -490,7 +490,32 @@ def change_password():
     hashed_pw = generate_password_hash(new_password)
 
     if code and email:
-        return redirect(url_for("pres.pres_login"))
+        # 1) hanapin reset row
+        res = (
+            supabase.table("password_resets")
+            .select("id, email, expires_at")
+            .eq("email", email)
+            .eq("code", code)
+            .single()
+            .execute()
+        )
+        row = res.data
+        if not row:
+            flash("Invalid or expired reset link.", "danger")
+            return render_template("change_password.html", code=None, email=None)
+
+        # 2) optional expiry check
+        if row.get("expires_at") and row["expires_at"] < datetime.utcnow().isoformat():
+            flash("Reset link has expired.", "danger")
+            return render_template("change_password.html", code=None, email=None)
+
+        # 3) update org password by email
+        supabase.table("organizations").update(
+            {"password": hashed_pw}
+        ).eq("email", email).execute()
+
+        # 4) delete reset row (optional)
+        supabase.table("password_resets").delete().eq("id", row["id"]).execute()
 
     elif org_id:
         supabase.table("organizations").update(
