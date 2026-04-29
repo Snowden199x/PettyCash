@@ -90,24 +90,36 @@ class WalletMonthDbHelper {
     }
   }
 
-  static Future<void> generateReport(int folderId, Map<String, dynamic> reportData) async {
+  static Future<int> _getWalletId(int folderId) async {
     final apiClient = ApiClient();
-    // Get wallet_id from folder
     final folders = await apiClient.getJsonList('/pres/api/wallets');
-    int? walletId;
     for (var item in folders) {
       if (item['id'] == folderId) {
-        walletId = item['wallet_id'];
-        break;
+        return item['wallet_id'] as int;
       }
     }
-    if (walletId == null) throw Exception('Wallet not found');
-    
-    await apiClient.postJson('/pres/api/reports/generate', {
+    throw Exception('Wallet not found for folder $folderId');
+  }
+
+  static Future<void> generateReport(int folderId, Map<String, dynamic> reportData) async {
+    final apiClient = ApiClient();
+    final walletId = await _getWalletId(folderId);
+
+    // Normalize date_prepared: convert dd/MM/yyyy → yyyy-MM-dd if needed
+    String? datePrepared = reportData['date_prepared']?.toString();
+    if (datePrepared != null && datePrepared.contains('/')) {
+      final parts = datePrepared.split('/');
+      if (parts.length == 3) {
+        // dd/MM/yyyy → yyyy-MM-dd
+        datePrepared = '${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}';
+      }
+    }
+
+    final response = await apiClient.postJson('/pres/api/reports/generate', {
       'wallet_id': walletId,
       'budget_id': folderId,
       'event_name': reportData['event_name'],
-      'date_prepared': reportData['date_prepared'],
+      'date_prepared': datePrepared,
       'report_no': reportData['report_no'],
       'budget': reportData['budget'],
       'total_income': reportData['total_income'],
@@ -116,6 +128,10 @@ class WalletMonthDbHelper {
       'previous_fund': reportData['previous_fund'],
       'budget_in_the_bank': reportData['budget_in_the_bank'],
     });
+
+    if (response['success'] != true) {
+      throw Exception(response['error'] ?? 'Failed to generate report');
+    }
   }
 
   static Future<Map<String, dynamic>?> loadBudget(int folderId) async {
@@ -134,69 +150,34 @@ class WalletMonthDbHelper {
   }
 
   static Future<String> getPreviewUrl(int folderId) async {
-    final apiClient = ApiClient();
-    final folders = await apiClient.getJsonList('/pres/api/wallets');
-    int? walletId;
-    for (var item in folders) {
-      if (item['id'] == folderId) {
-        walletId = item['wallet_id'];
-        break;
-      }
-    }
-    if (walletId == null) throw Exception('Wallet not found');
+    final walletId = await _getWalletId(folderId);
     return '${ApiClient.baseUrl}/pres/reports/$walletId/budgets/$folderId/preview';
   }
 
   static Future<String> getPrintUrl(int folderId) async {
-    final apiClient = ApiClient();
-    final folders = await apiClient.getJsonList('/pres/api/wallets');
-    int? walletId;
-    for (var item in folders) {
-      if (item['id'] == folderId) {
-        walletId = item['wallet_id'];
-        break;
-      }
-    }
-    if (walletId == null) throw Exception('Wallet not found');
+    final walletId = await _getWalletId(folderId);
     return '${ApiClient.baseUrl}/pres/reports/$walletId/budgets/$folderId/print';
   }
 
   static Future<void> submitReport(int folderId) async {
     final apiClient = ApiClient();
-    final folders = await apiClient.getJsonList('/pres/api/wallets');
-    int? walletId;
-    for (var item in folders) {
-      if (item['id'] == folderId) {
-        walletId = item['wallet_id'];
-        break;
-      }
-    }
-    if (walletId == null) throw Exception('Wallet not found');
+    final walletId = await _getWalletId(folderId);
     await apiClient.postJson('/pres/reports/$walletId/submit', {});
   }
 
   static Future<Map<String, dynamic>?> checkReportStatus(int folderId) async {
     try {
-      final apiClient = ApiClient();
-      final folders = await apiClient.getJsonList('/pres/api/wallets');
-      int? walletId;
-      for (var item in folders) {
-        if (item['id'] == folderId) {
-          walletId = item['wallet_id'];
-          break;
-        }
-      }
-      if (walletId == null) return null;
-      
+      final walletId = await _getWalletId(folderId);
+
       final response = await http.get(
-        Uri.parse('${ApiClient.baseUrl}/pres/api/wallets/$walletId/budgets/$folderId/submit'),
+        Uri.parse('${ApiClient.baseUrl}/pres/api/wallets/reports/status?wallet_id=$walletId&budget_id=$folderId'),
         headers: ApiClient.getHeaders(),
       );
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return {
-          'exists': true,
+          'exists': data['has_report'] ?? false,
           'submitted': data['submitted'] ?? false,
         };
       }

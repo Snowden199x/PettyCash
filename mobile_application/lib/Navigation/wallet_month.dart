@@ -916,42 +916,53 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                         showDialog(
                                           context: context,
                                           builder: (ctx) => Dialog(
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Padding(
-                                                  padding: const EdgeInsets.all(12),
-                                                  child: Text(
-                                                    r.description,
-                                                    style: const TextStyle(
-                                                      fontFamily: 'Poppins',
-                                                      fontSize: 14,
-                                                      fontWeight: FontWeight.w600,
+                                            insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                                            child: ConstrainedBox(
+                                              constraints: BoxConstraints(
+                                                maxHeight: MediaQuery.of(ctx).size.height * 0.75,
+                                              ),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Padding(
+                                                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                                                    child: Text(
+                                                      r.description,
+                                                      textAlign: TextAlign.center,
+                                                      style: const TextStyle(
+                                                        fontFamily: 'Poppins',
+                                                        fontSize: 14,
+                                                        fontWeight: FontWeight.w600,
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                                Image.network(
-                                                  url,
-                                                  fit: BoxFit.contain,
-                                                  loadingBuilder: (context, child, progress) {
-                                                    if (progress == null) return child;
-                                                    return const Padding(
-                                                      padding: EdgeInsets.all(50),
-                                                      child: CircularProgressIndicator(),
-                                                    );
-                                                  },
-                                                  errorBuilder: (context, error, stackTrace) {
-                                                    return const Padding(
-                                                      padding: EdgeInsets.all(16),
-                                                      child: Text('Failed to load image'),
-                                                    );
-                                                  },
-                                                ),
-                                                TextButton(
-                                                  onPressed: () => Navigator.of(ctx).pop(),
-                                                  child: const Text('Close'),
-                                                ),
-                                              ],
+                                                  Flexible(
+                                                    child: InteractiveViewer(
+                                                      child: Image.network(
+                                                        url,
+                                                        fit: BoxFit.contain,
+                                                        loadingBuilder: (context, child, progress) {
+                                                          if (progress == null) return child;
+                                                          return const SizedBox(
+                                                            height: 120,
+                                                            child: Center(child: CircularProgressIndicator()),
+                                                          );
+                                                        },
+                                                        errorBuilder: (context, error, stackTrace) {
+                                                          return const Padding(
+                                                            padding: EdgeInsets.all(16),
+                                                            child: Text('Failed to load image'),
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () => Navigator.of(ctx).pop(),
+                                                    child: const Text('Close'),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         );
@@ -1913,15 +1924,15 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                                         } else if (response.statusCode == 404) {
                                           messenger.showSnackBar(
                                             const SnackBar(
-                                              content: Text('Report not found. Please generate the report first by clicking "Generate Report" and filling in all fields.'),
-                                              duration: Duration(seconds: 5),
+                                              content: Text('No report found. Please click "Generate" and fill in all fields first.'),
+                                              duration: Duration(seconds: 4),
                                             ),
                                           );
                                         } else {
                                           messenger.showSnackBar(
                                             SnackBar(
                                               content: Text('Server error (${response.statusCode}). Please try generating the report again.'),
-                                              duration: const Duration(seconds: 5),
+                                              duration: const Duration(seconds: 4),
                                             ),
                                           );
                                         }

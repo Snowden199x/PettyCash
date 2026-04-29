@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 import '../api_client.dart';
 import 'officer_dialog_helper.dart';
 
@@ -41,8 +42,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // officers data (starts empty)
   List<Map<String, dynamic>> _officers = [];
 
-  // organization image (picked from gallery)
+  // organization image
   File? _orgImageFile;
+  String? _profilePhotoUrl;
+  bool _isUploadingPhoto = false;
   final ImagePicker _picker = ImagePicker();
 
   // shared horizontal controller for officers table
@@ -111,14 +114,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _pickOrgImage() async {
-    final XFile? picked =
-        await _picker.pickImage(source: ImageSource.gallery);
+  Future<void> _pickAndUploadImage() async {
+    final XFile? picked = await _picker.pickImage(source: ImageSource.gallery);
     if (picked == null) return;
 
+    final file = File(picked.path);
     setState(() {
-      _orgImageFile = File(picked.path);
+      _orgImageFile = file;
+      _isUploadingPhoto = true;
     });
+
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${ApiClient.baseUrl}/pres/api/profile/picture'),
+      );
+      request.headers.addAll(ApiClient.getHeaders());
+      request.files.add(await http.MultipartFile.fromPath('photo', file.path));
+
+      final response = await request.send();
+      final body = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        final data = ApiClient.parseJson(body);
+        if (mounted) {
+          setState(() {
+            _profilePhotoUrl = data['url'];
+            _isUploadingPhoto = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile photo updated')),
+          );
+        }
+      } else {
+        throw Exception('Upload failed: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isUploadingPhoto = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to upload photo: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -143,15 +181,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _shortNameController.text = data['org_short_name'] ?? '';
           _departmentController.text = data['department'] ?? '';
           _emailController.text = data['email'] ?? '';
-          
+          _profilePhotoUrl = data['profile_photo_url'];
+
           _displayShortName = data['org_short_name'] ?? '';
           _displayDepartment = data['department'] ?? '';
           _accreditationDate = accreditation['date_of_accreditation'] ?? '';
           _accreditationStatus = accreditation['current_status'] ?? '';
           _isLoading = false;
         });
-        
-        debugPrint('Email Controller Text: ${_emailController.text}');
         _loadOfficers();
       }
     } catch (e) {
@@ -226,46 +263,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     // Left: photo + button
                     Column(
                       children: [
-                        Container(
-                          width: 72,
-                          height: 72,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color(0xFFD9D9D9),
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: _orgImageFile == null
-                              ? const Icon(
-                                  Icons.person,
-                                  size: 40,
-                                  color: Colors.white70,
-                                )
-                              : Image.file(
-                                  _orgImageFile!,
-                                  fit: BoxFit.cover,
-                                ),
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 72,
+                              height: 72,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFD9D9D9),
+                              ),
+                              clipBehavior: Clip.antiAlias,
+                              child: _orgImageFile != null
+                                  ? Image.file(_orgImageFile!, fit: BoxFit.cover)
+                                  : _profilePhotoUrl != null
+                                      ? Image.network(_profilePhotoUrl!, fit: BoxFit.cover,
+                                          errorBuilder: (_, _, _) => const Icon(Icons.person, size: 40, color: Colors.white70))
+                                      : const Icon(Icons.person, size: 40, color: Colors.white70),
+                            ),
+                            if (_isUploadingPhoto)
+                              const SizedBox(
+                                width: 72, height: 72,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            side: const BorderSide(
-                              color: Color(0xFFCCCCCC),
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            side: const BorderSide(color: Color(0xFFCCCCCC)),
                             foregroundColor: Colors.black87,
-                            textStyle: const TextStyle(
-                              fontSize: 11,
-                              fontFamily: 'Poppins',
-                            ),
+                            textStyle: const TextStyle(fontSize: 11, fontFamily: 'Poppins'),
                           ),
-                          onPressed: _isEditingOrgInfo ? _pickOrgImage : null,
-                          icon: const Icon(
-                            Icons.photo_camera_outlined,
-                            size: 16,
-                          ),
+                          onPressed: _isEditingOrgInfo && !_isUploadingPhoto ? _pickAndUploadImage : null,
+                          icon: const Icon(Icons.photo_camera_outlined, size: 16),
                           label: const Text('Change Photo'),
                         ),
                       ],
