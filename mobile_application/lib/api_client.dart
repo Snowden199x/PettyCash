@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
-  // Change this if your Flask server IP/port changes
-  static const String baseUrl = 'http://192.168.1.13:5000';
+  // Flask backend hosted on Render — works from any network
+  static const String baseUrl = 'https://pockitrack-api.onrender.com';
   
   // Store session cookie after login
   static String? _sessionCookie;
