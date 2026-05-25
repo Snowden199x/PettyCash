@@ -95,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen>
         } else {
           Navigator.pushReplacementNamed(
             context,
-            '/home',
+            '/loading',
             arguments: {'orgName': orgName, 'orgId': orgId},
           );
         }

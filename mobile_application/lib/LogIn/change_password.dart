@@ -25,6 +25,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
   final TextEditingController pass = TextEditingController();
   final TextEditingController confirmPass = TextEditingController();
   bool error = false;
+  bool _mismatchError = false;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -61,12 +62,14 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
   }
 
   Future<void> submit() async {
+    final mismatch = pass.text != confirmPass.text || pass.text.isEmpty;
     setState(() {
-      error = pass.text != confirmPass.text || pass.text.isEmpty;
+      error = false;
+      _mismatchError = mismatch;
       _errorMessage = null;
     });
 
-    if (error) {
+    if (mismatch) {
       _passController.forward(from: 0);
       _confirmController.forward(from: 0);
       return;
@@ -75,6 +78,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
     if (pass.text.length < 8) {
       setState(() {
         error = true;
+        _mismatchError = false;
         _errorMessage = 'Password must be at least 8 characters';
       });
       _passController.forward(from: 0);
@@ -102,18 +106,19 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
         } else {
           setState(() {
             error = true;
+            _mismatchError = false;
             _errorMessage = response['error'] ?? 'Failed to reset password';
           });
           _passController.forward(from: 0);
         }
       } else {
-        final response = await ApiClient().postJson('/pres/change-password', {
+        final response = await ApiClient().postForm('/pres/change-password', {
           'password': pass.text,
           'confirm_password': confirmPass.text,
         });
         if (!mounted) return;
         setState(() => _isLoading = false);
-        if (response['success'] == true || response.containsKey('org_id')) {
+        if (response['success'] == true) {
           Navigator.pushReplacementNamed(
             context,
             '/home',
@@ -125,6 +130,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
         } else {
           setState(() {
             error = true;
+            _mismatchError = false;
             _errorMessage = response['error'] ?? 'Failed to change password';
           });
           _passController.forward(from: 0);
@@ -135,6 +141,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
       setState(() {
         _isLoading = false;
         error = true;
+        _mismatchError = false;
         _errorMessage = 'Network error. Please try again.';
       });
       _passController.forward(from: 0);
@@ -237,7 +244,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
                                     borderSide: BorderSide(
                                         color: Color(0xFFE59E2C), width: 1),
                                   ),
-                                  errorText: error ? (_errorMessage ?? "Passwords do not match.") : null,
+                                  errorText: (error || _mismatchError) ? (_errorMessage ?? "Passwords do not match.") : null,
                                 ),
                               ),
                             ),
@@ -279,7 +286,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
                                     borderSide: BorderSide(
                                         color: Color(0xFFE59E2C), width: 1),
                                   ),
-                                  errorText: error
+                                  errorText: _mismatchError
                                       ? "Passwords do not match."
                                       : null,
                                 ),
