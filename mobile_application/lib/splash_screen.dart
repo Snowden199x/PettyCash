@@ -77,7 +77,13 @@ class _SplashScreenState extends State<SplashScreen>
       );
     });
 
-    _controller.forward();
+    // Wait for the first frame to be drawn before starting the animation
+    // so it is always visible on cold start (not just hot restart)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _controller.forward();
+      }
+    });
 
     Future.delayed(const Duration(milliseconds: 4200), () {
       if (mounted) {
