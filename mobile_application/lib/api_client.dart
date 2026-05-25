@@ -36,6 +36,49 @@ class ApiClient {
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
+  // POST as application/x-www-form-urlencoded (for form-based Flask routes)
+  // Returns a map with 'success' and optional 'error' keys derived from the
+  // HTTP response — a redirect (3xx) means success, 4xx/5xx means failure.
+  Future<Map<String, dynamic>> postForm(
+    String path,
+    Map<String, String> fields,
+  ) async {
+    final headers = <String, String>{};
+    if (_sessionCookie != null) {
+      headers['Cookie'] = _sessionCookie!;
+    }
+
+    final res = await http
+        .post(
+          Uri.parse('$baseUrl$path'),
+          headers: headers,
+          body: fields, // http package sends as form-urlencoded by default
+        )
+        .timeout(const Duration(seconds: 30));
+
+    // Save any new session cookie
+    if (res.headers['set-cookie'] != null) {
+      _sessionCookie = res.headers['set-cookie']!.split(';')[0];
+    }
+
+    // Flask form routes redirect (302) on success and re-render (200) on error.
+    // A redirect to the login page means the password was changed successfully.
+    if (res.statusCode >= 300 && res.statusCode < 400) {
+      return {'success': true};
+    }
+
+    // On error Flask re-renders the HTML page — check for flash danger message
+    final body = res.body;
+    if (body.contains('danger') || body.contains('do not match') || body.contains('Invalid')) {
+      // Try to extract the flash message text
+      final match = RegExp(r'class="flash danger"[^>]*>([^<]+)<').firstMatch(body);
+      final msg = match?.group(1)?.trim() ?? 'Failed to change password';
+      return {'success': false, 'error': msg};
+    }
+
+    return {'success': res.statusCode < 400};
+  }
+
   // For endpoints that return a JSON object
   Future<Map<String, dynamic>> getJson(String path) async {
     final headers = {'Accept': 'application/json'};

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'splash_screen.dart';
 import 'LogIn/log_in_screen.dart';
 import 'LogIn/change_password.dart';
+import 'LogIn/loading_screen.dart';
 import 'Navigation/main_shell.dart';
 
 void main() {
@@ -19,11 +21,22 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.amber,
         scaffoldBackgroundColor: Colors.white,
       ),
-      initialRoute: '/login',
+      initialRoute: '/splash',
       routes: {
+        '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
       },
       onGenerateRoute: (settings) {
+        if (settings.name == '/loading') {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => LoadingScreen(
+              orgName: args?['orgName'] as String? ?? 'Organization',
+              orgId: args?['orgId'] as int? ?? 0,
+            ),
+          );
+        }
+
         if (settings.name == '/home') {
           final args = settings.arguments as Map<String, dynamic>?;
 

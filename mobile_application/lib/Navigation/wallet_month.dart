@@ -1876,20 +1876,17 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                       const SizedBox(height: 6),
                       SizedBox(
                         height: 24,
-                        child: showReportActions
+                        child: showReportActions && !isReportSubmitted
                             ? Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   GestureDetector(
-                                    onTap: isReportSubmitted ? null : () => openPopup(ActivePopup.reportDetails),
-                                    child: Opacity(
-                                      opacity: isReportSubmitted ? 0.4 : 1.0,
-                                      child: _buildReportActionChip(
-                                        label: 'Edit Report',
-                                        background:
-                                            const Color(0xFFFFFFFF),
-                                        textColor: Colors.black,
-                                      ),
+                                    onTap: () => openPopup(ActivePopup.reportDetails),
+                                    child: _buildReportActionChip(
+                                      label: 'Edit Report',
+                                      background:
+                                          const Color(0xFFFFFFFF),
+                                      textColor: Colors.black,
                                     ),
                                   ),
                                   const SizedBox(width: 6),
@@ -2067,38 +2064,37 @@ class WalletMonthScreenState extends State<WalletMonthScreen> {
                               )
                             : Align(
                                 alignment: Alignment.centerLeft,
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    openPopup(ActivePopup.reportDetails);
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: Colors.black,
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 5,
-                                      vertical: 2,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(4),
-                                      side: const BorderSide(
-                                        color: Color.fromARGB(
-                                          255,
-                                          255,
-                                          255,
-                                          255,
+                                child: Opacity(
+                                  opacity: isReportSubmitted ? 0.4 : 1.0,
+                                  child: ElevatedButton(
+                                    onPressed: isReportSubmitted
+                                        ? null
+                                        : () => openPopup(ActivePopup.reportDetails),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: Colors.black,
+                                      disabledBackgroundColor: Colors.white,
+                                      disabledForegroundColor: Colors.black,
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 5,
+                                        vertical: 2,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4),
+                                        side: const BorderSide(
+                                          color: Colors.white,
+                                          width: 1,
                                         ),
-                                        width: 1,
                                       ),
                                     ),
-                                  ),
-                                  child: const Text(
-                                    'Generate Report',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
+                                    child: const Text(
+                                      'Generate Report',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ),
